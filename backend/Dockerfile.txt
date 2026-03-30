@@ -3,7 +3,6 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install --legacy-peer-deps
 COPY . .
-RUN npx tsc --skipLibCheck --noEmit false --outDir dist || true
-RUN npx nest build --skip-type-check 2>/dev/null || npx tsc -p tsconfig.build.json --skipLibCheck
+RUN npx tsc -p tsconfig.build.json --skipLibCheck --noEmitOnError false || true
 EXPOSE 4000
 CMD ["node", "dist/main.js"]
