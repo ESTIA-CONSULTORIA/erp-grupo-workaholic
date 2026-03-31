@@ -22,4 +22,13 @@ export class CompaniesController {
   async createUser(@Param('id') companyId: string, @Body() body: any) {
     return this.svc.createUser(companyId, body);
   }
+  @Put(':id/users/:userId')
+  updateUser(@Param('userId') userId: string, @Body() body: any) {
+    return this.svc.updateUser(userId, body);
+  }
+
+  @Put(':id/users/:userId/toggle')
+  toggleStatus(@Param('userId') userId: string) {
+    return this.svc.toggleUserStatus(userId);
+  }
 }
