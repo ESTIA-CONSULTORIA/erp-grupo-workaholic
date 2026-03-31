@@ -4,7 +4,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .
-RUN ./node_modules/.bin/prisma generate
+RUN node node_modules/prisma/build/index.js generate
 RUN npx tsc -p tsconfig.json --skipLibCheck --noEmitOnError false || true
 EXPOSE 4000
 CMD ["node", "dist/main"]
