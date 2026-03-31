@@ -1,10 +1,8 @@
-FROM node:20-alpine
-RUN apk add --no-cache openssl
+FROM node:20-slim
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .
-RUN node node_modules/prisma/build/index.js generate
-RUN npx tsc -p tsconfig.json --skipLibCheck --noEmitOnError false || true
+RUN npm run build
 EXPOSE 4000
 CMD ["node", "dist/main"]
