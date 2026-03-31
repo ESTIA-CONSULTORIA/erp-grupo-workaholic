@@ -14,10 +14,10 @@ export class AuthService {
     const user = await this.prisma.user.findUnique({
       where: { email },
       include: {
-        companyAccess: {
+        companyRoles: {
           include: {
             company: true,
-            role: { include: { permissions: { include: { permission: true } } } },
+            role: true,
           },
         },
       },
@@ -27,22 +27,22 @@ export class AuthService {
     const valid = await bcrypt.compare(password, user.passwordHash);
     if (!valid) throw new UnauthorizedException('Credenciales inválidas');
 
-    const companies = user.companyAccess.map((ca) => ({
-      companyId:   ca.company.id,
-      companyCode: ca.company.code,
-      companyName: ca.company.name,
-      color:       ca.company.color,
-      roleCode:    ca.role.code,
-      permissions: ca.role.permissions.map((rp) => rp.permission.code),
+    const companies = user.companyRoles.map((cr) => ({
+      companyId:   cr.company.id,
+      companyCode: cr.company.code,
+      companyName: cr.company.name,
+      color:       cr.company.color,
+      roleCode:    cr.role.code,
+      permissions: [],
     }));
 
     const payload = { sub: user.id, email: user.email };
     return {
       accessToken: this.jwt.sign(payload),
       user: {
-        id:          user.id,
-        email:       user.email,
-        name:        user.name,
+        id:       user.id,
+        email:    user.email,
+        name:     user.name,
         companies,
       },
     };
