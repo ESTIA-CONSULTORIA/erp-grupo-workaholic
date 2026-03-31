@@ -18,4 +18,8 @@ export class CompaniesController {
 
   @Get(':id/users')
   getUsers(@Param('id') id: string) { return this.svc.getUsers(id); }
+  @Post(':id/users')
+  async createUser(@Param('id') companyId: string, @Body() body: any) {
+    return this.svc.createUser(companyId, body);
+  }
 }
