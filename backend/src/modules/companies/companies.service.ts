@@ -17,7 +17,7 @@ export class CompaniesService {
   }
 
   getUsers(companyId: string) {
-    return this.prisma.userCompanyAccess.findMany({
+    return this.prisma.userCompanyRole.findMany({
       where: { companyId },
       include: {
         user: { select: { id: true, name: true, email: true, isActive: true } },

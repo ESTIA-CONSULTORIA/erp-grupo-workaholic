@@ -1,0 +1,171 @@
+import { PrismaService } from '../../common/prisma/prisma.service';
+export declare class CutsService {
+    private prisma;
+    constructor(prisma: PrismaService);
+    findAll(companyId: string, period?: string): import(".prisma/client").Prisma.PrismaPromise<({
+        branch: {
+            id: string;
+            code: string;
+            name: string;
+            isActive: boolean;
+            createdAt: Date;
+            companyId: string;
+        };
+        createdBy: {
+            id: string;
+            name: string;
+        };
+        lines: ({
+            rubric: {
+                id: string;
+                code: string;
+                name: string;
+                isActive: boolean;
+                groupId: string;
+                order: number;
+                rubricType: string;
+                allowsContado: boolean;
+                allowsCxC: boolean;
+                allowsDiscount: boolean;
+                allowsCourtesy: boolean;
+                requiresClient: boolean;
+                requiresSupplier: boolean;
+                requiresBank: boolean;
+                requiresTerminal: boolean;
+                affectsGrossSale: boolean;
+                affectsNetSale: boolean;
+                affectsFlow: boolean;
+                affectsCxC: boolean;
+                affectsCxP: boolean;
+                affectsCost: boolean;
+                affectsExpense: boolean;
+                affectsResult: boolean;
+                affectsExternalOp: boolean;
+                showInSummary: boolean;
+                showInStatement: boolean;
+                showInDashboard: boolean;
+            };
+        } & {
+            id: string;
+            currency: string;
+            exchangeRate: import("@prisma/client/runtime/library").Decimal;
+            cashAccountId: string | null;
+            rubricId: string;
+            reference: string | null;
+            notes: string | null;
+            paymentType: string;
+            grossAmount: import("@prisma/client/runtime/library").Decimal;
+            discount: import("@prisma/client/runtime/library").Decimal;
+            courtesy: import("@prisma/client/runtime/library").Decimal;
+            netAmount: import("@prisma/client/runtime/library").Decimal;
+            clientId: string | null;
+            cutId: string;
+        })[];
+    } & {
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        companyId: string;
+        shift: string | null;
+        branchId: string;
+        date: Date;
+        notes: string | null;
+        folio: string;
+        status: string;
+        createdById: string;
+        approvedById: string | null;
+        approvedAt: Date | null;
+    })[]>;
+    create(companyId: string, userId: string, data: any): import(".prisma/client").Prisma.Prisma__CutClient<{
+        lines: ({
+            rubric: {
+                id: string;
+                code: string;
+                name: string;
+                isActive: boolean;
+                groupId: string;
+                order: number;
+                rubricType: string;
+                allowsContado: boolean;
+                allowsCxC: boolean;
+                allowsDiscount: boolean;
+                allowsCourtesy: boolean;
+                requiresClient: boolean;
+                requiresSupplier: boolean;
+                requiresBank: boolean;
+                requiresTerminal: boolean;
+                affectsGrossSale: boolean;
+                affectsNetSale: boolean;
+                affectsFlow: boolean;
+                affectsCxC: boolean;
+                affectsCxP: boolean;
+                affectsCost: boolean;
+                affectsExpense: boolean;
+                affectsResult: boolean;
+                affectsExternalOp: boolean;
+                showInSummary: boolean;
+                showInStatement: boolean;
+                showInDashboard: boolean;
+            };
+        } & {
+            id: string;
+            currency: string;
+            exchangeRate: import("@prisma/client/runtime/library").Decimal;
+            cashAccountId: string | null;
+            rubricId: string;
+            reference: string | null;
+            notes: string | null;
+            paymentType: string;
+            grossAmount: import("@prisma/client/runtime/library").Decimal;
+            discount: import("@prisma/client/runtime/library").Decimal;
+            courtesy: import("@prisma/client/runtime/library").Decimal;
+            netAmount: import("@prisma/client/runtime/library").Decimal;
+            clientId: string | null;
+            cutId: string;
+        })[];
+    } & {
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        companyId: string;
+        shift: string | null;
+        branchId: string;
+        date: Date;
+        notes: string | null;
+        folio: string;
+        status: string;
+        createdById: string;
+        approvedById: string | null;
+        approvedAt: Date | null;
+    }, never, import("@prisma/client/runtime/library").DefaultArgs>;
+    submit(id: string): import(".prisma/client").Prisma.Prisma__CutClient<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        companyId: string;
+        shift: string | null;
+        branchId: string;
+        date: Date;
+        notes: string | null;
+        folio: string;
+        status: string;
+        createdById: string;
+        approvedById: string | null;
+        approvedAt: Date | null;
+    }, never, import("@prisma/client/runtime/library").DefaultArgs>;
+    approve(id: string): import(".prisma/client").Prisma.Prisma__CutClient<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        companyId: string;
+        shift: string | null;
+        branchId: string;
+        date: Date;
+        notes: string | null;
+        folio: string;
+        status: string;
+        createdById: string;
+        approvedById: string | null;
+        approvedAt: Date | null;
+    }, never, import("@prisma/client/runtime/library").DefaultArgs>;
+}

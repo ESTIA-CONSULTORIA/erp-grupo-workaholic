@@ -23,7 +23,6 @@ export class ExpensesService {
     return this.prisma.expense.create({
       data: {
         companyId,
-        createdById:   userId,
         rubricId:      data.rubricId      || null,
         supplierId:    data.supplierId    || null,
         cashAccountId: data.cashAccountId || null,
@@ -36,6 +35,9 @@ export class ExpensesService {
         paymentMethod: data.paymentMethod || 'efectivo',
         paymentStatus: data.paymentStatus || 'PAGADO',
         invoiceRef:    data.invoiceRef    || null,
+userId:       userId,
+        totalMxn:     (data.subtotal || 0) + (data.tax || 0),
+        exchangeRate: 1,
         isExternal:    data.isExternal    || false,
         externalNotes: data.externalNotes || null,
       },
