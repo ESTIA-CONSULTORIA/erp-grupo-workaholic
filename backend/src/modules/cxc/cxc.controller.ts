@@ -12,12 +12,14 @@ export class CxcController {
   constructor(private svc: CxcService) {}
 
   @Get()
+@Get()
   findAll(
     @Param('companyId') cid: string,
     @Query('period') period?: string,
     @Query('status') status?: string,
-  ) { return this.svc.findAll(cid, period, status); }
-
+    @Query('clientId') clientId?: string,
+  ) { return this.svc.findAll(cid, period, status, clientId); }
+  
   @Get('summary')
   summary(@Param('companyId') cid: string) { return this.svc.getSummary(cid); }
 
