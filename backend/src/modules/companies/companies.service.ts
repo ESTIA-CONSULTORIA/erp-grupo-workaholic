@@ -25,6 +25,14 @@ export class CompaniesService {
       },
     });
   }
+
+  getClients(companyId: string) {
+    return this.prisma.client.findMany({
+      where: { companyId, isActive: true },
+      orderBy: { name: 'asc' },
+    });
+  }
+  
   async createUser(companyId: string, data: any) {
     const bcrypt = require('bcryptjs');
     const passwordHash = await bcrypt.hash(data.password, 10);
