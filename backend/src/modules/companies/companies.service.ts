@@ -81,46 +81,75 @@ export class CompaniesService {
     });
   }
 
-  async createOrdenCompra(companyId: string, clientId: string, data: any) {
+ async createOrdenCompra(companyId: string, clientId: string, data: any) {
+    const montoTotal = data.lineas
+      ? data.lineas.reduce((t: number, l: any) => t + (l.cantidad * l.precioUnitario), 0)
+      : Number(data.montoTotal || 0);
+
     return this.prisma.ordenCompra.create({
       data: {
         companyId,
         clientId,
         numero:     data.numero,
         fecha:      new Date(data.fecha),
-        montoTotal: data.montoTotal,
-        saldo:      data.montoTotal,
+        montoTotal,
+        saldo:      montoTotal,
         status:     'PENDIENTE',
         notes:      data.notes || null,
+        lineas: data.lineas ? {
+          create: data.lineas.map((l: any) => ({
+            productId:      l.productId,
+            cantidad:       l.cantidad,
+            precioUnitario: l.precioUnitario,
+            total:          l.cantidad * l.precioUnitario,
+          })),
+        } : undefined,
       },
+      include: { lineas: { include: { product: true } } },
     });
   }
 
   async registrarSurtido(ordenId: string, data: any) {
-    const orden = await this.prisma.ordenCompra.findUnique({ where: { id: ordenId } });
+    const orden = await this.prisma.ordenCompra.findUnique({
+      where: { id: ordenId },
+      include: { lineas: true },
+    });
     if (!orden) throw new Error('OC no encontrada');
 
-    const nuevoSurtido = Number(data.monto);
-    const nuevoMonto   = Number(orden.montoSurtido) + nuevoSurtido;
-    const nuevoSaldo   = Number(orden.montoTotal)   - nuevoMonto;
-    const nuevoStatus  = nuevoSaldo <= 0 ? 'SURTIDO_COMPLETO' : 'SURTIDO_PARCIAL';
+    let montoSurtido = 0;
+
+    // Si vienen líneas específicas, actualizar cantidades surtidas
+    if (data.lineas && data.lineas.length > 0) {
+      for (const ls of data.lineas) {
+        const linea = orden.lineas.find((l: any) => l.id === ls.lineaId);
+        if (!linea) continue;
+        const nuevaCantSurtida = Number(linea.cantidadSurtida) + Number(ls.cantidad);
+        await this.prisma.lineaOC.update({
+          where: { id: ls.lineaId },
+          data: { cantidadSurtida: nuevaCantSurtida },
+        });
+        montoSurtido += Number(ls.cantidad) * Number(linea.precioUnitario);
+      }
+    } else {
+      montoSurtido = Number(data.monto || 0);
+    }
+
+    const nuevoMontoSurtido = Number(orden.montoSurtido) + montoSurtido;
+    const nuevoSaldo        = Number(orden.montoTotal)   - nuevoMontoSurtido;
+    const nuevoStatus       = nuevoSaldo <= 0 ? 'SURTIDO_COMPLETO' : 'SURTIDO_PARCIAL';
 
     return this.prisma.$transaction([
       this.prisma.surtidoOC.create({
         data: {
           ordenCompraId: ordenId,
           fecha:         new Date(data.fecha),
-          monto:         nuevoSurtido,
+          monto:         montoSurtido,
           notes:         data.notes || null,
         },
       }),
       this.prisma.ordenCompra.update({
         where: { id: ordenId },
-        data: {
-          montoSurtido: nuevoMonto,
-          saldo:        nuevoSaldo,
-          status:       nuevoStatus,
-        },
+        data: { montoSurtido: nuevoMontoSurtido, saldo: nuevoSaldo, status: nuevoStatus },
       }),
     ]);
   }
