@@ -783,6 +783,7 @@ model Product {
   saleLines     SaleLine[]
 
   @@unique([companyId, sku])
+lineasOC     LineaOC[]
   @@map("products")
 }
 
@@ -1149,6 +1150,7 @@ model OrdenCompra {
   client    Client         @relation(fields: [clientId],  references: [id])
   surtidos  SurtidoOC[]
   @@unique([companyId, numero])
+lineas    LineaOC[]
   @@map("ordenes_compra")
 }
 
@@ -1161,4 +1163,18 @@ model SurtidoOC {
   createdAt    DateTime @default(now())
   ordenCompra OrdenCompra @relation(fields: [ordenCompraId], references: [id], onDelete: Cascade)
   @@map("surtidos_oc")
+}
+
+model LineaOC {
+  id           String   @id @default(cuid())
+  ordenCompraId String
+  productId    String
+  cantidad     Int
+  cantidadSurtida Int   @default(0)
+  precioUnitario Decimal @db.Decimal(12,2)
+  total        Decimal  @db.Decimal(12,2)
+  createdAt    DateTime @default(now())
+  ordenCompra OrdenCompra @relation(fields: [ordenCompraId], references: [id], onDelete: Cascade)
+  product     Product     @relation(fields: [productId],     references: [id])
+  @@map("lineas_oc")
 }
