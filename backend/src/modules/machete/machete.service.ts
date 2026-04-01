@@ -62,60 +62,62 @@ export class MacheteService {
     });
   }
 
-  async registerSale(companyId: string, data: any) {
+ async registerSale(companyId: string, data: any) {
     const total = data.lines.reduce((t: number, l: any) => t + l.quantity * l.unitPrice, 0);
-    return this.prisma.sale.create({
-      data: {
-        companyId,
-        date:          new Date(data.date),
-        channel:       data.channel,
-        clientName:    data.clientName    || null,
-        total,
-        paymentMethod: data.paymentMethod || 'efectivo',
-        lines: {
-          create: data.lines.map((l: any) => ({
-            productId: l.productId,
-            quantity:  l.quantity,
-            unitPrice: l.unitPrice,
-            total:     l.quantity * l.unitPrice,
-          })),
+
+    return this.prisma.$transaction(async (tx) => {
+      // 1. Crear la venta
+      const sale = await tx.sale.create({
+        data: {
+          companyId,
+          date:          new Date(data.date),
+          channel:       data.channel,
+          clientName:    data.clientName    || null,
+          clientId:      data.clientId      || null,
+          total,
+          paymentMethod: data.paymentMethod || 'efectivo',
+          lines: {
+            create: data.lines.map((l: any) => ({
+              productId: l.productId,
+              quantity:  l.quantity,
+              unitPrice: l.unitPrice,
+              total:     l.quantity * l.unitPrice,
+            })),
+          },
         },
-      },
-      include: { lines: { include: { product: true } } },
-    });
-  }
+        include: { lines: { include: { product: true } } },
+      });
 
-  async getSalesReport(companyId: string, period: string) {
-    const [y, m] = period.split('-').map(Number);
-    const sales = await this.prisma.sale.findMany({
-      where: {
-        companyId,
-        date: { gte: new Date(y, m - 1, 1), lte: new Date(y, m, 0) },
-      },
-      include: { lines: { include: { product: true } } },
-    });
-
-    const byChannel: Record<string, number> = {};
-    const bySKU: Record<string, any> = {};
-    let totalRevenue = 0;
-    let totalUnits = 0;
-
-    for (const sale of sales) {
-      byChannel[sale.channel] = (byChannel[sale.channel] || 0) + Number(sale.total);
-      totalRevenue += Number(sale.total);
+      // 2. Actualizar inventario
       for (const line of sale.lines) {
-        totalUnits += line.quantity;
-        if (!bySKU[line.product.sku]) bySKU[line.product.sku] = { name: line.product.name, units: 0, revenue: 0 };
-        bySKU[line.product.sku].units   += line.quantity;
-        bySKU[line.product.sku].revenue += Number(line.total);
+        await tx.productStock.updateMany({
+          where: { productId: line.productId },
+          data:  { stock: { decrement: line.quantity } },
+        });
       }
-    }
 
-    return {
-      period, totalRevenue, totalUnits,
-      byChannel: Object.entries(byChannel).map(([canal, revenue]) => ({ canal, revenue })),
-      bySKU:     Object.values(bySKU).sort((a: any, b: any) => b.revenue - a.revenue),
-      production: { lotes: 0, totalKgIn: 0, totalKgOut: 0, totalWaste: 0, avgYield: 0 },
-    };
+      // 3. Si es crédito, crear CxC automáticamente
+      if (data.isCredit && data.clientId) {
+        const dueDate = new Date();
+        dueDate.setDate(dueDate.getDate() + 30); // 30 días por defecto
+
+        await tx.receivable.create({
+          data: {
+            companyId,
+            clientId:      data.clientId,
+            date:          new Date(data.date),
+            dueDate,
+            concept:       `Venta ${data.channel} — ${sale.id.slice(-6)}`,
+            originalAmount: total,
+            paidAmount:    0,
+            balance:       total,
+            currency:      'MXN',
+            status:        'PENDIENTE',
+            cutLineId:     null,
+          },
+        });
+      }
+
+      return sale;
+    });
   }
-}
