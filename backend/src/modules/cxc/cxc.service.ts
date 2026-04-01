@@ -12,7 +12,7 @@ export class CxcService {
       const [y, m] = period.split('-').map(Number);
       where.date = { gte: new Date(y, m - 1, 1), lte: new Date(y, m, 0) };
     }
-    return this.prisma.cxC.findMany({
+    return this.prisma.receivable.findMany({
       where,
       include: { client: true, payments: true },
       orderBy: { date: 'desc' },
@@ -20,7 +20,7 @@ export class CxcService {
   }
 
   async getSummary(companyId: string) {
-    const pending = await this.prisma.cxC.findMany({
+    const pending = await this.prisma.receivable.findMany({
       where: { companyId, status: { in: ['PENDIENTE', 'PARCIAL', 'VENCIDO'] } },
     });
     const totalPending = pending.reduce((t, c) => t + Number(c.balance), 0);
@@ -29,29 +29,29 @@ export class CxcService {
     return { totalPending, totalOverdue, pendingCount: pending.length };
   }
 
-  async addPayment(cxcId: string, cashAccountId: string, data: any) {
-    const cxc = await this.prisma.cxC.findUnique({ where: { id: cxcId } });
-    if (!cxc) throw new Error('CxC no encontrada');
+  async addPayment(receivableId: string, cashAccountId: string, data: any) {
+    const rec = await this.prisma.receivable.findUnique({ where: { id: receivableId } });
+    if (!rec) throw new Error('CxC no encontrada');
 
-    const newBalance = Number(cxc.balance) - Number(data.amount);
-    const newStatus = newBalance <= 0 ? 'PAGADO' : 'PARCIAL';
+    const newBalance = Number(rec.balance) - Number(data.amount);
+    const newStatus  = newBalance <= 0 ? 'PAGADO' : 'PARCIAL';
 
     return this.prisma.$transaction([
-      this.prisma.cxCPayment.create({
+      this.prisma.receivablePayment.create({
         data: {
-          cxcId,
+          receivableId,
           amount:        data.amount,
           currency:      data.currency      || 'MXN',
           paymentMethod: data.paymentMethod || 'EFECTIVO_MXN',
           date:          new Date(data.date),
           reference:     data.reference     || null,
-          cashAccountId,
+          cashAccountId: cashAccountId      || null,
         },
       }),
-      this.prisma.cxC.update({
-        where: { id: cxcId },
+      this.prisma.receivable.update({
+        where: { id: receivableId },
         data: {
-          paidAmount: Number(cxc.paidAmount) + Number(data.amount),
+          paidAmount: Number(rec.paidAmount) + Number(data.amount),
           balance:    newBalance,
           status:     newStatus,
         },
