@@ -300,6 +300,7 @@ ordenesCompra    OrdenCompra[]
 rfc           String?
   address       String?
   creditDays    Int      @default(30)
+sales        Sale[]
   @@map("clients")
 }
 
@@ -875,7 +876,9 @@ model Sale {
   createdAt   DateTime @default(now())
 
   lines SaleLine[]
-
+clientId    String?
+  isCredit    Boolean  @default(false)
+  client      Client?  @relation(fields: [clientId], references: [id])
   @@map("sales")
 }
 
