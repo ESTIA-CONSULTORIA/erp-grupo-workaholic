@@ -107,7 +107,7 @@ export class MacheteService {
             clientId:      data.clientId,
             date:          new Date(data.date),
             dueDate,
-            concept:       `Venta ${data.channel} — ${sale.id.slice(-6)}`,
+            
             originalAmount: total,
             paidAmount:    0,
             balance:       total,
