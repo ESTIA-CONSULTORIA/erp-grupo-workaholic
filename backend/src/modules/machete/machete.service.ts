@@ -97,7 +97,7 @@ export class MacheteService {
       }
 
       // 3. Si es crédito, crear CxC automáticamente
-      if ((data.isCredit || data.paymentMethod === 'credito') && data.clientId) {
+     if ((data.isCredit === true || data.isCredit === 'true' || data.paymentMethod === 'credito') && data.clientId) {
         const dueDate = new Date();
         dueDate.setDate(dueDate.getDate() + 30); // 30 días por defecto
 
