@@ -98,27 +98,22 @@ export class MacheteService {
       }
 
       // 3. Si es crédito, crear CxC automáticamente
-     if ((data.isCredit === true || data.isCredit === 'true' || data.paymentMethod === 'credito') && data.clientId) {
-        const dueDate = new Date();
-        dueDate.setDate(dueDate.getDate() + 30); // 30 días por defecto
-
+    if ((data.isCredit === true || data.isCredit === 'true' || data.paymentMethod === 'credito') && data.clientId) {
+        const saleDate = new Date(data.date);
+        saleDate.setHours(0,0,0,0);
+        const dueDate = new Date(saleDate);
+        dueDate.setDate(dueDate.getDate() + 30);
         await tx.receivable.create({
           data: {
             companyId,
-            clientId:      data.clientId,
-            date:          new Date(data.date),
+            clientId:       data.clientId,
+            date:           saleDate,
             dueDate,
-            
             originalAmount: total,
-            paidAmount:    0,
-            balance:       total,
-            currency:      'MXN',
-            status:        'PENDIENTE',
-            cutLineId:     null,
+            paidAmount:     0,
+            balance:        total,
+            currency:       'MXN',
+            status:         'PENDIENTE',
           },
         });
       }
-
-      return sale;
-    });
-  }
