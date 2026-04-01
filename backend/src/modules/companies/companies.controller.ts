@@ -19,20 +19,28 @@ export class CompaniesController {
   getClients(@Param('id') id: string) {
     return this.svc.getClients(id);
   }
-  
-  @Get(':id/users')
-  getUsers(@Param('id') id: string) { return this.svc.getUsers(id); }
-  @Post(':id/users')
-  async createUser(@Param('id') companyId: string, @Body() body: any) {
-    return this.svc.createUser(companyId, body);
-  }
-  @Put(':id/users/:userId')
-  updateUser(@Param('userId') userId: string, @Body() body: any) {
-    return this.svc.updateUser(userId, body);
+
+  @Post(':id/clients')
+  createClient(@Param('id') id: string, @Body() body: any) {
+    return this.svc.createClient(id, body);
   }
 
-  @Put(':id/users/:userId/toggle')
-  toggleStatus(@Param('userId') userId: string) {
-    return this.svc.toggleUserStatus(userId);
+  @Put(':id/clients/:clientId')
+  updateClient(@Param('clientId') clientId: string, @Body() body: any) {
+    return this.svc.updateClient(clientId, body);
   }
-}
+
+  @Get(':id/clients/:clientId')
+  getClientDetail(@Param('clientId') clientId: string) {
+    return this.svc.getClientDetail(clientId);
+  }
+
+  @Post(':id/clients/:clientId/ordenes')
+  createOrden(@Param('id') cid: string, @Param('clientId') clientId: string, @Body() body: any) {
+    return this.svc.createOrdenCompra(cid, clientId, body);
+  }
+
+  @Post(':id/ordenes/:ordenId/surtidos')
+  registrarSurtido(@Param('ordenId') ordenId: string, @Body() body: any) {
+    return this.svc.registrarSurtido(ordenId, body);
+  }
