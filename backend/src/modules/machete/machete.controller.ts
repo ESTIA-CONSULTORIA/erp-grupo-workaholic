@@ -13,6 +13,11 @@ export class MacheteController {
   @Get('products')
   getProducts(@Param('companyId') cid: string) { return this.svc.getProducts(cid); }
 
+  @Put('products/:productId')
+  updateProduct(@Param('productId') id: string, @Body() body: any) {
+    return this.svc.updateProduct(id, body);
+  }
+
   @Get('inventory/pt')
   getPT(@Param('companyId') cid: string) { return this.svc.getPTInventory(cid); }
 
