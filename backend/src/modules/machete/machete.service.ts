@@ -62,19 +62,20 @@ export class MacheteService {
     });
   }
 
- async registerSale(companyId: string, data: any) {
-   console.log('SALE DATA:', JSON.stringify({ isCredit: data.isCredit, paymentMethod: data.paymentMethod, clientId: data.clientId }));
+async registerSale(companyId: string, data: any) {
+    console.log('SALE DATA:', JSON.stringify({ isCredit: data.isCredit, paymentMethod: data.paymentMethod, clientId: data.clientId }));
     const total = data.lines.reduce((t: number, l: any) => t + l.quantity * l.unitPrice, 0);
 
-    return this.prisma.$transaction(async (tx) => {
-      // 1. Crear la venta
-      const sale = await tx.sale.create({
+    // 1. Crear venta e inventario en transacción
+    const sale = await this.prisma.$transaction(async (tx) => {
+      const s = await tx.sale.create({
         data: {
           companyId,
           date:          new Date(data.date),
           channel:       data.channel,
           clientName:    data.clientName    || null,
           clientId:      data.clientId      || null,
+          isCredit:      data.isCredit      || false,
           total,
           paymentMethod: data.paymentMethod || 'efectivo',
           lines: {
@@ -89,21 +90,25 @@ export class MacheteService {
         include: { lines: { include: { product: true } } },
       });
 
-      // 2. Actualizar inventario
-      for (const line of sale.lines) {
+      for (const line of s.lines) {
         await tx.productStock.updateMany({
           where: { productId: line.productId },
           data:  { stock: { decrement: line.quantity } },
         });
       }
 
-      // 3. Si es crédito, crear CxC automáticamente
+      return s;
+    });
+
+    // 2. Crear CxC FUERA de la transacción
     if ((data.isCredit === true || data.isCredit === 'true' || data.paymentMethod === 'credito') && data.clientId) {
+      try {
         const saleDate = new Date(data.date);
-        saleDate.setHours(0,0,0,0);
+        saleDate.setHours(0, 0, 0, 0);
         const dueDate = new Date(saleDate);
         dueDate.setDate(dueDate.getDate() + 30);
-        await tx.receivable.create({
+
+        const cxc = await this.prisma.receivable.create({
           data: {
             companyId,
             clientId:       data.clientId,
@@ -116,4 +121,12 @@ export class MacheteService {
             status:         'PENDIENTE',
           },
         });
+        console.log('CXC CREADO:', cxc.id);
+      } catch (e: any) {
+        console.error('ERROR CXC:', e.message);
+      }
+    }
+
+    return sale;
+  }
       }
