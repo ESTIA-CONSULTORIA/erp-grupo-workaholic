@@ -63,6 +63,7 @@ export class MacheteService {
   }
 
  async registerSale(companyId: string, data: any) {
+   console.log('SALE DATA:', JSON.stringify({ isCredit: data.isCredit, paymentMethod: data.paymentMethod, clientId: data.clientId }));
     const total = data.lines.reduce((t: number, l: any) => t + l.quantity * l.unitPrice, 0);
 
     return this.prisma.$transaction(async (tx) => {
