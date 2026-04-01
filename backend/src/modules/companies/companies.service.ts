@@ -29,68 +29,98 @@ export class CompaniesService {
   getClients(companyId: string) {
     return this.prisma.client.findMany({
       where: { companyId, isActive: true },
+      include: { _count: { select: { ordenesCompra: true } } },
       orderBy: { name: 'asc' },
     });
   }
-  
-  async createUser(companyId: string, data: any) {
-    const bcrypt = require('bcryptjs');
-    const passwordHash = await bcrypt.hash(data.password, 10);
 
-    const user = await this.prisma.user.upsert({
-      where: { email: data.email },
-      update: { name: data.name, passwordHash },
-      create: { email: data.email, name: data.name, passwordHash, isActive: true },
-    });
-
-    const role = await this.prisma.role.findUnique({ where: { code: data.roleCode } });
-    if (!role) throw new Error(`Rol ${data.roleCode} no encontrado`);
-
-    const companyIds = data.companyIds?.length > 0 ? data.companyIds : [companyId];
-    for (const cid of companyIds) {
-      await this.prisma.userCompanyRole.upsert({
-        where: { userId_companyId: { userId: user.id, companyId: cid } },
-        update: { roleId: role.id },
-        create: { userId: user.id, companyId: cid, roleId: role.id },
-      });
-    }
-
-    return { success: true, userId: user.id, name: user.name, email: user.email };
-  }
-
-  async updateUser(userId: string, data: any) {
-    const bcrypt = require('bcryptjs');
-    const updateData: any = { name: data.name };
-    if (data.password) updateData.passwordHash = await bcrypt.hash(data.password, 10);
-    if (data.isActive !== undefined) updateData.isActive = data.isActive;
-
-    const user = await this.prisma.user.update({
-      where: { id: userId },
-      data: updateData,
-    });
-
-    if (data.roleCode && data.companyIds?.length > 0) {
-      const role = await this.prisma.role.findUnique({ where: { code: data.roleCode } });
-      if (role) {
-        for (const cid of data.companyIds) {
-          await this.prisma.userCompanyRole.upsert({
-            where: { userId_companyId: { userId: user.id, companyId: cid } },
-            update: { roleId: role.id },
-            create: { userId: user.id, companyId: cid, roleId: role.id },
-          });
-        }
-      }
-    }
-
-    return { success: true, userId: user.id };
-  }
-
-  async toggleUserStatus(userId: string) {
-    const user = await this.prisma.user.findUnique({ where: { id: userId } });
-    if (!user) throw new Error('Usuario no encontrado');
-    return this.prisma.user.update({
-      where: { id: userId },
-      data: { isActive: !user.isActive },
+  createClient(companyId: string, data: any) {
+    return this.prisma.client.create({
+      data: {
+        companyId,
+        name:         data.name,
+        rfc:          data.rfc          || null,
+        phone:        data.phone        || null,
+        email:        data.email        || null,
+        address:      data.address      || null,
+        creditLimit:  data.creditLimit  || 0,
+        creditDays:   data.creditDays   || 0,
+        isActive:     true,
+      },
     });
   }
-}
+
+  updateClient(clientId: string, data: any) {
+    return this.prisma.client.update({
+      where: { id: clientId },
+      data: {
+        name:        data.name,
+        rfc:         data.rfc         || null,
+        phone:       data.phone       || null,
+        email:       data.email       || null,
+        address:     data.address     || null,
+        creditLimit: data.creditLimit || 0,
+        creditDays:  data.creditDays  || 0,
+      },
+    });
+  }
+
+  getClientDetail(clientId: string) {
+    return this.prisma.client.findUnique({
+      where: { id: clientId },
+      include: {
+        ordenesCompra: {
+          include: { surtidos: true },
+          orderBy: { fecha: 'desc' },
+        },
+        receivables: {
+          where: { status: { in: ['PENDIENTE', 'PARCIAL', 'VENCIDO'] } },
+          orderBy: { date: 'desc' },
+        },
+      },
+    });
+  }
+
+  async createOrdenCompra(companyId: string, clientId: string, data: any) {
+    return this.prisma.ordenCompra.create({
+      data: {
+        companyId,
+        clientId,
+        numero:     data.numero,
+        fecha:      new Date(data.fecha),
+        montoTotal: data.montoTotal,
+        saldo:      data.montoTotal,
+        status:     'PENDIENTE',
+        notes:      data.notes || null,
+      },
+    });
+  }
+
+  async registrarSurtido(ordenId: string, data: any) {
+    const orden = await this.prisma.ordenCompra.findUnique({ where: { id: ordenId } });
+    if (!orden) throw new Error('OC no encontrada');
+
+    const nuevoSurtido = Number(data.monto);
+    const nuevoMonto   = Number(orden.montoSurtido) + nuevoSurtido;
+    const nuevoSaldo   = Number(orden.montoTotal)   - nuevoMonto;
+    const nuevoStatus  = nuevoSaldo <= 0 ? 'SURTIDO_COMPLETO' : 'SURTIDO_PARCIAL';
+
+    return this.prisma.$transaction([
+      this.prisma.surtidoOC.create({
+        data: {
+          ordenCompraId: ordenId,
+          fecha:         new Date(data.fecha),
+          monto:         nuevoSurtido,
+          notes:         data.notes || null,
+        },
+      }),
+      this.prisma.ordenCompra.update({
+        where: { id: ordenId },
+        data: {
+          montoSurtido: nuevoMonto,
+          saldo:        nuevoSaldo,
+          status:       nuevoStatus,
+        },
+      }),
+    ]);
+  }
