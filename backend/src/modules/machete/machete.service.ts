@@ -13,6 +13,20 @@ export class MacheteService {
     });
   }
 
+  updateProduct(productId: string, data: any) {
+    return this.prisma.product.update({
+      where: { id: productId },
+      data: {
+        priceMostrador: data.priceMostrador !== undefined ? Number(data.priceMostrador) : undefined,
+        priceMayoreo:   data.priceMayoreo   !== undefined ? Number(data.priceMayoreo)   : undefined,
+        priceOnline:    data.priceOnline     !== undefined ? Number(data.priceOnline)    : undefined,
+        priceML:        data.priceML         !== undefined ? Number(data.priceML)        : undefined,
+        name:           data.name            || undefined,
+        isActive:       data.isActive        !== undefined ? data.isActive              : undefined,
+      },
+    });
+  }
+
   async getPTInventory(companyId: string) {
     const products = await this.prisma.product.findMany({
       where: { companyId, isActive: true },
