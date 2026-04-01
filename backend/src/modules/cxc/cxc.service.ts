@@ -5,9 +5,10 @@ import { PrismaService } from '../../common/prisma/prisma.service';
 export class CxcService {
   constructor(private prisma: PrismaService) {}
 
-  findAll(companyId: string, period?: string, status?: string) {
+  findAll(companyId: string, period?: string, status?: string, clientId?: string) {
     const where: any = { companyId };
-    if (status) where.status = status;
+    if (status)   where.status   = status;
+    if (clientId) where.clientId = clientId;
     if (period) {
       const [y, m] = period.split('-').map(Number);
       where.date = { gte: new Date(y, m - 1, 1), lte: new Date(y, m, 0) };
