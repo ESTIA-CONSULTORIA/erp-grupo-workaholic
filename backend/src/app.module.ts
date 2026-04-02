@@ -10,6 +10,7 @@ import { DocumentsModule } from './modules/documents/documents.module';
 import { ReportsModule } from './modules/reports/reports.module';
 import { MacheteModule } from './modules/machete/machete.module';
 import { RhModule } from './modules/rh/rh.module';
+import { CorteCajaModule } from './modules/corte-caja/corte-caja.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { RhModule } from './modules/rh/rh.module';
     ReportsModule,
     MacheteModule,
     RhModule,
+    CorteCajaModule,
   ],
 })
 export class AppModule {}
