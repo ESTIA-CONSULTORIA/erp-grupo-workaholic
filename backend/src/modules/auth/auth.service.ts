@@ -51,4 +51,20 @@ export class AuthService {
   async validateUser(userId: string) {
     return this.prisma.user.findUnique({ where: { id: userId } });
   }
+  async verifyPin(companyId: string, pin: string) {
+    const users = await this.prisma.userCompanyRole.findMany({
+      where: {
+        companyId,
+        role: { code: { in: ['gerente', 'admin', 'administrador'] } },
+        user: { pin, isActive: true },
+      },
+      include: { user: { select: { id: true, name: true } }, role: true },
+    });
+    if (users.length === 0) throw new Error('PIN incorrecto o sin autorización');
+    return { authorized: true, authorizedBy: users[0].user.name };
+  }
+  async setPin(userId: string, pin: string) {
+    if (pin.length !== 4 || !/^\d{4}$/.test(pin)) throw new Error('El PIN debe ser de 4 dígitos');
+    return this.prisma.user.update({ where: { id: userId }, data: { pin } });
+  }
 }
