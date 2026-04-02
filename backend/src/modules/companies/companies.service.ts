@@ -156,3 +156,19 @@ export class CompaniesService {
       }),
     ]);
   }
+
+async cancelarOC(ordenId: string, motivo: string) {
+    return this.prisma.ordenCompra.update({
+      where: { id: ordenId },
+      data:  { status: 'CANCELADA', notes: motivo },
+    });
+  }
+
+  async cerrarOCParcial(ordenId: string) {
+    const orden = await this.prisma.ordenCompra.findUnique({ where: { id: ordenId } });
+    if (!orden) throw new Error('OC no encontrada');
+    return this.prisma.ordenCompra.update({
+      where: { id: ordenId },
+      data:  { status: 'SURTIDO_COMPLETO' },
+    });
+  }
