@@ -44,3 +44,13 @@ export class CompaniesController {
   registrarSurtido(@Param('ordenId') ordenId: string, @Body() body: any) {
     return this.svc.registrarSurtido(ordenId, body);
   }
+
+  @Put(':id/ordenes/:ordenId/cancelar')
+  cancelarOC(@Param('ordenId') ordenId: string, @Body() body: any) {
+    return this.svc.cancelarOC(ordenId, body.motivo || '');
+  }
+
+  @Put(':id/ordenes/:ordenId/cerrar')
+  cerrarOC(@Param('ordenId') ordenId: string) {
+    return this.svc.cerrarOCParcial(ordenId);
+  }
