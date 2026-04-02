@@ -65,12 +65,15 @@ export class CompaniesService {
     });
   }
 
-  getClientDetail(clientId: string) {
+ getClientDetail(clientId: string) {
     return this.prisma.client.findUnique({
       where: { id: clientId },
       include: {
         ordenesCompra: {
-          include: { surtidos: true },
+          include: {
+            lineas: { include: { product: true } },
+            surtidos: true,
+          },
           orderBy: { fecha: 'desc' },
         },
         receivables: {
