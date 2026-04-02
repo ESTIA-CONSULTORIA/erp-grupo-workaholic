@@ -38,6 +38,8 @@ model User {
   auditLogs       AuditLog[]
 documents        Document[]
 pin           String?
+cortesCajero     CorteCaja[] @relation("CorteCajaCajero")
+  cortesValidador  CorteCaja[] @relation("CorteCajaValidador")
   @@map("users")
 }
 
@@ -149,6 +151,7 @@ cxcs             CxC[]
   payrollPeriods   PayrollPeriod[]
   insumos Insumo[]
 ordenesCompra    OrdenCompra[]
+cortesCaja       CorteCaja[]
   @@map("companies")
 }
 
@@ -1181,4 +1184,32 @@ model LineaOC {
   ordenCompra OrdenCompra @relation(fields: [ordenCompraId], references: [id], onDelete: Cascade)
   product     Product     @relation(fields: [productId],     references: [id])
   @@map("lineas_oc")
+}
+
+model CorteCaja {
+  id              String   @id @default(cuid())
+  companyId       String
+  branchId        String?
+  cajeroId        String
+  fecha           DateTime @db.Date
+  status          String   @default("PENDIENTE")
+  totalVentas     Decimal  @db.Decimal(12,2) @default(0)
+  totalEfectivo   Decimal  @db.Decimal(12,2) @default(0)
+  totalTarjeta    Decimal  @db.Decimal(12,2) @default(0)
+  totalTransfer   Decimal  @db.Decimal(12,2) @default(0)
+  totalCredito    Decimal  @db.Decimal(12,2) @default(0)
+  efectivoContado Decimal  @db.Decimal(12,2) @default(0)
+  efectivoReal    Decimal? @db.Decimal(12,2)
+  diferencia      Decimal  @db.Decimal(12,2) @default(0)
+  notasCajero     String?
+  notasValidador  String?
+  validadoPor     String?
+  validadoAt      DateTime?
+  detalleVentas   Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  company  Company @relation(fields: [companyId], references: [id])
+  cajero   User    @relation("CorteCajaCajero",    fields: [cajeroId],    references: [id])
+  validador User?  @relation("CorteCajaValidador", fields: [validadoPor], references: [id])
+  @@map("cortes_caja")
 }
