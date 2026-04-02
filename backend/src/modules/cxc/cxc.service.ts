@@ -20,13 +20,12 @@ export class CxcService {
     });
   }
 
-  async getSummary(companyId: string) {
-    const pending = await this.prisma.receivable.findMany({
-      where: { companyId, status: { in: ['PENDIENTE', 'PARCIAL', 'VENCIDO'] } },
-    });
+  async getSummary(companyId: string, clientId?: string) {
+    const where: any = { companyId, status: { in: ['PENDIENTE', 'PARCIAL', 'VENCIDO'] } };
+    if (clientId) where.clientId = clientId;
+    const pending = await this.prisma.receivable.findMany({ where });
     const totalPending = pending.reduce((t, c) => t + Number(c.balance), 0);
-    const totalOverdue = pending.filter(c => c.status === 'VENCIDO')
-      .reduce((t, c) => t + Number(c.balance), 0);
+    const totalOverdue = pending.filter(c => c.status === 'VENCIDO').reduce((t, c) => t + Number(c.balance), 0);
     return { totalPending, totalOverdue, pendingCount: pending.length };
   }
 
