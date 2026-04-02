@@ -25,4 +25,12 @@ export class CxcController {
     @Param('companyId') cid: string,
     @Query('clientId') clientId?: string,
   ) { return this.svc.getSummary(cid, clientId); }
+  @Post(':id/payments')
+  addPayment(
+    @Param('companyId') cid: string,
+    @Param('id') receivableId: string,
+    @Body() body: any,
+  ) {
+    return this.svc.addPayment(receivableId, body.cashAccountId, body);
+  }
 }
