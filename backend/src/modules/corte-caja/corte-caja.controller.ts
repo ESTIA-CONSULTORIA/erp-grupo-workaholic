@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Put, Param, Body, Query, UseGuards, Request } from '@nestjs/common';
 import { CorteCajaService } from './corte-caja.service';
-import { JwtAuthGuard } from '../auth/jwt.guard';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @UseGuards(JwtAuthGuard)
 @Controller('api/v1/companies/:companyId/corte-caja')
