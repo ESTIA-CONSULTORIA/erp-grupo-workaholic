@@ -20,12 +20,9 @@ export class CxcController {
     @Query('clientId') clientId?: string,
   ) { return this.svc.findAll(cid, period, status, clientId); }
   
-  @Get('summary')
-  summary(@Param('companyId') cid: string) { return this.svc.getSummary(cid); }
-
-  @Post(':id/payments')
-  addPayment(
-    @Param('id') id: string,
-    @Body() body: any,
-  ) { return this.svc.addPayment(id, body.cashAccountId, body); }
+ @Get('summary')
+  summary(
+    @Param('companyId') cid: string,
+    @Query('clientId') clientId?: string,
+  ) { return this.svc.getSummary(cid, clientId); }
 }
