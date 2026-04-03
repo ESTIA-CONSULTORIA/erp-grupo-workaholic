@@ -38,6 +38,6 @@ export class MacheteController {
 
   @Get('reports/sales')
   salesReport(@Param('companyId') cid: string, @Query('period') period: string) {
-    return this.svc.getSalesReport(cid, period);
+    return this.svc.getSales(cid, period);
   }
 }
