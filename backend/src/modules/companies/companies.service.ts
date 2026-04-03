@@ -118,6 +118,7 @@ export class CompaniesService {
       include: { lineas: true },
     });
     if (!orden) throw new Error('OC no encontrada');
+    if (orden.status === 'CANCELADA') throw new Error('No se puede surtir una OC cancelada');
 
     let montoSurtido = 0;
 
