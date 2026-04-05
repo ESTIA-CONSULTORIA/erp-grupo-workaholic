@@ -48,16 +48,21 @@ export class MacheteService {
     });
   }
 
-  getSales(companyId: string, period?: string, channel?: string) {
+  getSales(companyId: string, period?: string, channel?: string, startDate?: string, endDate?: string) {
     const where: any = { companyId };
     if (channel) where.channel = channel;
-    if (period) {
+    if (startDate && endDate) {
+      where.date = { gte: new Date(startDate), lte: new Date(endDate) };
+    } else if (period) {
       const [y, m] = period.split('-').map(Number);
       where.date = { gte: new Date(y, m - 1, 1), lte: new Date(y, m, 0) };
     }
     return this.prisma.sale.findMany({
       where,
-      include: { lines: { include: { product: true } } },
+      include: {
+        lines: { include: { product: true } },
+        client: { select: { id: true, name: true } },
+      },
       orderBy: { date: 'desc' },
     });
   }
