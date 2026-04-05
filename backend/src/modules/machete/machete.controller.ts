@@ -27,9 +27,11 @@ export class MacheteController {
   @Get('sales')
   getSales(
     @Param('companyId') cid: string,
-    @Query('period') period?: string,
-    @Query('channel') channel?: string,
-  ) { return this.svc.getSales(cid, period, channel); }
+    @Query('period')    period?: string,
+    @Query('channel')   channel?: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate')   endDate?: string,
+  ) { return this.svc.getSales(cid, period, channel, startDate, endDate); }
 
   @Post('sales')
   registerSale(@Param('companyId') cid: string, @Body() body: any) {
