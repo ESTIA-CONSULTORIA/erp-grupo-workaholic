@@ -59,3 +59,4 @@ export class CompaniesController {
   cerrarOC(@Param('ordenId') ordenId: string) {
     return this.svc.cerrarOCParcial(ordenId);
   }
+}
