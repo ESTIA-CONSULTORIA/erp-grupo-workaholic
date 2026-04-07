@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Param, Body, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Param, Body, Query, Request, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/auth.guards';
 import { MacheteService } from './machete.service';
@@ -13,6 +13,31 @@ export class MacheteController {
   @Get('products')
   getProducts(@Param('companyId') cid: string) { return this.svc.getProducts(cid); }
 
+  @Get('lotes')
+  getLotes(@Param('companyId') cid: string) {
+    return this.svc.getLotes(cid);
+  }
+
+  @Post('lotes')
+  crearLote(@Param('companyId') cid: string, @Body() body: any, @Request() req: any) {
+    return this.svc.crearLote(cid, req.user.sub, body);
+  }
+
+  @Put('lotes/:loteId/salida-horno')
+  salida(@Param('loteId') id: string, @Body() body: any) {
+    return this.svc.registrarSalidaHorno(id, body);
+  }
+
+  @Put('lotes/:loteId/empaque')
+  empaque(@Param('loteId') id: string, @Body() body: any) {
+    return this.svc.registrarEmpaque(id, body);
+  }
+
+  @Put('lotes/:loteId/cerrar')
+  cerrar(@Param('loteId') id: string) {
+    return this.svc.cerrarLote(id);
+  }
+  
   @Put('products/:productId')
   updateProduct(@Param('productId') id: string, @Body() body: any) {
     return this.svc.updateProduct(id, body);
