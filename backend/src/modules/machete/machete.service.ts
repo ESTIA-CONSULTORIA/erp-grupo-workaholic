@@ -13,6 +13,88 @@ export class MacheteService {
     });
   }
 
+  // ── PRODUCCIÓN ────────────────────────────────────────────
+  getLotes(companyId: string) {
+    return this.prisma.loteProduccion.findMany({
+      where: { companyId },
+      include: {
+        insumos:  true,
+        empaques: { include: { product: true } },
+      },
+      orderBy: { fecha: 'desc' },
+    });
+  }
+
+  async crearLote(companyId: string, userId: string, data: any) {
+    const lote = await this.prisma.loteProduccion.create({
+      data: {
+        companyId,
+        fecha:     new Date(data.fecha),
+        tipo:      data.tipo,
+        kgEntrada: data.kgEntrada || 0,
+        notas:     data.notas    || null,
+        creadoPor: userId,
+        status:    'EN_PROCESO',
+      },
+    });
+    return lote;
+  }
+
+  async registrarSalidaHorno(loteId: string, data: any) {
+    const lote = await this.prisma.loteProduccion.findUnique({ where: { id: loteId } });
+    if (!lote) throw new Error('Lote no encontrado');
+
+    const kgEntrada    = Number(lote.kgEntrada);
+    const kgSalida     = Number(data.kgSalida    || 0);
+    const kgGrasa      = Number(data.kgGrasa     || 0);
+    const kgEscarchado = Number(data.kgEscarchado|| 0);
+    const kgMerma      = kgEntrada - kgSalida - kgGrasa;
+    const rendimiento  = kgEntrada > 0 ? (kgSalida / kgEntrada) * 100 : 0;
+
+    return this.prisma.loteProduccion.update({
+      where: { id: loteId },
+      data: {
+        kgSalida,
+        kgGrasa,
+        kgEscarchado,
+        kgMerma,
+        rendimiento,
+        status: 'EN_PROCESO',
+      },
+    });
+  }
+
+  async registrarEmpaque(loteId: string, data: any) {
+    // Registrar líneas de empaque
+    for (const linea of data.lineas) {
+      await this.prisma.loteEmpaque.create({
+        data: {
+          loteId,
+          productId: linea.productId,
+          cantidad:  linea.cantidad,
+          costoUnit: linea.costoUnit || 0,
+        },
+      });
+      // Actualizar inventario de producto terminado
+      await this.prisma.productStock.updateMany({
+        where: { productId: linea.productId },
+        data:  { stock: { increment: linea.cantidad } },
+      });
+    }
+
+    return this.prisma.loteProduccion.update({
+      where: { id: loteId },
+      data:  { status: 'EMPACADO' },
+    });
+  }
+
+  async cerrarLote(loteId: string) {
+    return this.prisma.loteProduccion.update({
+      where: { id: loteId },
+      data:  { status: 'CERRADO' },
+    });
+  }
+  
   updateProduct(productId: string, data: any) {
     return this.prisma.product.update({
       where: { id: productId },
