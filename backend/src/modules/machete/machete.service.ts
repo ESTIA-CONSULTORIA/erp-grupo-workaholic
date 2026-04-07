@@ -112,13 +112,13 @@ export class MacheteService {
   async getPTInventory(companyId: string) {
     const products = await this.prisma.product.findMany({
       where: { companyId, isActive: true },
-      include: { stock: true },
+      include: { currentStock: true },
     });
     return products.map(p => ({
       ...p,
       stock:    (p as any).currentStock?.stock    || 0,
       minStock: (p as any).currentStock?.minStock || 5,
-      lowStock: ((p as any).currentStock?.stock || 0) < ((p as any).stock?.minStock || 5),
+      lowStock: ((p as any).currentStock?.stock || 0) < ((p as any).currentStock?.minStock || 5),
     }));
   }
 
