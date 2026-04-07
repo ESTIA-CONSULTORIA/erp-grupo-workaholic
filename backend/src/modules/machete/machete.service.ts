@@ -8,7 +8,7 @@ export class MacheteService {
   getProducts(companyId: string) {
     return this.prisma.product.findMany({
       where: { companyId },
-      include: { currentStock: true },
+      include: { stock: true },
       orderBy: [{ meatType: 'asc' }, { flavor: 'asc' }],
     });
   }
@@ -112,13 +112,13 @@ export class MacheteService {
   async getPTInventory(companyId: string) {
     const products = await this.prisma.product.findMany({
       where: { companyId, isActive: true },
-      include: { currentStock: true },
+      include: { stock: true },
     });
     return products.map(p => ({
       ...p,
-      stock:    p.currentStock?.stock    || 0,
-      minStock: p.currentStock?.minStock || 5,
-      lowStock: (p.currentStock?.stock || 0) < (p.currentStock?.minStock || 5),
+      stock:    (p as any).stock?.stock    || 0,
+      minStock: (p as any).stock?.minStock || 5,
+      lowStock: ((p as any).stock?.stock || 0) < ((p as any).stock?.minStock || 5),
     }));
   }
 
