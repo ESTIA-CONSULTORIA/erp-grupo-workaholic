@@ -122,6 +122,13 @@ export class MacheteService {
     }));
   }
 
+  getInsumos(companyId: string) {
+    return (this.prisma as any).insumo.findMany({
+      where: { companyId, isActive: true },
+      orderBy: [{ group: 'asc' }, { name: 'asc' }],
+    });
+  }
+  
   getRecipes(companyId: string) {
     return this.prisma.recipe.findMany({
       where: { companyId, isActive: true },
