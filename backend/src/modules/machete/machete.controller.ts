@@ -46,6 +46,11 @@ export class MacheteController {
   @Get('inventory/pt')
   getPT(@Param('companyId') cid: string) { return this.svc.getPTInventory(cid); }
 
+  @Get('insumos')
+  getInsumos(@Param('companyId') cid: string) {
+    return this.svc.getInsumos(cid);
+  }
+  
   @Get('recipes')
   getRecipes(@Param('companyId') cid: string) { return this.svc.getRecipes(cid); }
 
