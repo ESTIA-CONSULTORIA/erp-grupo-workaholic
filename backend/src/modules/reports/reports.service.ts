@@ -20,9 +20,14 @@ export class ReportsService {
 
     // 2. Cortes aprobados
     const cuts = await this.prisma.cut.findMany({
-      where: { companyId, status: 'APROBADO', period },
+      where: {
+        companyId,
+        status: 'APROBADO',
+        date: { gte: start, lte: end },
+      },
       include: { lines: true },
     });
+    
     const ventaCortes = cuts.reduce((t, c) => {
       return t + c.lines.reduce((tt, l) => tt + Number(l.amount), 0);
     }, 0);
