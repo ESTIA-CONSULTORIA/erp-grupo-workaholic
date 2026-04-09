@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Param, Body, Query, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Put, Param, Body, Query, Request, UseGuards } from '@nestjs/common';
 import { CorteCajaService } from './corte-caja.service';
 import { JwtAuthGuard } from '../auth/auth.guards';
 
@@ -12,18 +12,23 @@ export class CorteCajaController {
     return this.svc.getCortes(cid, status);
   }
 
+  @Get('ventas-del-dia')
+  getVentasDelDia(@Param('companyId') cid: string, @Query('fecha') fecha: string) {
+    return this.svc.getVentasDelDia(cid, fecha || new Date().toISOString().slice(0,10));
+  }
+
   @Post()
   crearCorte(@Param('companyId') cid: string, @Body() body: any, @Request() req: any) {
     return this.svc.crearCorte(cid, req.user.sub, body);
   }
 
   @Put(':corteId/validar')
-  validarCorte(@Param('corteId') id: string, @Body() body: any, @Request() req: any) {
+  validar(@Param('corteId') id: string, @Body() body: any, @Request() req: any) {
     return this.svc.validarCorte(id, req.user.sub, body);
   }
 
   @Put(':corteId/rechazar')
-  rechazarCorte(@Param('corteId') id: string, @Body() body: any, @Request() req: any) {
-    return this.svc.rechazarCorte(id, req.user.sub, body.notas);
+  rechazar(@Param('corteId') id: string, @Body() body: any, @Request() req: any) {
+    return this.svc.rechazarCorte(id, req.user.sub, body.notas || '');
   }
 }
