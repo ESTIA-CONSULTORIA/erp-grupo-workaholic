@@ -173,3 +173,4 @@ async cancelarOC(ordenId: string, motivo: string) {
       data:  { status: 'SURTIDO_COMPLETO' },
     });
   }
+}
