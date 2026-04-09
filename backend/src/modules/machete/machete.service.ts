@@ -128,6 +128,47 @@ export class MacheteService {
       orderBy: [{ group: 'asc' }, { name: 'asc' }],
     });
   }
+
+  async comprarInsumo(companyId: string, data: any) {
+    const cantidad = Number(data.cantidad);
+    const costoUnitario = Number(data.costoUnitario);
+    const total = cantidad * costoUnitario;
+
+    // Actualizar stock del insumo
+    await (this.prisma as any).insumo.update({
+      where: { id: data.insumoId },
+      data:  { stock: { increment: cantidad }, costUnit: costoUnitario },
+    });
+
+    // Registrar el gasto en flujo
+    const branch = await this.prisma.branch.findFirst({ where: { companyId } });
+
+    if (data.metodoPago !== 'credito' && branch) {
+      const cuenta = await this.prisma.cashAccount.findFirst({
+        where: { companyId, code: data.cuentaId || 'efectivo_mxn', isActive: true },
+      });
+      if (cuenta) {
+        await this.prisma.flowMovement.create({
+          data: {
+            companyId,
+            branchId:      branch.id,
+            cashAccountId: cuenta.id,
+            date:          new Date(data.fecha),
+            type:          'SALIDA',
+            originType:    'COMPRA_INSUMO',
+            originId:      data.insumoId,
+            amount:        total,
+            currency:      'MXN',
+            exchangeRate:  1,
+            amountMxn:     total,
+            notes:         `Compra: ${data.nombreInsumo} x ${cantidad} ${data.unidad}`,
+          },
+        });
+      }
+    }
+
+    return { success: true, total };
+  }
   
   getRecipes(companyId: string) {
     return this.prisma.recipe.findMany({
