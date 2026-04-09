@@ -1208,6 +1208,13 @@ model CorteCaja {
   validadoPor     String?
   validadoAt      DateTime?
   detalleVentas   Json?
+desgloseDenominaciones Json?
+  desgloseTerminales     Json?
+  desgloseDelivery       Json?
+  totalDelivery          Decimal  @db.Decimal(12,2) @default(0)
+  totalTerminal          Decimal  @db.Decimal(12,2) @default(0)
+  diferenciEfectivo      Decimal  @db.Decimal(12,2) @default(0)
+  diferenciaTerminal     Decimal  @db.Decimal(12,2) @default(0)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   company  Company @relation(fields: [companyId], references: [id])
