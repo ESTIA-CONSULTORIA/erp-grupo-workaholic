@@ -18,6 +18,6 @@ export class ReportsController {
 
   @Get('consolidated')
   consolidated(@Query('period') period: string) {
-    return this.svc.getConsolidated(period || `${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}`);
+    return this.svc.getConsolidado(period || `${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}`);
   }
 }
