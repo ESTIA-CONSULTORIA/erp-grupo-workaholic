@@ -22,14 +22,35 @@ let MacheteController = class MacheteController {
         this.svc = svc;
     }
     getProducts(cid) { return this.svc.getProducts(cid); }
+    getLotes(cid) {
+        return this.svc.getLotes(cid);
+    }
+    crearLote(cid, body, req) {
+        return this.svc.crearLote(cid, req.user.sub, body);
+    }
+    salida(id, body) {
+        return this.svc.registrarSalidaHorno(id, body);
+    }
+    empaque(id, body) {
+        return this.svc.registrarEmpaque(id, body);
+    }
+    cerrar(id) {
+        return this.svc.cerrarLote(id);
+    }
+    updateProduct(id, body) {
+        return this.svc.updateProduct(id, body);
+    }
     getPT(cid) { return this.svc.getPTInventory(cid); }
+    getInsumos(cid) {
+        return this.svc.getInsumos(cid);
+    }
     getRecipes(cid) { return this.svc.getRecipes(cid); }
-    getSales(cid, period, channel) { return this.svc.getSales(cid, period, channel); }
+    getSales(cid, period, channel, startDate, endDate) { return this.svc.getSales(cid, period, channel, startDate, endDate); }
     registerSale(cid, body) {
         return this.svc.registerSale(cid, body);
     }
     salesReport(cid, period) {
-        return this.svc.getSalesReport(cid, period);
+        return this.svc.getSales(cid, period);
     }
 };
 exports.MacheteController = MacheteController;
@@ -41,12 +62,66 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], MacheteController.prototype, "getProducts", null);
 __decorate([
+    (0, common_1.Get)('lotes'),
+    __param(0, (0, common_1.Param)('companyId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], MacheteController.prototype, "getLotes", null);
+__decorate([
+    (0, common_1.Post)('lotes'),
+    __param(0, (0, common_1.Param)('companyId')),
+    __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object, Object]),
+    __metadata("design:returntype", void 0)
+], MacheteController.prototype, "crearLote", null);
+__decorate([
+    (0, common_1.Put)('lotes/:loteId/salida-horno'),
+    __param(0, (0, common_1.Param)('loteId')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], MacheteController.prototype, "salida", null);
+__decorate([
+    (0, common_1.Put)('lotes/:loteId/empaque'),
+    __param(0, (0, common_1.Param)('loteId')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], MacheteController.prototype, "empaque", null);
+__decorate([
+    (0, common_1.Put)('lotes/:loteId/cerrar'),
+    __param(0, (0, common_1.Param)('loteId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], MacheteController.prototype, "cerrar", null);
+__decorate([
+    (0, common_1.Put)('products/:productId'),
+    __param(0, (0, common_1.Param)('productId')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], MacheteController.prototype, "updateProduct", null);
+__decorate([
     (0, common_1.Get)('inventory/pt'),
     __param(0, (0, common_1.Param)('companyId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], MacheteController.prototype, "getPT", null);
+__decorate([
+    (0, common_1.Get)('insumos'),
+    __param(0, (0, common_1.Param)('companyId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], MacheteController.prototype, "getInsumos", null);
 __decorate([
     (0, common_1.Get)('recipes'),
     __param(0, (0, common_1.Param)('companyId')),
@@ -59,8 +134,10 @@ __decorate([
     __param(0, (0, common_1.Param)('companyId')),
     __param(1, (0, common_1.Query)('period')),
     __param(2, (0, common_1.Query)('channel')),
+    __param(3, (0, common_1.Query)('startDate')),
+    __param(4, (0, common_1.Query)('endDate')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String, String]),
+    __metadata("design:paramtypes", [String, String, String, String, String]),
     __metadata("design:returntype", void 0)
 ], MacheteController.prototype, "getSales", null);
 __decorate([

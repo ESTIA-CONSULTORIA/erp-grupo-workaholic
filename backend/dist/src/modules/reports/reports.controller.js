@@ -23,7 +23,7 @@ let ReportsController = class ReportsController {
     }
     incomeStatement(cid, period) { return this.svc.getIncomeStatement(cid, period || `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`); }
     consolidated(period) {
-        return this.svc.getConsolidated(period || `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`);
+        return this.svc.getConsolidado(period || `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`);
     }
 };
 exports.ReportsController = ReportsController;

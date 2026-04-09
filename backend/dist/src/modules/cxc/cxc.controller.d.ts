@@ -2,7 +2,7 @@ import { CxcService } from './cxc.service';
 export declare class CxcController {
     private svc;
     constructor(svc: CxcService);
-    findAll(cid: string, period?: string, status?: string): import(".prisma/client").Prisma.PrismaPromise<({
+    findAll(cid: string, period?: string, status?: string, clientId?: string): import(".prisma/client").Prisma.PrismaPromise<({
         client: {
             id: string;
             name: string;
@@ -11,19 +11,24 @@ export declare class CxcController {
             companyId: string;
             email: string | null;
             phone: string | null;
-            notes: string | null;
             creditLimit: import("@prisma/client/runtime/library").Decimal;
+            notes: string | null;
+            rfc: string | null;
+            address: string | null;
+            creditDays: number;
         };
         payments: {
             id: string;
             createdAt: Date;
             currency: string;
-            amount: import("@prisma/client/runtime/library").Decimal;
-            cashAccountId: string | null;
+            notes: string | null;
             date: Date;
+            amount: import("@prisma/client/runtime/library").Decimal;
+            exchangeRate: import("@prisma/client/runtime/library").Decimal;
+            cashAccountId: string | null;
             reference: string | null;
             paymentMethod: string;
-            cxcId: string;
+            receivableId: string;
         }[];
     } & {
         id: string;
@@ -31,45 +36,49 @@ export declare class CxcController {
         updatedAt: Date;
         companyId: string;
         currency: string;
-        balance: import("@prisma/client/runtime/library").Decimal;
-        date: Date;
         notes: string | null;
+        clientId: string;
         status: string;
-        clientId: string | null;
-        concept: string;
+        date: Date;
+        cutLineId: string | null;
+        rubricId: string | null;
         dueDate: Date | null;
         originalAmount: import("@prisma/client/runtime/library").Decimal;
         paidAmount: import("@prisma/client/runtime/library").Decimal;
+        balance: import("@prisma/client/runtime/library").Decimal;
     })[]>;
-    summary(cid: string): Promise<{
+    summary(cid: string, clientId?: string): Promise<{
         totalPending: number;
         totalOverdue: number;
         pendingCount: number;
     }>;
-    addPayment(id: string, body: any): Promise<[{
+    addPayment(cid: string, receivableId: string, body: any): Promise<[{
         id: string;
         createdAt: Date;
         currency: string;
-        amount: import("@prisma/client/runtime/library").Decimal;
-        cashAccountId: string | null;
+        notes: string | null;
         date: Date;
+        amount: import("@prisma/client/runtime/library").Decimal;
+        exchangeRate: import("@prisma/client/runtime/library").Decimal;
+        cashAccountId: string | null;
         reference: string | null;
         paymentMethod: string;
-        cxcId: string;
+        receivableId: string;
     }, {
         id: string;
         createdAt: Date;
         updatedAt: Date;
         companyId: string;
         currency: string;
-        balance: import("@prisma/client/runtime/library").Decimal;
-        date: Date;
         notes: string | null;
+        clientId: string;
         status: string;
-        clientId: string | null;
-        concept: string;
+        date: Date;
+        cutLineId: string | null;
+        rubricId: string | null;
         dueDate: Date | null;
         originalAmount: import("@prisma/client/runtime/library").Decimal;
         paidAmount: import("@prisma/client/runtime/library").Decimal;
+        balance: import("@prisma/client/runtime/library").Decimal;
     }]>;
 }

@@ -21,4 +21,25 @@ export declare class AuthController {
             }[];
         };
     }>;
+    verifyPin(body: {
+        companyId: string;
+        pin: string;
+    }): Promise<{
+        authorized: boolean;
+        authorizedBy: string;
+    }>;
+    setPin(body: {
+        userId: string;
+        pin: string;
+    }): Promise<{
+        id: string;
+        name: string;
+        isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        email: string;
+        passwordHash: string;
+        phone: string | null;
+        pin: string | null;
+    }>;
 }

@@ -3,33 +3,43 @@ export declare class ReportsService {
     private prisma;
     constructor(prisma: PrismaService);
     getIncomeStatement(companyId: string, period: string): Promise<{
-        summary: {
-            totalNetSale: number;
-            totalCost: number;
-            totalExpenses: number;
-            grossProfit: number;
-            grossMargin: number;
-            operatingIncome: number;
-            netIncome: number;
-            netMargin: number;
+        period: string;
+        ventas: {
+            bruta: number;
+            descuentos: number;
+            neta: number;
+            cortes: number;
+            total: number;
         };
-        sections: any[];
+        gastosPorSeccion: Record<string, any>;
+        nomina: number;
+        totalGastos: number;
+        contribuciones: number;
+        resultadoAntesContrib: number;
+        resultadoEjercicio: number;
     }>;
-    getConsolidated(period: string): Promise<{
-        companies: {
-            companyId: string;
-            companyName: string;
+    getConsolidado(period: string): Promise<{
+        company: {
+            id: string;
+            name: string;
+            code: string;
             color: string;
-            netSale: number;
-            expenses: number;
-            netIncome: number;
-            cxcBalance: number;
-        }[];
-        groupTotal: {
-            netSale: number;
-            expenses: number;
-            netIncome: number;
-            cxcBalance: number;
         };
-    }>;
+        er: {
+            period: string;
+            ventas: {
+                bruta: number;
+                descuentos: number;
+                neta: number;
+                cortes: number;
+                total: number;
+            };
+            gastosPorSeccion: Record<string, any>;
+            nomina: number;
+            totalGastos: number;
+            contribuciones: number;
+            resultadoAntesContrib: number;
+            resultadoEjercicio: number;
+        };
+    }[]>;
 }

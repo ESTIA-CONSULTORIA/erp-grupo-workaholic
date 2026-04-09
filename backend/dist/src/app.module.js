@@ -19,6 +19,7 @@ const documents_module_1 = require("./modules/documents/documents.module");
 const reports_module_1 = require("./modules/reports/reports.module");
 const machete_module_1 = require("./modules/machete/machete.module");
 const rh_module_1 = require("./modules/rh/rh.module");
+const corte_caja_module_1 = require("./modules/corte-caja/corte-caja.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -36,6 +37,7 @@ exports.AppModule = AppModule = __decorate([
             reports_module_1.ReportsModule,
             machete_module_1.MacheteModule,
             rh_module_1.RhModule,
+            corte_caja_module_1.CorteCajaModule,
         ],
     })
 ], AppModule);

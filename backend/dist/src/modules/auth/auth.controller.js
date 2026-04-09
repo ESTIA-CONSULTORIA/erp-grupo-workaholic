@@ -23,6 +23,12 @@ let AuthController = class AuthController {
     login(body) {
         return this.auth.login(body.email, body.password);
     }
+    verifyPin(body) {
+        return this.auth.verifyPin(body.companyId, body.pin);
+    }
+    setPin(body) {
+        return this.auth.setPin(body.userId, body.pin);
+    }
 };
 exports.AuthController = AuthController;
 __decorate([
@@ -32,6 +38,20 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "login", null);
+__decorate([
+    (0, common_1.Post)('verify-pin'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "verifyPin", null);
+__decorate([
+    (0, common_1.Put)('set-pin'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "setPin", null);
 exports.AuthController = AuthController = __decorate([
     (0, swagger_1.ApiTags)('Auth'),
     (0, common_1.Controller)('auth'),

@@ -29,5 +29,21 @@ export declare class AuthService {
         email: string;
         passwordHash: string;
         phone: string | null;
+        pin: string | null;
+    }>;
+    verifyPin(companyId: string, pin: string): Promise<{
+        authorized: boolean;
+        authorizedBy: string;
+    }>;
+    setPin(userId: string, pin: string): Promise<{
+        id: string;
+        name: string;
+        isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        email: string;
+        passwordHash: string;
+        phone: string | null;
+        pin: string | null;
     }>;
 }

@@ -23,7 +23,33 @@ let CompaniesController = class CompaniesController {
     }
     findAll() { return this.svc.findAll(); }
     findOne(id) { return this.svc.findOne(id); }
-    getUsers(id) { return this.svc.getUsers(id); }
+    getUsers(id) {
+        return this.svc.getUsers(id);
+    }
+    getClients(id) {
+        return this.svc.getClients(id);
+    }
+    createClient(id, body) {
+        return this.svc.createClient(id, body);
+    }
+    updateClient(clientId, body) {
+        return this.svc.updateClient(clientId, body);
+    }
+    getClientDetail(clientId) {
+        return this.svc.getClientDetail(clientId);
+    }
+    createOrden(cid, clientId, body) {
+        return this.svc.createOrdenCompra(cid, clientId, body);
+    }
+    registrarSurtido(ordenId, body) {
+        return this.svc.registrarSurtido(ordenId, body);
+    }
+    cancelarOC(ordenId, body) {
+        return this.svc.cancelarOC(ordenId, body.motivo || '');
+    }
+    cerrarOC(ordenId) {
+        return this.svc.cerrarOCParcial(ordenId);
+    }
 };
 exports.CompaniesController = CompaniesController;
 __decorate([
@@ -46,6 +72,68 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], CompaniesController.prototype, "getUsers", null);
+__decorate([
+    (0, common_1.Get)(':id/clients'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], CompaniesController.prototype, "getClients", null);
+__decorate([
+    (0, common_1.Post)(':id/clients'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], CompaniesController.prototype, "createClient", null);
+__decorate([
+    (0, common_1.Put)(':id/clients/:clientId'),
+    __param(0, (0, common_1.Param)('clientId')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], CompaniesController.prototype, "updateClient", null);
+__decorate([
+    (0, common_1.Get)(':id/clients/:clientId'),
+    __param(0, (0, common_1.Param)('clientId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], CompaniesController.prototype, "getClientDetail", null);
+__decorate([
+    (0, common_1.Post)(':id/clients/:clientId/ordenes'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Param)('clientId')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, Object]),
+    __metadata("design:returntype", void 0)
+], CompaniesController.prototype, "createOrden", null);
+__decorate([
+    (0, common_1.Post)(':id/ordenes/:ordenId/surtidos'),
+    __param(0, (0, common_1.Param)('ordenId')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], CompaniesController.prototype, "registrarSurtido", null);
+__decorate([
+    (0, common_1.Put)(':id/ordenes/:ordenId/cancelar'),
+    __param(0, (0, common_1.Param)('ordenId')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], CompaniesController.prototype, "cancelarOC", null);
+__decorate([
+    (0, common_1.Put)(':id/ordenes/:ordenId/cerrar'),
+    __param(0, (0, common_1.Param)('ordenId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], CompaniesController.prototype, "cerrarOC", null);
 exports.CompaniesController = CompaniesController = __decorate([
     (0, swagger_1.ApiTags)('Companies'),
     (0, swagger_1.ApiBearerAuth)(),

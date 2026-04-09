@@ -21,33 +21,39 @@ let CxcController = class CxcController {
     constructor(svc) {
         this.svc = svc;
     }
-    findAll(cid, period, status) { return this.svc.findAll(cid, period, status); }
-    summary(cid) { return this.svc.getSummary(cid); }
-    addPayment(id, body) { return this.svc.addPayment(id, body.cashAccountId, body); }
+    findAll(cid, period, status, clientId) { return this.svc.findAll(cid, period, status, clientId); }
+    summary(cid, clientId) { return this.svc.getSummary(cid, clientId); }
+    addPayment(cid, receivableId, body) {
+        return this.svc.addPayment(receivableId, body.cashAccountId, body);
+    }
 };
 exports.CxcController = CxcController;
 __decorate([
     (0, common_1.Get)(),
+    (0, common_1.Get)(),
     __param(0, (0, common_1.Param)('companyId')),
     __param(1, (0, common_1.Query)('period')),
     __param(2, (0, common_1.Query)('status')),
+    __param(3, (0, common_1.Query)('clientId')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String, String]),
+    __metadata("design:paramtypes", [String, String, String, String]),
     __metadata("design:returntype", void 0)
 ], CxcController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)('summary'),
     __param(0, (0, common_1.Param)('companyId')),
+    __param(1, (0, common_1.Query)('clientId')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", void 0)
 ], CxcController.prototype, "summary", null);
 __decorate([
     (0, common_1.Post)(':id/payments'),
-    __param(0, (0, common_1.Param)('id')),
-    __param(1, (0, common_1.Body)()),
+    __param(0, (0, common_1.Param)('companyId')),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:paramtypes", [String, String, Object]),
     __metadata("design:returntype", void 0)
 ], CxcController.prototype, "addPayment", null);
 exports.CxcController = CxcController = __decorate([

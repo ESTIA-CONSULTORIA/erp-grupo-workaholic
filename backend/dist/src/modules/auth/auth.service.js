@@ -13,7 +13,7 @@ exports.AuthService = void 0;
 const common_1 = require("@nestjs/common");
 const jwt_1 = require("@nestjs/jwt");
 const prisma_service_1 = require("../../common/prisma/prisma.service");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 let AuthService = class AuthService {
     constructor(prisma, jwt) {
         this.prisma = prisma;
@@ -57,6 +57,24 @@ let AuthService = class AuthService {
     }
     async validateUser(userId) {
         return this.prisma.user.findUnique({ where: { id: userId } });
+    }
+    async verifyPin(companyId, pin) {
+        const users = await this.prisma.userCompanyRole.findMany({
+            where: {
+                companyId,
+                role: { code: { in: ['gerente', 'admin', 'administrador'] } },
+                user: { pin, isActive: true },
+            },
+            include: { user: { select: { id: true, name: true } }, role: true },
+        });
+        if (users.length === 0)
+            throw new Error('PIN incorrecto o sin autorización');
+        return { authorized: true, authorizedBy: users[0].user.name };
+    }
+    async setPin(userId, pin) {
+        if (pin.length !== 4 || !/^\d{4}$/.test(pin))
+            throw new Error('El PIN debe ser de 4 dígitos');
+        return this.prisma.user.update({ where: { id: userId }, data: { pin } });
     }
 };
 exports.AuthService = AuthService;

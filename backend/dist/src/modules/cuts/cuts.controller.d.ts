@@ -21,8 +21,9 @@ export declare class CutsController {
                 code: string;
                 name: string;
                 isActive: boolean;
-                groupId: string;
                 order: number;
+                affectsResult: boolean;
+                groupId: string;
                 rubricType: string;
                 allowsContado: boolean;
                 allowsCxC: boolean;
@@ -39,7 +40,6 @@ export declare class CutsController {
                 affectsCxP: boolean;
                 affectsCost: boolean;
                 affectsExpense: boolean;
-                affectsResult: boolean;
                 affectsExternalOp: boolean;
                 showInSummary: boolean;
                 showInStatement: boolean;
@@ -48,17 +48,17 @@ export declare class CutsController {
         } & {
             id: string;
             currency: string;
+            notes: string | null;
+            clientId: string | null;
+            rubricId: string;
             exchangeRate: import("@prisma/client/runtime/library").Decimal;
             cashAccountId: string | null;
-            rubricId: string;
             reference: string | null;
-            notes: string | null;
             paymentType: string;
             grossAmount: import("@prisma/client/runtime/library").Decimal;
             discount: import("@prisma/client/runtime/library").Decimal;
             courtesy: import("@prisma/client/runtime/library").Decimal;
             netAmount: import("@prisma/client/runtime/library").Decimal;
-            clientId: string | null;
             cutId: string;
         })[];
     } & {
@@ -66,12 +66,12 @@ export declare class CutsController {
         createdAt: Date;
         updatedAt: Date;
         companyId: string;
+        notes: string | null;
+        status: string;
+        date: Date;
         shift: string | null;
         branchId: string;
-        date: Date;
-        notes: string | null;
         folio: string;
-        status: string;
         createdById: string;
         approvedById: string | null;
         approvedAt: Date | null;
@@ -83,8 +83,9 @@ export declare class CutsController {
                 code: string;
                 name: string;
                 isActive: boolean;
-                groupId: string;
                 order: number;
+                affectsResult: boolean;
+                groupId: string;
                 rubricType: string;
                 allowsContado: boolean;
                 allowsCxC: boolean;
@@ -101,7 +102,6 @@ export declare class CutsController {
                 affectsCxP: boolean;
                 affectsCost: boolean;
                 affectsExpense: boolean;
-                affectsResult: boolean;
                 affectsExternalOp: boolean;
                 showInSummary: boolean;
                 showInStatement: boolean;
@@ -110,17 +110,17 @@ export declare class CutsController {
         } & {
             id: string;
             currency: string;
+            notes: string | null;
+            clientId: string | null;
+            rubricId: string;
             exchangeRate: import("@prisma/client/runtime/library").Decimal;
             cashAccountId: string | null;
-            rubricId: string;
             reference: string | null;
-            notes: string | null;
             paymentType: string;
             grossAmount: import("@prisma/client/runtime/library").Decimal;
             discount: import("@prisma/client/runtime/library").Decimal;
             courtesy: import("@prisma/client/runtime/library").Decimal;
             netAmount: import("@prisma/client/runtime/library").Decimal;
-            clientId: string | null;
             cutId: string;
         })[];
     } & {
@@ -128,12 +128,12 @@ export declare class CutsController {
         createdAt: Date;
         updatedAt: Date;
         companyId: string;
+        notes: string | null;
+        status: string;
+        date: Date;
         shift: string | null;
         branchId: string;
-        date: Date;
-        notes: string | null;
         folio: string;
-        status: string;
         createdById: string;
         approvedById: string | null;
         approvedAt: Date | null;
@@ -143,12 +143,12 @@ export declare class CutsController {
         createdAt: Date;
         updatedAt: Date;
         companyId: string;
+        notes: string | null;
+        status: string;
+        date: Date;
         shift: string | null;
         branchId: string;
-        date: Date;
-        notes: string | null;
         folio: string;
-        status: string;
         createdById: string;
         approvedById: string | null;
         approvedAt: Date | null;
@@ -158,12 +158,12 @@ export declare class CutsController {
         createdAt: Date;
         updatedAt: Date;
         companyId: string;
+        notes: string | null;
+        status: string;
+        date: Date;
         shift: string | null;
         branchId: string;
-        date: Date;
-        notes: string | null;
         folio: string;
-        status: string;
         createdById: string;
         approvedById: string | null;
         approvedAt: Date | null;

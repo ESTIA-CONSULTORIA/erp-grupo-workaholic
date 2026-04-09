@@ -54,4 +54,221 @@ export declare class CompaniesController {
         userId: string;
         roleId: string;
     })[]>;
+    getClients(id: string): import(".prisma/client").Prisma.PrismaPromise<({
+        _count: {
+            ordenesCompra: number;
+        };
+    } & {
+        id: string;
+        name: string;
+        isActive: boolean;
+        createdAt: Date;
+        companyId: string;
+        email: string | null;
+        phone: string | null;
+        creditLimit: import("@prisma/client/runtime/library").Decimal;
+        notes: string | null;
+        rfc: string | null;
+        address: string | null;
+        creditDays: number;
+    })[]>;
+    createClient(id: string, body: any): import(".prisma/client").Prisma.Prisma__ClientClient<{
+        id: string;
+        name: string;
+        isActive: boolean;
+        createdAt: Date;
+        companyId: string;
+        email: string | null;
+        phone: string | null;
+        creditLimit: import("@prisma/client/runtime/library").Decimal;
+        notes: string | null;
+        rfc: string | null;
+        address: string | null;
+        creditDays: number;
+    }, never, import("@prisma/client/runtime/library").DefaultArgs>;
+    updateClient(clientId: string, body: any): import(".prisma/client").Prisma.Prisma__ClientClient<{
+        id: string;
+        name: string;
+        isActive: boolean;
+        createdAt: Date;
+        companyId: string;
+        email: string | null;
+        phone: string | null;
+        creditLimit: import("@prisma/client/runtime/library").Decimal;
+        notes: string | null;
+        rfc: string | null;
+        address: string | null;
+        creditDays: number;
+    }, never, import("@prisma/client/runtime/library").DefaultArgs>;
+    getClientDetail(clientId: string): import(".prisma/client").Prisma.Prisma__ClientClient<{
+        receivables: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            companyId: string;
+            currency: string;
+            notes: string | null;
+            clientId: string;
+            status: string;
+            date: Date;
+            cutLineId: string | null;
+            rubricId: string | null;
+            dueDate: Date | null;
+            originalAmount: import("@prisma/client/runtime/library").Decimal;
+            paidAmount: import("@prisma/client/runtime/library").Decimal;
+            balance: import("@prisma/client/runtime/library").Decimal;
+        }[];
+        ordenesCompra: ({
+            surtidos: {
+                id: string;
+                createdAt: Date;
+                notes: string | null;
+                fecha: Date;
+                ordenCompraId: string;
+                monto: import("@prisma/client/runtime/library").Decimal;
+            }[];
+            lineas: ({
+                product: {
+                    id: string;
+                    name: string;
+                    isActive: boolean;
+                    companyId: string;
+                    sku: string;
+                    meatType: string;
+                    flavor: string;
+                    presentation: string;
+                    gramsWeight: number | null;
+                    priceMostrador: import("@prisma/client/runtime/library").Decimal | null;
+                    priceMayoreo: import("@prisma/client/runtime/library").Decimal | null;
+                    priceOnline: import("@prisma/client/runtime/library").Decimal | null;
+                    priceML: import("@prisma/client/runtime/library").Decimal | null;
+                };
+            } & {
+                id: string;
+                createdAt: Date;
+                productId: string;
+                cantidad: number;
+                cantidadSurtida: number;
+                precioUnitario: import("@prisma/client/runtime/library").Decimal;
+                total: import("@prisma/client/runtime/library").Decimal;
+                ordenCompraId: string;
+            })[];
+        } & {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            companyId: string;
+            notes: string | null;
+            fecha: Date;
+            clientId: string;
+            numero: string;
+            montoTotal: import("@prisma/client/runtime/library").Decimal;
+            montoSurtido: import("@prisma/client/runtime/library").Decimal;
+            saldo: import("@prisma/client/runtime/library").Decimal;
+            status: string;
+        })[];
+    } & {
+        id: string;
+        name: string;
+        isActive: boolean;
+        createdAt: Date;
+        companyId: string;
+        email: string | null;
+        phone: string | null;
+        creditLimit: import("@prisma/client/runtime/library").Decimal;
+        notes: string | null;
+        rfc: string | null;
+        address: string | null;
+        creditDays: number;
+    }, null, import("@prisma/client/runtime/library").DefaultArgs>;
+    createOrden(cid: string, clientId: string, body: any): Promise<{
+        lineas: ({
+            product: {
+                id: string;
+                name: string;
+                isActive: boolean;
+                companyId: string;
+                sku: string;
+                meatType: string;
+                flavor: string;
+                presentation: string;
+                gramsWeight: number | null;
+                priceMostrador: import("@prisma/client/runtime/library").Decimal | null;
+                priceMayoreo: import("@prisma/client/runtime/library").Decimal | null;
+                priceOnline: import("@prisma/client/runtime/library").Decimal | null;
+                priceML: import("@prisma/client/runtime/library").Decimal | null;
+            };
+        } & {
+            id: string;
+            createdAt: Date;
+            productId: string;
+            cantidad: number;
+            cantidadSurtida: number;
+            precioUnitario: import("@prisma/client/runtime/library").Decimal;
+            total: import("@prisma/client/runtime/library").Decimal;
+            ordenCompraId: string;
+        })[];
+    } & {
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        companyId: string;
+        notes: string | null;
+        fecha: Date;
+        clientId: string;
+        numero: string;
+        montoTotal: import("@prisma/client/runtime/library").Decimal;
+        montoSurtido: import("@prisma/client/runtime/library").Decimal;
+        saldo: import("@prisma/client/runtime/library").Decimal;
+        status: string;
+    }>;
+    registrarSurtido(ordenId: string, body: any): Promise<[{
+        id: string;
+        createdAt: Date;
+        notes: string | null;
+        fecha: Date;
+        ordenCompraId: string;
+        monto: import("@prisma/client/runtime/library").Decimal;
+    }, {
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        companyId: string;
+        notes: string | null;
+        fecha: Date;
+        clientId: string;
+        numero: string;
+        montoTotal: import("@prisma/client/runtime/library").Decimal;
+        montoSurtido: import("@prisma/client/runtime/library").Decimal;
+        saldo: import("@prisma/client/runtime/library").Decimal;
+        status: string;
+    }]>;
+    cancelarOC(ordenId: string, body: any): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        companyId: string;
+        notes: string | null;
+        fecha: Date;
+        clientId: string;
+        numero: string;
+        montoTotal: import("@prisma/client/runtime/library").Decimal;
+        montoSurtido: import("@prisma/client/runtime/library").Decimal;
+        saldo: import("@prisma/client/runtime/library").Decimal;
+        status: string;
+    }>;
+    cerrarOC(ordenId: string): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        companyId: string;
+        notes: string | null;
+        fecha: Date;
+        clientId: string;
+        numero: string;
+        montoTotal: import("@prisma/client/runtime/library").Decimal;
+        montoSurtido: import("@prisma/client/runtime/library").Decimal;
+        saldo: import("@prisma/client/runtime/library").Decimal;
+        status: string;
+    }>;
 }
