@@ -29,7 +29,7 @@ export class ReportsService {
     });
     
     const ventaCortes = cuts.reduce((t, c) => {
-      return t + c.lines.reduce((tt, l) => tt + Number(l.netAmount || l.amount || 0), 0);
+      return t + c.lines.reduce((tt, l) => tt + Number(l.netAmount || 0), 0);
     }, 0);
 
     // 3. Gastos del período por sección/grupo/rubro
