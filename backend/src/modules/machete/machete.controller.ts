@@ -50,6 +50,11 @@ export class MacheteController {
   getInsumos(@Param('companyId') cid: string) {
     return this.svc.getInsumos(cid);
   }
+
+  @Post('insumos/compra')
+  comprarInsumo(@Param('companyId') cid: string, @Body() body: any) {
+    return this.svc.comprarInsumo(cid, body);
+  }
   
   @Get('recipes')
   getRecipes(@Param('companyId') cid: string) { return this.svc.getRecipes(cid); }
