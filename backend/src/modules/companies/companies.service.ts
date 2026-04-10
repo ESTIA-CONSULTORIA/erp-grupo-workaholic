@@ -84,6 +84,36 @@ export class CompaniesService {
     });
   }
 
+  async getOrdenesByCliente(companyId: string, clientId: string, status?: string) {
+    const where: any = { companyId, clientId };
+    if (status) where.status = status;
+    return this.prisma.ordenCompra.findMany({
+      where,
+      include: {
+        lineas: {
+          include: { product: true }
+        },
+        surtidos: true,
+      },
+      orderBy: { fecha: 'desc' },
+    });
+  }
+
+  async getOrdenes(companyId: string, clientId?: string, status?: string) {
+    const where: any = { companyId };
+    if (clientId) where.clientId = clientId;
+    if (status)   where.status   = status;
+    return this.prisma.ordenCompra.findMany({
+      where,
+      include: {
+        client: { select: { id: true, name: true } },
+        lineas: { include: { product: true } },
+        surtidos: true,
+      },
+      orderBy: { fecha: 'desc' },
+    });
+  }
+
  async createOrdenCompra(companyId: string, clientId: string, data: any) {
     const montoTotal = data.lineas
       ? data.lineas.reduce((t: number, l: any) => t + (l.cantidad * l.precioUnitario), 0)
