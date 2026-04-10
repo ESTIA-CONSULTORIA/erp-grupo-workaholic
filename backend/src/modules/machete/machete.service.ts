@@ -295,3 +295,4 @@ async registerSale(companyId: string, data: any) {
 
     return sale;
   }
+}
