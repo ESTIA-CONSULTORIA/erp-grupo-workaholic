@@ -33,7 +33,23 @@ export declare class CorteCajaController {
         validadoPor: string | null;
         validadoAt: Date | null;
         detalleVentas: import("@prisma/client/runtime/library").JsonValue | null;
+        desgloseDenominaciones: import("@prisma/client/runtime/library").JsonValue | null;
+        desgloseTerminales: import("@prisma/client/runtime/library").JsonValue | null;
+        desgloseDelivery: import("@prisma/client/runtime/library").JsonValue | null;
+        totalDelivery: import("@prisma/client/runtime/library").Decimal;
+        totalTerminal: import("@prisma/client/runtime/library").Decimal;
+        diferenciEfectivo: import("@prisma/client/runtime/library").Decimal;
+        diferenciaTerminal: import("@prisma/client/runtime/library").Decimal;
     })[]>;
+    getVentasDelDia(cid: string, fecha: string): Promise<{
+        totalVentas: number;
+        totalEfectivo: number;
+        totalTarjeta: number;
+        totalTransfer: number;
+        totalCredito: number;
+        totalDelivery: number;
+        porMetodo: Record<string, number>;
+    }>;
     crearCorte(cid: string, body: any, req: any): Promise<{
         cajero: {
             id: string;
@@ -61,8 +77,15 @@ export declare class CorteCajaController {
         validadoPor: string | null;
         validadoAt: Date | null;
         detalleVentas: import("@prisma/client/runtime/library").JsonValue | null;
+        desgloseDenominaciones: import("@prisma/client/runtime/library").JsonValue | null;
+        desgloseTerminales: import("@prisma/client/runtime/library").JsonValue | null;
+        desgloseDelivery: import("@prisma/client/runtime/library").JsonValue | null;
+        totalDelivery: import("@prisma/client/runtime/library").Decimal;
+        totalTerminal: import("@prisma/client/runtime/library").Decimal;
+        diferenciEfectivo: import("@prisma/client/runtime/library").Decimal;
+        diferenciaTerminal: import("@prisma/client/runtime/library").Decimal;
     }>;
-    validarCorte(id: string, body: any, req: any): Promise<{
+    validar(id: string, body: any, req: any): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -84,8 +107,15 @@ export declare class CorteCajaController {
         validadoPor: string | null;
         validadoAt: Date | null;
         detalleVentas: import("@prisma/client/runtime/library").JsonValue | null;
+        desgloseDenominaciones: import("@prisma/client/runtime/library").JsonValue | null;
+        desgloseTerminales: import("@prisma/client/runtime/library").JsonValue | null;
+        desgloseDelivery: import("@prisma/client/runtime/library").JsonValue | null;
+        totalDelivery: import("@prisma/client/runtime/library").Decimal;
+        totalTerminal: import("@prisma/client/runtime/library").Decimal;
+        diferenciEfectivo: import("@prisma/client/runtime/library").Decimal;
+        diferenciaTerminal: import("@prisma/client/runtime/library").Decimal;
     }>;
-    rechazarCorte(id: string, body: any, req: any): Promise<{
+    rechazar(id: string, body: any, req: any): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -107,5 +137,12 @@ export declare class CorteCajaController {
         validadoPor: string | null;
         validadoAt: Date | null;
         detalleVentas: import("@prisma/client/runtime/library").JsonValue | null;
+        desgloseDenominaciones: import("@prisma/client/runtime/library").JsonValue | null;
+        desgloseTerminales: import("@prisma/client/runtime/library").JsonValue | null;
+        desgloseDelivery: import("@prisma/client/runtime/library").JsonValue | null;
+        totalDelivery: import("@prisma/client/runtime/library").Decimal;
+        totalTerminal: import("@prisma/client/runtime/library").Decimal;
+        diferenciEfectivo: import("@prisma/client/runtime/library").Decimal;
+        diferenciaTerminal: import("@prisma/client/runtime/library").Decimal;
     }>;
 }

@@ -126,6 +126,40 @@ let MacheteService = class MacheteService {
             orderBy: [{ group: 'asc' }, { name: 'asc' }],
         });
     }
+    async comprarInsumo(companyId, data) {
+        const cantidad = Number(data.cantidad);
+        const costoUnitario = Number(data.costoUnitario);
+        const total = cantidad * costoUnitario;
+        await this.prisma.insumo.update({
+            where: { id: data.insumoId },
+            data: { stock: { increment: cantidad }, costUnit: costoUnitario },
+        });
+        const branch = await this.prisma.branch.findFirst({ where: { companyId } });
+        if (data.metodoPago !== 'credito' && branch) {
+            const cuenta = await this.prisma.cashAccount.findFirst({
+                where: { companyId, code: data.cuentaId || 'efectivo_mxn', isActive: true },
+            });
+            if (cuenta) {
+                await this.prisma.flowMovement.create({
+                    data: {
+                        companyId,
+                        branchId: branch.id,
+                        cashAccountId: cuenta.id,
+                        date: new Date(data.fecha),
+                        type: 'SALIDA',
+                        originType: 'COMPRA_INSUMO',
+                        originId: data.insumoId,
+                        amount: total,
+                        currency: 'MXN',
+                        exchangeRate: 1,
+                        amountMxn: total,
+                        notes: `Compra: ${data.nombreInsumo} x ${cantidad} ${data.unidad}`,
+                    },
+                });
+            }
+        }
+        return { success: true, total };
+    }
     getRecipes(companyId) {
         return this.prisma.recipe.findMany({
             where: { companyId, isActive: true },
@@ -209,6 +243,34 @@ let MacheteService = class MacheteService {
             }
             catch (e) {
                 console.error('ERROR CXC:', e.message);
+            }
+        }
+        if (data.ocId) {
+            try {
+                const orden = await this.prisma.ordenCompra.findUnique({
+                    where: { id: data.ocId },
+                    include: { lineas: true },
+                });
+                if (orden) {
+                    const montoSurtido = Number(orden.montoSurtido) + total;
+                    const saldo = Number(orden.montoTotal) - montoSurtido;
+                    const status = saldo <= 0 ? 'SURTIDO_COMPLETO' : 'SURTIDO_PARCIAL';
+                    await this.prisma.ordenCompra.update({
+                        where: { id: data.ocId },
+                        data: { montoSurtido, saldo: Math.max(0, saldo), status },
+                    });
+                    await this.prisma.surtidoOC.create({
+                        data: {
+                            ordenCompraId: data.ocId,
+                            fecha: new Date(data.date),
+                            monto: total,
+                            notes: `Surtido desde POS — venta ${sale.id}`,
+                        },
+                    });
+                }
+            }
+            catch (e) {
+                console.error('ERROR OC:', e.message);
             }
         }
         return sale;

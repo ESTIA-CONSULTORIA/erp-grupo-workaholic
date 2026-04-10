@@ -24,14 +24,14 @@ export declare class FlowService {
         notes: string | null;
         date: Date;
         rubricId: string | null;
-        amountMxn: import("@prisma/client/runtime/library").Decimal;
-        amount: import("@prisma/client/runtime/library").Decimal;
-        exchangeRate: import("@prisma/client/runtime/library").Decimal;
-        branchId: string;
-        cashAccountId: string;
         originType: string;
         originId: string | null;
+        amount: import("@prisma/client/runtime/library").Decimal;
+        exchangeRate: import("@prisma/client/runtime/library").Decimal;
+        amountMxn: import("@prisma/client/runtime/library").Decimal;
         reference: string | null;
+        branchId: string;
+        cashAccountId: string;
     }, {
         id: string;
         createdAt: Date;
@@ -41,13 +41,13 @@ export declare class FlowService {
         notes: string | null;
         date: Date;
         rubricId: string | null;
-        amountMxn: import("@prisma/client/runtime/library").Decimal;
-        amount: import("@prisma/client/runtime/library").Decimal;
-        exchangeRate: import("@prisma/client/runtime/library").Decimal;
-        branchId: string;
-        cashAccountId: string;
         originType: string;
         originId: string | null;
+        amount: import("@prisma/client/runtime/library").Decimal;
+        exchangeRate: import("@prisma/client/runtime/library").Decimal;
+        amountMxn: import("@prisma/client/runtime/library").Decimal;
         reference: string | null;
+        branchId: string;
+        cashAccountId: string;
     }]>;
 }

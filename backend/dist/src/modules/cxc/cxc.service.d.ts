@@ -23,11 +23,11 @@ export declare class CxcService {
             currency: string;
             notes: string | null;
             date: Date;
+            paymentMethod: string;
             amount: import("@prisma/client/runtime/library").Decimal;
             exchangeRate: import("@prisma/client/runtime/library").Decimal;
-            cashAccountId: string | null;
             reference: string | null;
-            paymentMethod: string;
+            cashAccountId: string | null;
             receivableId: string;
         }[];
     } & {
@@ -58,11 +58,11 @@ export declare class CxcService {
         currency: string;
         notes: string | null;
         date: Date;
+        paymentMethod: string;
         amount: import("@prisma/client/runtime/library").Decimal;
         exchangeRate: import("@prisma/client/runtime/library").Decimal;
-        cashAccountId: string | null;
         reference: string | null;
-        paymentMethod: string;
+        cashAccountId: string | null;
         receivableId: string;
     }, {
         id: string;

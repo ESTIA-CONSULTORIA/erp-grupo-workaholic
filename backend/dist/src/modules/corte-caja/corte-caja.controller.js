@@ -23,14 +23,17 @@ let CorteCajaController = class CorteCajaController {
     getCortes(cid, status) {
         return this.svc.getCortes(cid, status);
     }
+    getVentasDelDia(cid, fecha) {
+        return this.svc.getVentasDelDia(cid, fecha || new Date().toISOString().slice(0, 10));
+    }
     crearCorte(cid, body, req) {
         return this.svc.crearCorte(cid, req.user.sub, body);
     }
-    validarCorte(id, body, req) {
+    validar(id, body, req) {
         return this.svc.validarCorte(id, req.user.sub, body);
     }
-    rechazarCorte(id, body, req) {
-        return this.svc.rechazarCorte(id, req.user.sub, body.notas);
+    rechazar(id, body, req) {
+        return this.svc.rechazarCorte(id, req.user.sub, body.notas || '');
     }
 };
 exports.CorteCajaController = CorteCajaController;
@@ -42,6 +45,14 @@ __decorate([
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", void 0)
 ], CorteCajaController.prototype, "getCortes", null);
+__decorate([
+    (0, common_1.Get)('ventas-del-dia'),
+    __param(0, (0, common_1.Param)('companyId')),
+    __param(1, (0, common_1.Query)('fecha')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", void 0)
+], CorteCajaController.prototype, "getVentasDelDia", null);
 __decorate([
     (0, common_1.Post)(),
     __param(0, (0, common_1.Param)('companyId')),
@@ -59,7 +70,7 @@ __decorate([
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object, Object]),
     __metadata("design:returntype", void 0)
-], CorteCajaController.prototype, "validarCorte", null);
+], CorteCajaController.prototype, "validar", null);
 __decorate([
     (0, common_1.Put)(':corteId/rechazar'),
     __param(0, (0, common_1.Param)('corteId')),
@@ -68,7 +79,7 @@ __decorate([
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object, Object]),
     __metadata("design:returntype", void 0)
-], CorteCajaController.prototype, "rechazarCorte", null);
+], CorteCajaController.prototype, "rechazar", null);
 exports.CorteCajaController = CorteCajaController = __decorate([
     (0, common_1.UseGuards)(auth_guards_1.JwtAuthGuard),
     (0, common_1.Controller)('api/v1/companies/:companyId/corte-caja'),

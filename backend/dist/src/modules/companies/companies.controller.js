@@ -38,6 +38,9 @@ let CompaniesController = class CompaniesController {
     getClientDetail(clientId) {
         return this.svc.getClientDetail(clientId);
     }
+    getOrdenes(companyId, clientId, status) {
+        return this.svc.getOrdenes(companyId, clientId, status);
+    }
     createOrden(cid, clientId, body) {
         return this.svc.createOrdenCompra(cid, clientId, body);
     }
@@ -102,6 +105,15 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], CompaniesController.prototype, "getClientDetail", null);
+__decorate([
+    (0, common_1.Get)(':id/ordenes'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Query)('clientId')),
+    __param(2, (0, common_1.Query)('status')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, String]),
+    __metadata("design:returntype", void 0)
+], CompaniesController.prototype, "getOrdenes", null);
 __decorate([
     (0, common_1.Post)(':id/clients/:clientId/ordenes'),
     __param(0, (0, common_1.Param)('id')),

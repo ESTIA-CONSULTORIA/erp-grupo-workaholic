@@ -12,8 +12,8 @@ export declare class DocumentsController {
         createdAt: Date;
         updatedAt: Date;
         companyId: string;
-        userId: string;
         type: string;
+        userId: string;
         status: string;
         fileUrl: string | null;
         fileName: string | null;
@@ -26,8 +26,8 @@ export declare class DocumentsController {
         createdAt: Date;
         updatedAt: Date;
         companyId: string;
-        userId: string;
         type: string;
+        userId: string;
         status: string;
         fileUrl: string | null;
         fileName: string | null;
@@ -43,8 +43,8 @@ export declare class DocumentsController {
         createdAt: Date;
         updatedAt: Date;
         companyId: string;
-        userId: string;
         type: string;
+        userId: string;
         status: string;
         fileUrl: string | null;
         fileName: string | null;
@@ -57,8 +57,8 @@ export declare class DocumentsController {
         createdAt: Date;
         updatedAt: Date;
         companyId: string;
-        userId: string;
         type: string;
+        userId: string;
         status: string;
         fileUrl: string | null;
         fileName: string | null;

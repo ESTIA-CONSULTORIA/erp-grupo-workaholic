@@ -11,10 +11,6 @@ export declare class CutsController {
             createdAt: Date;
             companyId: string;
         };
-        createdBy: {
-            id: string;
-            name: string;
-        };
         lines: ({
             rubric: {
                 id: string;
@@ -51,16 +47,20 @@ export declare class CutsController {
             notes: string | null;
             clientId: string | null;
             rubricId: string;
+            cutId: string;
             exchangeRate: import("@prisma/client/runtime/library").Decimal;
-            cashAccountId: string | null;
             reference: string | null;
+            cashAccountId: string | null;
             paymentType: string;
             grossAmount: import("@prisma/client/runtime/library").Decimal;
             discount: import("@prisma/client/runtime/library").Decimal;
             courtesy: import("@prisma/client/runtime/library").Decimal;
             netAmount: import("@prisma/client/runtime/library").Decimal;
-            cutId: string;
         })[];
+        createdBy: {
+            id: string;
+            name: string;
+        };
     } & {
         id: string;
         createdAt: Date;
@@ -113,15 +113,15 @@ export declare class CutsController {
             notes: string | null;
             clientId: string | null;
             rubricId: string;
+            cutId: string;
             exchangeRate: import("@prisma/client/runtime/library").Decimal;
-            cashAccountId: string | null;
             reference: string | null;
+            cashAccountId: string | null;
             paymentType: string;
             grossAmount: import("@prisma/client/runtime/library").Decimal;
             discount: import("@prisma/client/runtime/library").Decimal;
             courtesy: import("@prisma/client/runtime/library").Decimal;
             netAmount: import("@prisma/client/runtime/library").Decimal;
-            cutId: string;
         })[];
     } & {
         id: string;

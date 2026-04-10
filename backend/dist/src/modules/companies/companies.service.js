@@ -88,6 +88,37 @@ let CompaniesService = class CompaniesService {
             },
         });
     }
+    async getOrdenesByCliente(companyId, clientId, status) {
+        const where = { companyId, clientId };
+        if (status)
+            where.status = status;
+        return this.prisma.ordenCompra.findMany({
+            where,
+            include: {
+                lineas: {
+                    include: { product: true }
+                },
+                surtidos: true,
+            },
+            orderBy: { fecha: 'desc' },
+        });
+    }
+    async getOrdenes(companyId, clientId, status) {
+        const where = { companyId };
+        if (clientId)
+            where.clientId = clientId;
+        if (status)
+            where.status = status;
+        return this.prisma.ordenCompra.findMany({
+            where,
+            include: {
+                client: { select: { id: true, name: true } },
+                lineas: { include: { product: true } },
+                surtidos: true,
+            },
+            orderBy: { fecha: 'desc' },
+        });
+    }
     async createOrdenCompra(companyId, clientId, data) {
         const montoTotal = data.lineas
             ? data.lineas.reduce((t, l) => t + (l.cantidad * l.precioUnitario), 0)

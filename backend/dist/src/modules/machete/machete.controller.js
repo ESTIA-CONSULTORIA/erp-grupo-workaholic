@@ -44,6 +44,9 @@ let MacheteController = class MacheteController {
     getInsumos(cid) {
         return this.svc.getInsumos(cid);
     }
+    comprarInsumo(cid, body) {
+        return this.svc.comprarInsumo(cid, body);
+    }
     getRecipes(cid) { return this.svc.getRecipes(cid); }
     getSales(cid, period, channel, startDate, endDate) { return this.svc.getSales(cid, period, channel, startDate, endDate); }
     registerSale(cid, body) {
@@ -122,6 +125,14 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], MacheteController.prototype, "getInsumos", null);
+__decorate([
+    (0, common_1.Post)('insumos/compra'),
+    __param(0, (0, common_1.Param)('companyId')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], MacheteController.prototype, "comprarInsumo", null);
 __decorate([
     (0, common_1.Get)('recipes'),
     __param(0, (0, common_1.Param)('companyId')),
