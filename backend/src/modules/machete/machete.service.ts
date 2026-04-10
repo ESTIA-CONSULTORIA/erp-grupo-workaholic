@@ -262,6 +262,36 @@ async registerSale(companyId: string, data: any) {
       }
     }
 
+    // 3. Actualizar OC si viene ocId
+    if (data.ocId) {
+      try {
+        const orden = await this.prisma.ordenCompra.findUnique({
+          where: { id: data.ocId },
+          include: { lineas: true },
+        });
+        if (orden) {
+          const montoSurtido = Number(orden.montoSurtido) + total;
+          const saldo        = Number(orden.montoTotal)   - montoSurtido;
+          const status       = saldo <= 0 ? 'SURTIDO_COMPLETO' : 'SURTIDO_PARCIAL';
+
+          await this.prisma.ordenCompra.update({
+            where: { id: data.ocId },
+            data:  { montoSurtido, saldo: Math.max(0, saldo), status },
+          });
+
+          await this.prisma.surtidoOC.create({
+            data: {
+              ordenCompraId: data.ocId,
+              fecha:         new Date(data.date),
+              monto:         total,
+              notes:         `Surtido desde POS — venta ${sale.id}`,
+            },
+          });
+        }
+      } catch (e: any) {
+        console.error('ERROR OC:', e.message);
+      }
+    }
+
     return sale;
   }
-      }
