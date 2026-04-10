@@ -15,12 +15,13 @@ export class CompaniesController {
 
   @Get(':id')
   findOne(@Param('id') id: string) { return this.svc.findOne(id); }
+
   @Get(':id/users')
   getUsers(@Param('id') id: string) {
     return this.svc.getUsers(id);
   }
-  
-@Get(':id/clients')
+
+  @Get(':id/clients')
   getClients(@Param('id') id: string) {
     return this.svc.getClients(id);
   }
