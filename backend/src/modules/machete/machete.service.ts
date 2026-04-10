@@ -279,6 +279,17 @@ async registerSale(companyId: string, data: any) {
             data:  { montoSurtido, saldo: Math.max(0, saldo), status },
           });
 
+          // Actualizar cantidadSurtida por línea
+          for (const lineaVenta of sale.lines) {
+            const lineaOC = orden.lineas.find((l:any) => l.productId === lineaVenta.productId);
+            if (lineaOC) {
+              await this.prisma.lineaOC.update({
+                where: { id: lineaOC.id },
+                data:  { cantidadSurtida: { increment: lineaVenta.quantity } },
+              });
+            }
+          }
+
           await this.prisma.surtidoOC.create({
             data: {
               ordenCompraId: data.ocId,
