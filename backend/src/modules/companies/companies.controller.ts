@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Param, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Param, Body, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { CompaniesService } from './companies.service';
 import { JwtAuthGuard } from '../auth/auth.guards';
@@ -38,6 +38,15 @@ export class CompaniesController {
   @Get(':id/clients/:clientId')
   getClientDetail(@Param('clientId') clientId: string) {
     return this.svc.getClientDetail(clientId);
+  }
+
+  @Get(':id/ordenes')
+  getOrdenes(
+    @Param('id') companyId: string,
+    @Query('clientId') clientId?: string,
+    @Query('status')   status?: string,
+  ) {
+    return this.svc.getOrdenes(companyId, clientId, status);
   }
 
   @Post(':id/clients/:clientId/ordenes')
