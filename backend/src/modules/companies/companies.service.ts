@@ -102,7 +102,11 @@ export class CompaniesService {
   async getOrdenes(companyId: string, clientId?: string, status?: string) {
     const where: any = { companyId };
     if (clientId) where.clientId = clientId;
-    if (status)   where.status   = status;
+    if (status === 'ACTIVAS') {
+      where.status = { in: ['PENDIENTE', 'SURTIDO_PARCIAL'] };
+    } else if (status) {
+      where.status = status;
+    }
     return this.prisma.ordenCompra.findMany({
       where,
       include: {
