@@ -105,11 +105,28 @@ export class ReportsService {
   async getConsolidado(period: string) {
     const companies = await this.prisma.company.findMany({ where: { isActive: true } });
     const results = await Promise.all(
-      companies.map(async c => ({
-        company: { id: c.id, name: c.name, code: c.code, color: c.color },
-        er: await this.getIncomeStatement(c.id, period),
-      }))
+      companies.map(async c => {
+        const er = await this.getIncomeStatement(c.id, period);
+        return {
+          companyId:   c.id,
+          companyName: c.name,
+          companyCode: c.code,
+          color:       c.color,
+          netSale:     er.ventas?.total    || 0,
+          expenses:    er.totalGastos      || 0,
+          cxcBalance:  0,
+          netIncome:   er.resultadoEjercicio || 0,
+        };
+      })
     );
-    return results;
+
+    const groupTotal = {
+      netSale:    results.reduce((t, c) => t + Number(c.netSale),    0),
+      expenses:   results.reduce((t, c) => t + Number(c.expenses),   0),
+      cxcBalance: results.reduce((t, c) => t + Number(c.cxcBalance), 0),
+      netIncome:  results.reduce((t, c) => t + Number(c.netIncome),  0),
+    };
+
+    return { companies: results, groupTotal };
   }
 }
