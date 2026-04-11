@@ -1273,16 +1273,3 @@ model LoteEmpaque {
   product Product        @relation(fields: [productId], references: [id])
   @@map("lote_empaques")
 }
-
-model PayablePayment {
-  id            String   @id @default(cuid())
-  payableId     String
-  amount        Decimal  @db.Decimal(12,2)
-  paymentMethod String   @default("EFECTIVO_MXN")
-  date          DateTime
-  reference     String?
-  notes         String?
-  createdAt     DateTime @default(now())
-  payable Payable @relation(fields: [payableId], references: [id], onDelete: Cascade)
-  @@map("payable_payments")
-}
