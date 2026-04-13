@@ -16,11 +16,28 @@ export class CompaniesController {
   @Get(':id')
   findOne(@Param('id') id: string) { return this.svc.findOne(id); }
 
+  // ── Usuarios ──────────────────────────────────────────────
   @Get(':id/users')
   getUsers(@Param('id') id: string) {
     return this.svc.getUsers(id);
   }
 
+  @Post(':id/users')
+  createUser(@Param('id') companyId: string, @Body() body: any) {
+    return this.svc.createUser(companyId, body);
+  }
+
+  @Put(':id/users/:userId')
+  updateUser(@Param('userId') userId: string, @Body() body: any) {
+    return this.svc.updateUser(userId, body);
+  }
+
+  @Put(':id/users/:userId/toggle')
+  toggleUser(@Param('userId') userId: string) {
+    return this.svc.toggleUser(userId);
+  }
+
+  // ── Clientes ──────────────────────────────────────────────
   @Get(':id/clients')
   getClients(@Param('id') id: string) {
     return this.svc.getClients(id);
@@ -41,6 +58,7 @@ export class CompaniesController {
     return this.svc.getClientDetail(clientId);
   }
 
+  // ── Órdenes de compra ─────────────────────────────────────
   @Get(':id/ordenes')
   getOrdenes(
     @Param('id') companyId: string,
