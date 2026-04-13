@@ -55,6 +55,21 @@ export class MacheteController {
   comprarInsumo(@Param('companyId') cid: string, @Body() body: any) {
     return this.svc.comprarInsumo(cid, body);
   }
+
+@Post('products')
+createProduct(@Param('companyId') cid: string, @Body() body: any) {
+  return this.svc.createProduct(cid, body);
+}
+
+@Post('insumos')
+createInsumo(@Param('companyId') cid: string, @Body() body: any) {
+  return this.svc.createInsumo(cid, body);
+}
+
+@Put('insumos/:insumoId')
+updateInsumo(@Param('insumoId') id: string, @Body() body: any) {
+  return this.svc.updateInsumo(id, body);
+}
   
   @Get('recipes')
   getRecipes(@Param('companyId') cid: string) { return this.svc.getRecipes(cid); }
