@@ -26,94 +26,78 @@ export class MacheteService {
   }
 
   async crearLote(companyId: string, userId: string, data: any) {
-  const lote = await this.prisma.loteProduccion.create({
-    data: {
-      companyId,
-      fecha:     new Date(data.fecha),
-      tipo:      data.tipo,
-      kgEntrada: data.kgEntrada || 0,
-      notas:     data.notas    || null,
-      creadoPor: userId,
-      status:    'EN_PROCESO',
-    },
-  });
+    const lote = await this.prisma.loteProduccion.create({
+      data: {
+        companyId,
+        fecha:     new Date(data.fecha),
+        tipo:      data.tipo,
+        kgEntrada: data.kgEntrada || 0,
+        notas:     data.notas    || null,
+        creadoPor: userId,
+        status:    'EN_PROCESO',
+      },
+    });
 
-  // Registrar insumos y descontar stock
-  if (data.insumos && data.insumos.length > 0) {
-    for (const ins of data.insumos) {
-      if (!ins.insumoId || !ins.cantidad) continue;
-      const insumo = await (this.prisma as any).insumo.findUnique({
-        where: { id: ins.insumoId },
-      });
-      if (!insumo) continue;
-      const costoTotal = Number(ins.cantidad) * Number(insumo.costUnit);
-      await this.prisma.loteInsumo.create({
-        data: {
-          loteId:        lote.id,
-          insumoId:      ins.insumoId,
-          nombre:        insumo.name,
-          cantidad:      Number(ins.cantidad),
-          unidad:        insumo.unit,
-          costoUnitario: Number(insumo.costUnit),
-          costoTotal,
-        },
-      });
-      // Descontar stock del insumo
-      await (this.prisma as any).insumo.update({
-        where: { id: ins.insumoId },
-        data:  { stock: { decrement: Number(ins.cantidad) } },
-      });
+    // Registrar insumos y descontar stock
+    if (data.insumos && data.insumos.length > 0) {
+      for (const ins of data.insumos) {
+        if (!ins.insumoId || !ins.cantidad) continue;
+        const insumo = await (this.prisma as any).insumo.findUnique({
+          where: { id: ins.insumoId },
+        });
+        if (!insumo) continue;
+        const costoTotal = Number(ins.cantidad) * Number(insumo.costUnit);
+        await this.prisma.loteInsumo.create({
+          data: {
+            loteId:        lote.id,
+            insumoId:      ins.insumoId,
+            nombre:        insumo.name,
+            cantidad:      Number(ins.cantidad),
+            unidad:        insumo.unit,
+            costoUnitario: Number(insumo.costUnit),
+            costoTotal,
+          },
+        });
+        await (this.prisma as any).insumo.update({
+          where: { id: ins.insumoId },
+          data:  { stock: { decrement: Number(ins.cantidad) } },
+        });
+      }
     }
-  }
 
-  return this.prisma.loteProduccion.findUnique({
-    where: { id: lote.id },
-    include: { insumos: true },
-  });
-}
+    return this.prisma.loteProduccion.findUnique({
+      where: { id: lote.id },
+      include: { insumos: true },
+    });
+  }
 
   async registrarSalidaHorno(loteId: string, data: any) {
     const lote = await this.prisma.loteProduccion.findUnique({ where: { id: loteId } });
     if (!lote) throw new Error('Lote no encontrado');
 
     const kgEntrada    = Number(lote.kgEntrada);
-    const kgSalida     = Number(data.kgSalida    || 0);
-    const kgGrasa      = Number(data.kgGrasa     || 0);
-    const kgEscarchado = Number(data.kgEscarchado|| 0);
+    const kgSalida     = Number(data.kgSalida     || 0);
+    const kgGrasa      = Number(data.kgGrasa      || 0);
+    const kgEscarchado = Number(data.kgEscarchado || 0);
     const kgMerma      = kgEntrada - kgSalida - kgGrasa;
     const rendimiento  = kgEntrada > 0 ? (kgSalida / kgEntrada) * 100 : 0;
 
     return this.prisma.loteProduccion.update({
       where: { id: loteId },
-      data: {
-        kgSalida,
-        kgGrasa,
-        kgEscarchado,
-        kgMerma,
-        rendimiento,
-        status: 'EN_PROCESO',
-      },
+      data: { kgSalida, kgGrasa, kgEscarchado, kgMerma, rendimiento, status: 'EN_PROCESO' },
     });
   }
 
   async registrarEmpaque(loteId: string, data: any) {
-    // Registrar líneas de empaque
     for (const linea of data.lineas) {
       await this.prisma.loteEmpaque.create({
-        data: {
-          loteId,
-          productId: linea.productId,
-          cantidad:  linea.cantidad,
-          costoUnit: linea.costoUnit || 0,
-        },
+        data: { loteId, productId: linea.productId, cantidad: linea.cantidad, costoUnit: linea.costoUnit || 0 },
       });
-      // Actualizar inventario de producto terminado
       await this.prisma.productStock.updateMany({
         where: { productId: linea.productId },
         data:  { stock: { increment: linea.cantidad } },
       });
     }
-
     return this.prisma.loteProduccion.update({
       where: { id: loteId },
       data:  { status: 'EMPACADO' },
@@ -126,7 +110,7 @@ export class MacheteService {
       data:  { status: 'CERRADO' },
     });
   }
-  
+
   updateProduct(productId: string, data: any) {
     return this.prisma.product.update({
       where: { id: productId },
@@ -137,8 +121,36 @@ export class MacheteService {
         priceML:        data.priceML         !== undefined ? Number(data.priceML)        : undefined,
         name:           data.name            || undefined,
         isActive:       data.isActive        !== undefined ? data.isActive              : undefined,
+        sku:            data.sku             || undefined,
+        meatType:       data.meatType        || undefined,
+        flavor:         data.flavor          || undefined,
+        presentation:   data.presentation   || undefined,
+        gramsWeight:    data.gramsWeight     !== undefined ? Number(data.gramsWeight)    : undefined,
       },
     });
+  }
+
+  async createProduct(companyId: string, data: any) {
+    const product = await this.prisma.product.create({
+      data: {
+        companyId,
+        sku:            data.sku,
+        name:           data.name,
+        meatType:       data.meatType,
+        flavor:         data.flavor,
+        presentation:   data.presentation,
+        gramsWeight:    data.gramsWeight ? Number(data.gramsWeight) : null,
+        priceMostrador: data.priceMostrador ? Number(data.priceMostrador) : null,
+        priceMayoreo:   data.priceMayoreo   ? Number(data.priceMayoreo)   : null,
+        priceOnline:    data.priceOnline    ? Number(data.priceOnline)    : null,
+        priceML:        data.priceML        ? Number(data.priceML)        : null,
+        isActive:       true,
+      },
+    });
+    await this.prisma.productStock.create({
+      data: { productId: product.id, stock: 0, minStock: data.minStock ? Number(data.minStock) : 5 },
+    });
+    return product;
   }
 
   async getPTInventory(companyId: string) {
@@ -161,20 +173,47 @@ export class MacheteService {
     });
   }
 
-  async comprarInsumo(companyId: string, data: any) {
-    const cantidad = Number(data.cantidad);
-    const costoUnitario = Number(data.costoUnitario);
-    const total = cantidad * costoUnitario;
+  async createInsumo(companyId: string, data: any) {
+    return (this.prisma as any).insumo.create({
+      data: {
+        companyId,
+        sku:      data.sku,
+        name:     data.name,
+        unit:     data.unit     || 'kg',
+        costUnit: data.costUnit ? Number(data.costUnit) : 0,
+        group:    data.group    || 'GENERAL',
+        stock:    data.stock    ? Number(data.stock)    : 0,
+        minStock: data.minStock ? Number(data.minStock) : 0,
+        isActive: true,
+      },
+    });
+  }
 
-    // Actualizar stock del insumo
+  async updateInsumo(insumoId: string, data: any) {
+    return (this.prisma as any).insumo.update({
+      where: { id: insumoId },
+      data: {
+        name:     data.name     || undefined,
+        unit:     data.unit     || undefined,
+        costUnit: data.costUnit !== undefined ? Number(data.costUnit) : undefined,
+        group:    data.group    || undefined,
+        minStock: data.minStock !== undefined ? Number(data.minStock) : undefined,
+        isActive: data.isActive !== undefined ? data.isActive         : undefined,
+      },
+    });
+  }
+
+  async comprarInsumo(companyId: string, data: any) {
+    const cantidad      = Number(data.cantidad);
+    const costoUnitario = Number(data.costoUnitario);
+    const total         = cantidad * costoUnitario;
+
     await (this.prisma as any).insumo.update({
       where: { id: data.insumoId },
       data:  { stock: { increment: cantidad }, costUnit: costoUnitario },
     });
 
-    // Registrar el gasto en flujo
     const branch = await this.prisma.branch.findFirst({ where: { companyId } });
-
     if (data.metodoPago !== 'credito' && branch) {
       const cuenta = await this.prisma.cashAccount.findFirst({
         where: { companyId, code: data.cuentaId || 'efectivo_mxn', isActive: true },
@@ -182,79 +221,18 @@ export class MacheteService {
       if (cuenta) {
         await this.prisma.flowMovement.create({
           data: {
-            companyId,
-            branchId:      branch.id,
-            cashAccountId: cuenta.id,
-            date:          new Date(data.fecha),
-            type:          'SALIDA',
-            originType:    'COMPRA_INSUMO',
-            originId:      data.insumoId,
-            amount:        total,
-            currency:      'MXN',
-            exchangeRate:  1,
-            amountMxn:     total,
-            notes:         `Compra: ${data.nombreInsumo} x ${cantidad} ${data.unidad}`,
+            companyId, branchId: branch.id, cashAccountId: cuenta.id,
+            date: new Date(data.fecha), type: 'SALIDA', originType: 'COMPRA_INSUMO',
+            originId: data.insumoId, amount: total, currency: 'MXN',
+            exchangeRate: 1, amountMxn: total,
+            notes: `Compra: ${data.nombreInsumo} x ${cantidad} ${data.unidad}`,
           },
         });
       }
     }
-
     return { success: true, total };
   }
 
-async createProduct(companyId: string, data: any) {
-  const product = await this.prisma.product.create({
-    data: {
-      companyId,
-      sku:          data.sku,
-      name:         data.name,
-      meatType:     data.meatType,
-      flavor:       data.flavor,
-      presentation: data.presentation,
-      gramsWeight:  data.gramsWeight ? Number(data.gramsWeight) : null,
-      priceMostrador: data.priceMostrador ? Number(data.priceMostrador) : null,
-      priceMayoreo:   data.priceMayoreo   ? Number(data.priceMayoreo)   : null,
-      priceOnline:    data.priceOnline    ? Number(data.priceOnline)    : null,
-      priceML:        data.priceML        ? Number(data.priceML)        : null,
-      isActive: true,
-    },
-  });
-  await this.prisma.productStock.create({
-    data: { productId: product.id, stock: 0, minStock: data.minStock ? Number(data.minStock) : 5 },
-  });
-  return product;
-}
-
-async createInsumo(companyId: string, data: any) {
-  return (this.prisma as any).insumo.create({
-    data: {
-      companyId,
-      sku:      data.sku,
-      name:     data.name,
-      unit:     data.unit     || 'kg',
-      costUnit: data.costUnit ? Number(data.costUnit) : 0,
-      group:    data.group    || 'GENERAL',
-      stock:    data.stock    ? Number(data.stock)    : 0,
-      minStock: data.minStock ? Number(data.minStock) : 0,
-      isActive: true,
-    },
-  });
-}
-
-async updateInsumo(insumoId: string, data: any) {
-  return (this.prisma as any).insumo.update({
-    where: { id: insumoId },
-    data: {
-      name:     data.name     || undefined,
-      unit:     data.unit     || undefined,
-      costUnit: data.costUnit !== undefined ? Number(data.costUnit) : undefined,
-      group:    data.group    || undefined,
-      minStock: data.minStock !== undefined ? Number(data.minStock) : undefined,
-      isActive: data.isActive !== undefined ? data.isActive         : undefined,
-    },
-  });
-}
-  
   getRecipes(companyId: string) {
     return this.prisma.recipe.findMany({
       where: { companyId, isActive: true },
@@ -275,18 +253,71 @@ async updateInsumo(insumoId: string, data: any) {
     return this.prisma.sale.findMany({
       where,
       include: {
-        lines: { include: { product: true } },
+        lines:  { include: { product: true } },
         client: { select: { id: true, name: true } },
       },
       orderBy: { date: 'desc' },
     });
   }
 
-async registerSale(companyId: string, data: any) {
-    console.log('SALE DATA:', JSON.stringify({ isCredit: data.isCredit, paymentMethod: data.paymentMethod, clientId: data.clientId }));
+  async registerSale(companyId: string, data: any) {
     const total = data.lines.reduce((t: number, l: any) => t + l.quantity * l.unitPrice, 0);
 
-    // 1. Crear venta e inventario en transacción
+    // ── ENTREGA DE OC (preventa ya registrada) ────────────────
+    // Si viene ocId, NO crear venta nueva — solo mover stock y actualizar OC
+    // El ingreso ya fue registrado como CxC cuando se creó la OC
+    if (data.ocId) {
+      // 1. Mover stock
+      for (const line of data.lines) {
+        await this.prisma.productStock.updateMany({
+          where: { productId: line.productId },
+          data:  { stock: { decrement: line.quantity } },
+        });
+      }
+
+      // 2. Actualizar OC
+      try {
+        const orden = await this.prisma.ordenCompra.findUnique({
+          where: { id: data.ocId },
+          include: { lineas: true },
+        });
+        if (orden) {
+          const montoSurtido = Number(orden.montoSurtido) + total;
+          const saldo        = Number(orden.montoTotal)   - montoSurtido;
+          const status       = saldo <= 0 ? 'SURTIDO_COMPLETO' : 'SURTIDO_PARCIAL';
+
+          await this.prisma.ordenCompra.update({
+            where: { id: data.ocId },
+            data:  { montoSurtido, saldo: Math.max(0, saldo), status },
+          });
+
+          for (const lineaVenta of data.lines) {
+            const lineaOC = orden.lineas.find((l: any) => l.productId === lineaVenta.productId);
+            if (lineaOC) {
+              await this.prisma.lineaOC.update({
+                where: { id: lineaOC.id },
+                data:  { cantidadSurtida: { increment: lineaVenta.quantity } },
+              });
+            }
+          }
+
+          await this.prisma.surtidoOC.create({
+            data: {
+              ordenCompraId: data.ocId,
+              fecha:         new Date(data.date),
+              monto:         total,
+              notes:         `Entrega desde POS`,
+            },
+          });
+        }
+      } catch (e: any) {
+        console.error('ERROR OC:', e.message);
+      }
+
+      return { success: true, isOCDelivery: true, total };
+    }
+
+    // ── VENTA NORMAL (sin OC) ─────────────────────────────────
     const sale = await this.prisma.$transaction(async (tx) => {
       const s = await tx.sale.create({
         data: {
@@ -320,7 +351,7 @@ async registerSale(companyId: string, data: any) {
       return s;
     });
 
-    // 2. Crear CxC FUERA de la transacción
+    // Crear CxC para ventas a crédito sin OC
     if ((data.isCredit === true || data.isCredit === 'true' || data.paymentMethod === 'credito') && data.clientId) {
       try {
         const saleDate = new Date(data.date);
@@ -328,7 +359,7 @@ async registerSale(companyId: string, data: any) {
         const dueDate = new Date(saleDate);
         dueDate.setDate(dueDate.getDate() + 30);
 
-        const cxc = await this.prisma.receivable.create({
+        await this.prisma.receivable.create({
           data: {
             companyId,
             clientId:       data.clientId,
@@ -341,51 +372,8 @@ async registerSale(companyId: string, data: any) {
             status:         'PENDIENTE',
           },
         });
-        console.log('CXC CREADO:', cxc.id);
       } catch (e: any) {
         console.error('ERROR CXC:', e.message);
-      }
-    }
-
-    // 3. Actualizar OC si viene ocId
-    if (data.ocId) {
-      try {
-        const orden = await this.prisma.ordenCompra.findUnique({
-          where: { id: data.ocId },
-          include: { lineas: true },
-        });
-        if (orden) {
-          const montoSurtido = Number(orden.montoSurtido) + total;
-          const saldo        = Number(orden.montoTotal)   - montoSurtido;
-          const status       = saldo <= 0 ? 'SURTIDO_COMPLETO' : 'SURTIDO_PARCIAL';
-
-          await this.prisma.ordenCompra.update({
-            where: { id: data.ocId },
-            data:  { montoSurtido, saldo: Math.max(0, saldo), status },
-          });
-
-          // Actualizar cantidadSurtida por línea
-          for (const lineaVenta of sale.lines) {
-            const lineaOC = orden.lineas.find((l:any) => l.productId === lineaVenta.productId);
-            if (lineaOC) {
-              await this.prisma.lineaOC.update({
-                where: { id: lineaOC.id },
-                data:  { cantidadSurtida: { increment: lineaVenta.quantity } },
-              });
-            }
-          }
-
-          await this.prisma.surtidoOC.create({
-            data: {
-              ordenCompraId: data.ocId,
-              fecha:         new Date(data.date),
-              monto:         total,
-              notes:         `Surtido desde POS — venta ${sale.id}`,
-            },
-          });
-        }
-      } catch (e: any) {
-        console.error('ERROR OC:', e.message);
       }
     }
 
