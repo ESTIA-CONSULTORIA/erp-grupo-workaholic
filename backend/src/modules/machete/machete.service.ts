@@ -26,19 +26,51 @@ export class MacheteService {
   }
 
   async crearLote(companyId: string, userId: string, data: any) {
-    const lote = await this.prisma.loteProduccion.create({
-      data: {
-        companyId,
-        fecha:     new Date(data.fecha),
-        tipo:      data.tipo,
-        kgEntrada: data.kgEntrada || 0,
-        notas:     data.notas    || null,
-        creadoPor: userId,
-        status:    'EN_PROCESO',
-      },
-    });
-    return lote;
+  const lote = await this.prisma.loteProduccion.create({
+    data: {
+      companyId,
+      fecha:     new Date(data.fecha),
+      tipo:      data.tipo,
+      kgEntrada: data.kgEntrada || 0,
+      notas:     data.notas    || null,
+      creadoPor: userId,
+      status:    'EN_PROCESO',
+    },
+  });
+
+  // Registrar insumos y descontar stock
+  if (data.insumos && data.insumos.length > 0) {
+    for (const ins of data.insumos) {
+      if (!ins.insumoId || !ins.cantidad) continue;
+      const insumo = await (this.prisma as any).insumo.findUnique({
+        where: { id: ins.insumoId },
+      });
+      if (!insumo) continue;
+      const costoTotal = Number(ins.cantidad) * Number(insumo.costUnit);
+      await this.prisma.loteInsumo.create({
+        data: {
+          loteId:        lote.id,
+          insumoId:      ins.insumoId,
+          nombre:        insumo.name,
+          cantidad:      Number(ins.cantidad),
+          unidad:        insumo.unit,
+          costoUnitario: Number(insumo.costUnit),
+          costoTotal,
+        },
+      });
+      // Descontar stock del insumo
+      await (this.prisma as any).insumo.update({
+        where: { id: ins.insumoId },
+        data:  { stock: { decrement: Number(ins.cantidad) } },
+      });
+    }
   }
+
+  return this.prisma.loteProduccion.findUnique({
+    where: { id: lote.id },
+    include: { insumos: true },
+  });
+}
 
   async registrarSalidaHorno(loteId: string, data: any) {
     const lote = await this.prisma.loteProduccion.findUnique({ where: { id: loteId } });
