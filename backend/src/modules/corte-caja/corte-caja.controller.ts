@@ -3,7 +3,7 @@ import { CorteCajaService } from './corte-caja.service';
 import { JwtAuthGuard } from '../auth/auth.guards';
 
 @UseGuards(JwtAuthGuard)
-@Controller('api/v1/companies/:companyId/corte-caja')
+@Controller('companies/:companyId/corte-caja')
 export class CorteCajaController {
   constructor(private svc: CorteCajaService) {}
 
