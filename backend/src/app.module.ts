@@ -6,6 +6,7 @@ import { FlowModule } from './modules/flow/flow.module';
 import { CutsModule } from './modules/cuts/cuts.module';
 import { ExpensesModule } from './modules/expenses/expenses.module';
 import { CxcModule } from './modules/cxc/cxc.module';
+import { CxpModule } from './modules/cxp/cxp.module';
 import { DocumentsModule } from './modules/documents/documents.module';
 import { ReportsModule } from './modules/reports/reports.module';
 import { MacheteModule } from './modules/machete/machete.module';
@@ -21,6 +22,7 @@ import { CorteCajaModule } from './modules/corte-caja/corte-caja.module';
     CutsModule,
     ExpensesModule,
     CxcModule,
+    CxpModule,
     DocumentsModule,
     ReportsModule,
     MacheteModule,
