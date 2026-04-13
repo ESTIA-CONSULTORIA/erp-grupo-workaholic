@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
+import * as bcrypt from 'bcryptjs';
 
 @Injectable()
 export class CompaniesService {
@@ -16,6 +17,7 @@ export class CompaniesService {
     });
   }
 
+  // ── Usuarios ──────────────────────────────────────────────
   getUsers(companyId: string) {
     return this.prisma.userCompanyRole.findMany({
       where: { companyId },
@@ -26,6 +28,84 @@ export class CompaniesService {
     });
   }
 
+  async createUser(companyId: string, data: any) {
+    const passwordHash = await bcrypt.hash(data.password, 10);
+
+    // Buscar o crear rol
+    let role = await this.prisma.role.findUnique({ where: { code: data.roleCode } });
+    if (!role) {
+      role = await this.prisma.role.create({
+        data: { code: data.roleCode, name: data.roleCode, description: data.roleCode },
+      });
+    }
+
+    // Crear usuario
+    const user = await this.prisma.user.create({
+      data: {
+        name:         data.name,
+        email:        data.email,
+        passwordHash,
+        isActive:     true,
+      },
+    });
+
+    // Asignar a todas las empresas seleccionadas
+    const companyIds: string[] = data.companyIds || [companyId];
+    for (const cid of companyIds) {
+      await this.prisma.userCompanyRole.create({
+        data: { userId: user.id, companyId: cid, roleId: role.id },
+      });
+    }
+
+    return user;
+  }
+
+  async updateUser(userId: string, data: any) {
+    const updateData: any = {
+      name: data.name,
+    };
+
+    if (data.password && data.password.trim() !== '') {
+      updateData.passwordHash = await bcrypt.hash(data.password, 10);
+    }
+
+    // Actualizar datos del usuario
+    const user = await this.prisma.user.update({
+      where: { id: userId },
+      data:  updateData,
+    });
+
+    // Actualizar rol si viene
+    if (data.roleCode) {
+      let role = await this.prisma.role.findUnique({ where: { code: data.roleCode } });
+      if (!role) {
+        role = await this.prisma.role.create({
+          data: { code: data.roleCode, name: data.roleCode, description: data.roleCode },
+        });
+      }
+      // Actualizar en todas las empresas del usuario
+      const userRoles = await this.prisma.userCompanyRole.findMany({ where: { userId } });
+      for (const ur of userRoles) {
+        await this.prisma.userCompanyRole.update({
+          where: { id: ur.id },
+          data:  { roleId: role.id },
+        });
+      }
+    }
+
+    return user;
+  }
+
+  async toggleUser(userId: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new Error('Usuario no encontrado');
+    return this.prisma.user.update({
+      where: { id: userId },
+      data:  { isActive: !user.isActive },
+    });
+  }
+
+  // ── Clientes ──────────────────────────────────────────────
   getClients(companyId: string) {
     return this.prisma.client.findMany({
       where: { companyId, isActive: true },
@@ -38,14 +118,14 @@ export class CompaniesService {
     return this.prisma.client.create({
       data: {
         companyId,
-        name:         data.name,
-        rfc:          data.rfc          || null,
-        phone:        data.phone        || null,
-        email:        data.email        || null,
-        address:      data.address      || null,
-        creditLimit:  data.creditLimit  || 0,
-        creditDays:   data.creditDays   || 0,
-        isActive:     true,
+        name:        data.name,
+        rfc:         data.rfc         || null,
+        phone:       data.phone       || null,
+        email:       data.email       || null,
+        address:     data.address     || null,
+        creditLimit: data.creditLimit || 0,
+        creditDays:  data.creditDays  || 0,
+        isActive:    true,
       },
     });
   }
@@ -65,40 +145,26 @@ export class CompaniesService {
     });
   }
 
- getClientDetail(clientId: string) {
+  getClientDetail(clientId: string) {
     return this.prisma.client.findUnique({
       where: { id: clientId },
       include: {
         ordenesCompra: {
           include: {
-            lineas: { include: { product: true } },
+            lineas:   { include: { product: true } },
             surtidos: true,
           },
           orderBy: { fecha: 'desc' },
         },
         receivables: {
-          where: { status: { in: ['PENDIENTE', 'PARCIAL', 'VENCIDO'] } },
+          where:   { status: { in: ['PENDIENTE', 'PARCIAL', 'VENCIDO'] } },
           orderBy: { date: 'desc' },
         },
       },
     });
   }
 
-  async getOrdenesByCliente(companyId: string, clientId: string, status?: string) {
-    const where: any = { companyId, clientId };
-    if (status) where.status = status;
-    return this.prisma.ordenCompra.findMany({
-      where,
-      include: {
-        lineas: {
-          include: { product: true }
-        },
-        surtidos: true,
-      },
-      orderBy: { fecha: 'desc' },
-    });
-  }
-
+  // ── Órdenes de compra ─────────────────────────────────────
   async getOrdenes(companyId: string, clientId?: string, status?: string) {
     const where: any = { companyId };
     if (clientId) where.clientId = clientId;
@@ -110,15 +176,15 @@ export class CompaniesService {
     return this.prisma.ordenCompra.findMany({
       where,
       include: {
-        client: { select: { id: true, name: true } },
-        lineas: { include: { product: true } },
+        client:   { select: { id: true, name: true } },
+        lineas:   { include: { product: true } },
         surtidos: true,
       },
       orderBy: { fecha: 'desc' },
     });
   }
 
- async createOrdenCompra(companyId: string, clientId: string, data: any) {
+  async createOrdenCompra(companyId: string, clientId: string, data: any) {
     const montoTotal = data.lineas
       ? data.lineas.reduce((t: number, l: any) => t + (l.cantidad * l.precioUnitario), 0)
       : Number(data.montoTotal || 0);
@@ -156,7 +222,6 @@ export class CompaniesService {
 
     let montoSurtido = 0;
 
-    // Si vienen líneas específicas, actualizar cantidades surtidas
     if (data.lineas && data.lineas.length > 0) {
       for (const ls of data.lineas) {
         const linea = orden.lineas.find((l: any) => l.id === ls.lineaId);
@@ -164,7 +229,7 @@ export class CompaniesService {
         const nuevaCantSurtida = Number(linea.cantidadSurtida) + Number(ls.cantidad);
         await this.prisma.lineaOC.update({
           where: { id: ls.lineaId },
-          data: { cantidadSurtida: nuevaCantSurtida },
+          data:  { cantidadSurtida: nuevaCantSurtida },
         });
         montoSurtido += Number(ls.cantidad) * Number(linea.precioUnitario);
       }
@@ -187,12 +252,12 @@ export class CompaniesService {
       }),
       this.prisma.ordenCompra.update({
         where: { id: ordenId },
-        data: { montoSurtido: nuevoMontoSurtido, saldo: nuevoSaldo, status: nuevoStatus },
+        data:  { montoSurtido: nuevoMontoSurtido, saldo: nuevoSaldo, status: nuevoStatus },
       }),
     ]);
   }
 
-async cancelarOC(ordenId: string, motivo: string) {
+  async cancelarOC(ordenId: string, motivo: string) {
     return this.prisma.ordenCompra.update({
       where: { id: ordenId },
       data:  { status: 'CANCELADA', notes: motivo },
