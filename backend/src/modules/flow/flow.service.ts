@@ -97,6 +97,23 @@ export class FlowService {
     });
   }
 
+  async getMovements(companyId: string, fecha?: string, period?: string) {
+    const where: any = { companyId };
+    if (fecha) {
+      const start = new Date(fecha + 'T00:00:00');
+      const end   = new Date(fecha + 'T23:59:59');
+      where.date  = { gte: start, lte: end };
+    } else if (period) {
+      const [y, m] = period.split('-').map(Number);
+      where.date   = { gte: new Date(y, m-1, 1), lte: new Date(y, m, 0) };
+    }
+    return this.prisma.flowMovement.findMany({
+      where,
+      include: { cashAccount: { select: { id:true, name:true, type:true } } },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
   async updateAccount(accountId: string, data: any) {
     return this.prisma.cashAccount.update({
       where: { id: accountId },
