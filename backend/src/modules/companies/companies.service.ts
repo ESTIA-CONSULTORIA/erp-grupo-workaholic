@@ -189,7 +189,7 @@ export class CompaniesService {
       ? data.lineas.reduce((t: number, l: any) => t + (l.cantidad * l.precioUnitario), 0)
       : Number(data.montoTotal || 0);
 
-    return this.prisma.ordenCompra.create({
+    const oc = await this.prisma.ordenCompra.create({
       data: {
         companyId,
         clientId,
@@ -210,6 +210,35 @@ export class CompaniesService {
       },
       include: { lineas: { include: { product: true } } },
     });
+
+    // Crear CxC — la OC es una preventa, el ingreso se registra al crearla
+    if (montoTotal > 0) {
+      try {
+        const fecha = new Date(data.fecha);
+        fecha.setHours(0, 0, 0, 0);
+        const dueDate = new Date(fecha);
+        dueDate.setDate(dueDate.getDate() + 30);
+
+        await this.prisma.cxC.create({
+          data: {
+            companyId,
+            clientId,
+            date:           fecha,
+            dueDate,
+            concept:        `OC #${data.numero}`,
+            originalAmount: montoTotal,
+            paidAmount:     0,
+            balance:        montoTotal,
+            currency:       'MXN',
+            status:         'PENDIENTE',
+          },
+        });
+      } catch (e: any) {
+        console.error('ERROR CXC OC:', e.message);
+      }
+    }
+
+    return oc;
   }
 
   async registrarSurtido(ordenId: string, data: any) {
