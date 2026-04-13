@@ -169,6 +169,59 @@ export class MacheteService {
 
     return { success: true, total };
   }
+
+async createProduct(companyId: string, data: any) {
+  const product = await this.prisma.product.create({
+    data: {
+      companyId,
+      sku:          data.sku,
+      name:         data.name,
+      meatType:     data.meatType,
+      flavor:       data.flavor,
+      presentation: data.presentation,
+      gramsWeight:  data.gramsWeight ? Number(data.gramsWeight) : null,
+      priceMostrador: data.priceMostrador ? Number(data.priceMostrador) : null,
+      priceMayoreo:   data.priceMayoreo   ? Number(data.priceMayoreo)   : null,
+      priceOnline:    data.priceOnline    ? Number(data.priceOnline)    : null,
+      priceML:        data.priceML        ? Number(data.priceML)        : null,
+      isActive: true,
+    },
+  });
+  await this.prisma.productStock.create({
+    data: { productId: product.id, stock: 0, minStock: data.minStock ? Number(data.minStock) : 5 },
+  });
+  return product;
+}
+
+async createInsumo(companyId: string, data: any) {
+  return (this.prisma as any).insumo.create({
+    data: {
+      companyId,
+      sku:      data.sku,
+      name:     data.name,
+      unit:     data.unit     || 'kg',
+      costUnit: data.costUnit ? Number(data.costUnit) : 0,
+      group:    data.group    || 'GENERAL',
+      stock:    data.stock    ? Number(data.stock)    : 0,
+      minStock: data.minStock ? Number(data.minStock) : 0,
+      isActive: true,
+    },
+  });
+}
+
+async updateInsumo(insumoId: string, data: any) {
+  return (this.prisma as any).insumo.update({
+    where: { id: insumoId },
+    data: {
+      name:     data.name     || undefined,
+      unit:     data.unit     || undefined,
+      costUnit: data.costUnit !== undefined ? Number(data.costUnit) : undefined,
+      group:    data.group    || undefined,
+      minStock: data.minStock !== undefined ? Number(data.minStock) : undefined,
+      isActive: data.isActive !== undefined ? data.isActive         : undefined,
+    },
+  });
+}
   
   getRecipes(companyId: string) {
     return this.prisma.recipe.findMany({
