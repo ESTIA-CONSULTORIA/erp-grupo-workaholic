@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Param, Body, UseGuards, Request } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/auth.guards';
 import { FlowService } from './flow.service';
@@ -18,5 +18,24 @@ export class FlowController {
   @Post('transfer')
   transfer(@Param('companyId') id: string, @Body() body: any) {
     return this.svc.transfer(id, body);
+  }
+
+  // Depósito o retiro manual de caja (desde POS)
+  @Post('movements')
+  createMovement(
+    @Param('companyId') id: string,
+    @Body() body: any,
+    @Request() req: any,
+  ) {
+    return this.svc.createMovement(id, req.user.sub, body);
+  }
+
+  // Actualizar nombre/estado de cuenta bancaria
+  @Put('accounts/:accountId')
+  updateAccount(
+    @Param('accountId') accountId: string,
+    @Body() body: any,
+  ) {
+    return this.svc.updateAccount(accountId, body);
   }
 }
