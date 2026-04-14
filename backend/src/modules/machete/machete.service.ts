@@ -89,15 +89,41 @@ export class MacheteService {
   }
 
   async registrarEmpaque(loteId: string, data: any) {
+    const lote = await this.prisma.loteProduccion.findUnique({
+      where: { id: loteId },
+      include: { insumos: true },
+    });
+    if (!lote) throw new Error('Lote no encontrado');
+
+    // Calcular costo por kg del lote
+    const costoTotalInsumos = lote.insumos.reduce((t, i) => t + Number(i.costoTotal), 0);
+    const kgSalida          = Number(lote.kgSalida) || 1;
+    const costoKg           = costoTotalInsumos / kgSalida;
+
     for (const linea of data.lineas) {
-      await this.prisma.loteEmpaque.create({
-        data: { loteId, productId: linea.productId, cantidad: linea.cantidad, costoUnit: linea.costoUnit || 0 },
+      // Buscar el producto para obtener gramsWeight
+      const producto = await this.prisma.product.findUnique({
+        where: { id: linea.productId },
       });
+      const gramsWeight = Number((producto as any)?.gramsWeight || 0);
+      const costoUnit   = gramsWeight > 0 ? (gramsWeight / 1000) * costoKg : 0;
+
+      await this.prisma.loteEmpaque.create({
+        data: {
+          loteId,
+          productId: linea.productId,
+          cantidad:  linea.cantidad,
+          costoUnit,
+        },
+      });
+
+      // Actualizar inventario
       await this.prisma.productStock.updateMany({
         where: { productId: linea.productId },
         data:  { stock: { increment: linea.cantidad } },
       });
     }
+
     return this.prisma.loteProduccion.update({
       where: { id: loteId },
       data:  { status: 'EMPACADO' },
