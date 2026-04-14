@@ -38,7 +38,43 @@ export class MacheteService {
       },
     });
 
-    // Registrar insumos y descontar stock
+    // Mapeo de tipo de lote → SKU de carne
+    const CARNE_SKU: Record<string, string> = {
+      MACHETE_RES: 'INS-CARNE-RES',
+      CHICALI_RES: 'INS-CARNE-RES',
+      CERDO:       'INS-CARNE-CERDO',
+      MACHACA:     'INS-CARNE-RES',
+    };
+
+    // Agregar automáticamente la carne según el tipo de lote
+    const carneSku = CARNE_SKU[data.tipo];
+    if (carneSku && data.kgEntrada > 0) {
+      const carneInsumo = await (this.prisma as any).insumo.findFirst({
+        where: { companyId, sku: carneSku, isActive: true },
+      });
+      if (carneInsumo) {
+        const cantidad    = Number(data.kgEntrada);
+        const costoTotal  = cantidad * Number(carneInsumo.costUnit);
+        await this.prisma.loteInsumo.create({
+          data: {
+            loteId:        lote.id,
+            insumoId:      carneInsumo.id,
+            nombre:        carneInsumo.name,
+            cantidad,
+            unidad:        carneInsumo.unit,
+            costoUnitario: Number(carneInsumo.costUnit),
+            costoTotal,
+          },
+        });
+        // Descontar stock de carne
+        await (this.prisma as any).insumo.update({
+          where: { id: carneInsumo.id },
+          data:  { stock: { decrement: cantidad } },
+        });
+      }
+    }
+
+    // Registrar insumos adicionales (especias, etc.) capturados manualmente
     if (data.insumos && data.insumos.length > 0) {
       for (const ins of data.insumos) {
         if (!ins.insumoId || !ins.cantidad) continue;
