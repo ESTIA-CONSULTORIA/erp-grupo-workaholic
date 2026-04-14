@@ -57,6 +57,24 @@ export class ReportsService {
       else totalGastos += amount;
     }
 
+    // 5. Costo de ventas real (desde LoteEmpaque)
+    const saleLines = await this.prisma.saleLine.findMany({
+      where: { sale: { companyId, date: { gte: start, lte: end } } },
+      include: { product: true },
+    });
+
+    let costoVentas = 0;
+    for (const line of saleLines) {
+      // Buscar el último costo unitario registrado para este producto
+      const ultimoEmpaque = await this.prisma.loteEmpaque.findFirst({
+        where: { productId: line.productId },
+        orderBy: { createdAt: 'desc' },
+      });
+      if (ultimoEmpaque && Number(ultimoEmpaque.costoUnit) > 0) {
+        costoVentas += Number(ultimoEmpaque.costoUnit) * Number(line.quantity);
+      }
+    }
+
     // 4. Nómina
     const payrollPeriods = await this.prisma.payrollPeriod.findMany({
       where: { companyId, period, status: 'PAGADO' },
@@ -64,12 +82,15 @@ export class ReportsService {
     const totalNomina = payrollPeriods.reduce((t, p) => t + Number(p.totalGross || 0), 0);
 
     const totalVentas           = ventaNeta + ventaCortes;
-    const resultadoAntesContrib = totalVentas - totalGastos - totalNomina;
+    const utilidadBruta         = totalVentas - costoVentas;
+    const resultadoAntesContrib = utilidadBruta - totalGastos - totalNomina;
     const resultadoEjercicio    = resultadoAntesContrib - totalContribuciones;
 
     return {
       period,
       ventas: { bruta: ventaBruta, descuentos, neta: ventaNeta, cortes: ventaCortes, total: totalVentas },
+      costoVentas,
+      utilidadBruta,
       gastosPorSeccion,
       nomina:               totalNomina,
       totalGastos:          totalGastos + totalNomina,
