@@ -142,6 +142,21 @@ export class CorteCajaService {
     return updatedCorte;
   }
 
+  async responderCorte(corteId: string, cajeroId: string, respuesta: string) {
+    const corte = await this.prisma.corteCaja.findUnique({ where: { id: corteId } });
+    if (!corte) throw new Error("Corte no encontrado");
+    const notasActualizadas = corte.notasCajero
+      ? `${corte.notasCajero} | RESPUESTA: ${respuesta}`
+      : `RESPUESTA: ${respuesta}`;
+    return this.prisma.corteCaja.update({
+      where: { id: corteId },
+      data: {
+        status:      "PENDIENTE",
+        notasCajero: notasActualizadas,
+      },
+    });
+  }
+
   async rechazarCorte(corteId: string, validadorId: string, notas: string) {
     return this.prisma.corteCaja.update({
       where: { id: corteId },
