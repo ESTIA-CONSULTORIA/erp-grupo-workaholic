@@ -211,7 +211,7 @@ export class CompaniesService {
       include: { lineas: { include: { product: true } } },
     });
 
-    // Crear CxC — la OC es una preventa, el ingreso se registra al crearla
+    // Crear Receivable — la OC es una preventa, el ingreso se registra al crearla
     if (montoTotal > 0) {
       try {
         const fecha = new Date(data.fecha);
@@ -219,18 +219,18 @@ export class CompaniesService {
         const dueDate = new Date(fecha);
         dueDate.setDate(dueDate.getDate() + 30);
 
-        await this.prisma.cxC.create({
+        await this.prisma.receivable.create({
           data: {
             companyId,
             clientId,
             date:           fecha,
             dueDate,
-            concept:        `OC #${data.numero}`,
             originalAmount: montoTotal,
             paidAmount:     0,
             balance:        montoTotal,
             currency:       'MXN',
             status:         'PENDIENTE',
+            notes:          `OC #${data.numero}`,
           },
         });
       } catch (e: any) {
