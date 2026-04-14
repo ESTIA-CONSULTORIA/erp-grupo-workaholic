@@ -5,17 +5,22 @@ import { PrismaService } from '../../common/prisma/prisma.service';
 export class CxcService {
   constructor(private prisma: PrismaService) {}
 
-  findAll(companyId: string, period?: string, status?: string, clientId?: string) {
+  findAll(companyId: string, period?: string, status?: string, clientId?: string, startDate?: string, endDate?: string) {
     const where: any = { companyId };
     if (status)   where.status   = status;
     if (clientId) where.clientId = clientId;
-    if (period) {
+    if (startDate && endDate) {
+      where.date = { gte: new Date(startDate), lte: new Date(endDate) };
+    } else if (period) {
       const [y, m] = period.split('-').map(Number);
       where.date = { gte: new Date(y, m - 1, 1), lte: new Date(y, m, 0) };
     }
     return this.prisma.receivable.findMany({
       where,
-      include: { client: true, payments: true },
+      include: {
+        client:   true,
+        payments: { orderBy: { date: 'desc' } },
+      },
       orderBy: { date: 'desc' },
     });
   }
@@ -25,16 +30,20 @@ export class CxcService {
     if (clientId) where.clientId = clientId;
     const pending = await this.prisma.receivable.findMany({ where });
     const totalPending = pending.reduce((t, c) => t + Number(c.balance), 0);
-    const totalOverdue = pending.filter(c => c.status === 'VENCIDO').reduce((t, c) => t + Number(c.balance), 0);
+    const totalOverdue = pending
+      .filter(c => c.dueDate && new Date(c.dueDate) < new Date())
+      .reduce((t, c) => t + Number(c.balance), 0);
     return { totalPending, totalOverdue, pendingCount: pending.length };
   }
 
   async addPayment(receivableId: string, cashAccountId: string, data: any) {
     const rec = await this.prisma.receivable.findUnique({ where: { id: receivableId } });
     if (!rec) throw new Error('CxC no encontrada');
-
     const newBalance = Number(rec.balance) - Number(data.amount);
     const newStatus  = newBalance <= 0 ? 'PAGADO' : 'PARCIAL';
+
+    // Fix UTC: usar mediodía para evitar desfase de zona horaria
+    const fecha = new Date(data.date + 'T12:00:00');
 
     return this.prisma.$transaction([
       this.prisma.receivablePayment.create({
@@ -43,7 +52,7 @@ export class CxcService {
           amount:        data.amount,
           currency:      data.currency      || 'MXN',
           paymentMethod: data.paymentMethod || 'EFECTIVO_MXN',
-          date:          new Date(data.date),
+          date:          fecha,
           reference:     data.reference     || null,
           cashAccountId: cashAccountId      || null,
         },
