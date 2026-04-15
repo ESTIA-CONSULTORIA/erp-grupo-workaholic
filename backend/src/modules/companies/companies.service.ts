@@ -17,6 +17,46 @@ export class CompaniesService {
     });
   }
 
+  async getFinancialRubrics(companyId: string) {
+    const schema = await this.prisma.financialSchema.findFirst({
+      where: { companyId, isActive: true },
+      include: {
+        sections: {
+          include: {
+            groups: {
+              include: {
+                rubrics: {
+                  where: { isActive: true },
+                  orderBy: { order: 'asc' },
+                },
+              },
+              orderBy: { order: 'asc' },
+            },
+          },
+          orderBy: { order: 'asc' },
+        },
+      },
+    });
+    if (!schema) return [];
+    // Aplanar en lista agrupada para el selector
+    const result: any[] = [];
+    for (const section of schema.sections) {
+      for (const group of section.groups) {
+        for (const rubric of group.rubrics) {
+          result.push({
+            id:        rubric.id,
+            code:      rubric.code,
+            name:      rubric.name,
+            groupName: group.name,
+            sectionName: section.name,
+            label:     `${section.name} → ${group.name} → ${rubric.name}`,
+          });
+        }
+      }
+    }
+    return result;
+  }
+
   // ── Usuarios ──────────────────────────────────────────────
   getUsers(companyId: string) {
     return this.prisma.userCompanyRole.findMany({
