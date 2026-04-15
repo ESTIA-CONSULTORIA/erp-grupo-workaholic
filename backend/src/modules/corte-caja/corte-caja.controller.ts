@@ -35,6 +35,6 @@ export class CorteCajaController {
   // Cajero responde a un corte rechazado — regresa a PENDIENTE para re-validación
   @Put(':corteId/responder')
   responder(@Param('corteId') id: string, @Body() body: any, @Request() req: any) {
-    return this.svc.responderCorte(id, req.user.sub, body.respuesta || '');
+    return this.svc.responderCorte(id, req.user.sub, body.respuesta || '', body.ticketUrl, body.ticketNombre);
   }
 }
