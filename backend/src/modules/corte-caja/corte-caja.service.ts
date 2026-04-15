@@ -18,78 +18,51 @@ export class CorteCajaService {
     });
   }
 
-  async getVentasDelDia(companyId: string, fecha: string) {
-    const start = new Date(fecha);
-    start.setHours(0,0,0,0);
-    const end = new Date(fecha);
-    end.setHours(23,59,59,999);
-
-    const ventas = await this.prisma.sale.findMany({
-      where: { companyId, date: { gte: start, lte: end } },
+  async getCorteById(corteId: string) {
+    return this.prisma.corteCaja.findUnique({
+      where: { id: corteId },
+      include: {
+        cajero:    { select: { id: true, name: true } },
+        validador: { select: { id: true, name: true } },
+      },
     });
-
-    const resumen = {
-      totalVentas:   0,
-      totalEfectivo: 0,
-      totalTarjeta:  0,
-      totalTransfer: 0,
-      totalCredito:  0,
-      totalDelivery: 0,
-      porMetodo:     {} as Record<string,number>,
-    };
-
-    for (const v of ventas) {
-      const total = Number(v.total);
-      resumen.totalVentas += total;
-      const metodo = v.paymentMethod?.toLowerCase() || 'efectivo';
-      resumen.porMetodo[metodo] = (resumen.porMetodo[metodo] || 0) + total;
-
-      if (metodo === 'efectivo')       resumen.totalEfectivo += total;
-      else if (metodo === 'tarjeta')   resumen.totalTarjeta  += total;
-      else if (metodo === 'transferencia') resumen.totalTransfer += total;
-      else if (metodo === 'credito')   resumen.totalCredito  += total;
-      else if (['rappi','ubereats','didi','pedidosya'].includes(metodo)) resumen.totalDelivery += total;
-    }
-
-    return resumen;
   }
 
   async crearCorte(companyId: string, cajeroId: string, data: any) {
     const fecha = new Date(data.fecha);
     fecha.setHours(0, 0, 0, 0);
 
-    // Calcular diferencias
-    const efectivoEsperado = data.totalEfectivo || 0;
-    const efectivoContado  = data.efectivoContado || 0;
-    const terminalEsperada = (data.totalTarjeta || 0) + (data.totalTransfer || 0);
+    const efectivoEsperado  = data.totalEfectivo || 0;
+    const efectivoContado   = data.efectivoContado || 0;
+    const terminalEsperada  = (data.totalTarjeta || 0) + (data.totalTransfer || 0);
     const terminalReportada = data.totalTerminal || 0;
 
-    const diferenciaEfectivo  = efectivoContado  - efectivoEsperado;
-    const diferenciaTerminal   = terminalReportada - terminalEsperada;
-    const diferencia = diferenciaEfectivo + diferenciaTerminal;
+    const diferenciaEfectivo = efectivoContado  - efectivoEsperado;
+    const diferenciaTerminal = terminalReportada - terminalEsperada;
+    const diferencia         = diferenciaEfectivo + diferenciaTerminal;
 
     return this.prisma.corteCaja.create({
       data: {
         companyId,
         cajeroId,
         fecha,
-        status:                'PENDIENTE',
-        totalVentas:           data.totalVentas     || 0,
-        totalEfectivo:         data.totalEfectivo   || 0,
-        totalTarjeta:          data.totalTarjeta    || 0,
-        totalTransfer:         data.totalTransfer   || 0,
-        totalCredito:          data.totalCredito    || 0,
-        totalDelivery:         data.totalDelivery   || 0,
-        totalTerminal:         terminalReportada,
-        efectivoContado:       efectivoContado,
-        diferenciEfectivo:     diferenciaEfectivo,
+        status:                 'PENDIENTE',
+        totalVentas:            data.totalVentas     || 0,
+        totalEfectivo:          data.totalEfectivo   || 0,
+        totalTarjeta:           data.totalTarjeta    || 0,
+        totalTransfer:          data.totalTransfer   || 0,
+        totalCredito:           data.totalCredito    || 0,
+        totalDelivery:          data.totalDelivery   || 0,
+        totalTerminal:          terminalReportada,
+        efectivoContado,
+        diferenciEfectivo:      diferenciaEfectivo,
         diferenciaTerminal,
         diferencia,
-        notasCajero:           data.notasCajero     || null,
-        detalleVentas:         data.detalleVentas   || null,
+        notasCajero:            data.notasCajero     || null,
+        detalleVentas:          data.detalleVentas   || null,
         desgloseDenominaciones: data.desgloseDenominaciones || null,
-        desgloseTerminales:    data.desgloseTerminales     || null,
-        desgloseDelivery:      data.desgloseDelivery       || null,
+        desgloseTerminales:     data.desgloseTerminales     || null,
+        desgloseDelivery:       data.desgloseDelivery       || null,
       },
       include: { cajero: { select: { id: true, name: true } } },
     });
@@ -99,8 +72,20 @@ export class CorteCajaService {
     const corte = await this.prisma.corteCaja.findUnique({ where: { id: corteId } });
     if (!corte) throw new Error('Corte no encontrado');
 
-    const efectivoFinal = data.efectivoReal !== undefined ? Number(data.efectivoReal) : Number(corte.efectivoContado);
+    const efectivoFinal = data.efectivoReal !== undefined
+      ? Number(data.efectivoReal)
+      : Number(corte.efectivoContado);
     const diferencia = efectivoFinal - Number(corte.totalEfectivo);
+
+    // Agregar mensaje del contador al historial
+    const historial = this._parsearHistorial(corte.notasCajero);
+    if (data.notasValidador) {
+      historial.push({
+        tipo:    'contador',
+        mensaje: data.notasValidador,
+        fecha:   new Date().toISOString(),
+      });
+    }
 
     const updatedCorte = await this.prisma.corteCaja.update({
       where: { id: corteId },
@@ -109,6 +94,7 @@ export class CorteCajaService {
         efectivoReal:   efectivoFinal,
         diferencia,
         notasValidador: data.notasValidador || null,
+        notasCajero:    JSON.stringify(historial),
         validadoPor:    validadorId,
         validadoAt:     new Date(),
       },
@@ -142,30 +128,68 @@ export class CorteCajaService {
     return updatedCorte;
   }
 
-  async responderCorte(corteId: string, cajeroId: string, respuesta: string) {
-    const corte = await this.prisma.corteCaja.findUnique({ where: { id: corteId } });
-    if (!corte) throw new Error("Corte no encontrado");
-    const notasActualizadas = corte.notasCajero
-      ? `${corte.notasCajero} | RESPUESTA: ${respuesta}`
-      : `RESPUESTA: ${respuesta}`;
-    return this.prisma.corteCaja.update({
-      where: { id: corteId },
-      data: {
-        status:      "PENDIENTE",
-        notasCajero: notasActualizadas,
-      },
-    });
-  }
-
   async rechazarCorte(corteId: string, validadorId: string, notas: string) {
+    const corte = await this.prisma.corteCaja.findUnique({ where: { id: corteId } });
+    if (!corte) throw new Error('Corte no encontrado');
+
+    // Agregar mensaje del contador al historial
+    const historial = this._parsearHistorial(corte.notasCajero);
+    historial.push({
+      tipo:    'contador',
+      mensaje: notas,
+      fecha:   new Date().toISOString(),
+      accion:  'rechazo',
+    });
+
     return this.prisma.corteCaja.update({
       where: { id: corteId },
       data: {
         status:         'RECHAZADO',
         notasValidador: notas,
+        notasCajero:    JSON.stringify(historial),
         validadoPor:    validadorId,
         validadoAt:     new Date(),
       },
     });
+  }
+
+  async responderCorte(corteId: string, cajeroId: string, respuesta: string, ticketUrl?: string, ticketNombre?: string) {
+    const corte = await this.prisma.corteCaja.findUnique({ where: { id: corteId } });
+    if (!corte) throw new Error('Corte no encontrado');
+
+    // Construir historial como JSON
+    const historial = this._parsearHistorial(corte.notasCajero);
+    const entrada: any = {
+      tipo:    'cajero',
+      mensaje: respuesta,
+      fecha:   new Date().toISOString(),
+    };
+    if (ticketUrl)    entrada.ticketUrl    = ticketUrl;
+    if (ticketNombre) entrada.ticketNombre = ticketNombre;
+    historial.push(entrada);
+
+    return this.prisma.corteCaja.update({
+      where: { id: corteId },
+      data: {
+        status:      'PENDIENTE',
+        notasCajero: JSON.stringify(historial),
+      },
+    });
+  }
+
+  // Parsear historial — soporta tanto formato viejo (string) como nuevo (JSON)
+  private _parsearHistorial(notasCajero: string | null): any[] {
+    if (!notasCajero) return [];
+    try {
+      const parsed = JSON.parse(notasCajero);
+      if (Array.isArray(parsed)) return parsed;
+    } catch (e) {}
+    // Formato viejo: "RESPUESTA: texto | RESPUESTA: texto2"
+    const mensajes = notasCajero.split('|').map(s => s.trim()).filter(Boolean);
+    return mensajes.map(m => ({
+      tipo:    'cajero',
+      mensaje: m.replace(/^RESPUESTA:\s*/i, ''),
+      fecha:   new Date().toISOString(),
+    }));
   }
 }
