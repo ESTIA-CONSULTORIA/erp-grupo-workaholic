@@ -37,6 +37,12 @@ export class CompaniesController {
     return this.svc.toggleUser(userId);
   }
 
+  // ── Rubros financieros ───────────────────────────────────
+  @Get(':id/financial-rubrics')
+  getFinancialRubrics(@Param('id') id: string) {
+    return this.svc.getFinancialRubrics(id);
+  }
+
   // ── Clientes ──────────────────────────────────────────────
   @Get(':id/clients')
   getClients(@Param('id') id: string) {
