@@ -39,7 +39,7 @@ export class ExpensesService {
         currency:      data.currency      || 'MXN',
         exchangeRate:  1,
         totalMxn:      total,
-        paymentMethod: data.paymentMethod || 'EFECTIVO_MXN',
+        paymentMethod: data.paymentMethod || 'EFECTIVO',
         paymentStatus: data.paymentStatus || 'PAGADO',
         invoiceRef:    data.invoiceRef    || null,
         isExternal:    data.isExternal    || false,
@@ -49,14 +49,14 @@ export class ExpensesService {
     });
 
     // Registrar salida en flujo de efectivo si es pago inmediato
-    if ((data.paymentStatus || 'PAGADO') === 'PAGADO' && data.paymentMethod !== 'credito') {
+    if ((data.paymentStatus || 'PAGADO') === 'PAGADO' && data.paymentMethod !== 'CREDITO_CLIENTE' && data.paymentMethod !== 'credito') {
       try {
         const branch = await this.prisma.branch.findFirst({ where: { companyId } });
 
         // Determinar cuenta según método de pago
         let cashAccountId = data.cashAccountId;
         if (!cashAccountId) {
-          const metodo = data.paymentMethod || 'EFECTIVO_MXN';
+          const metodo = data.paymentMethod || 'EFECTIVO';
           const esEfectivo = metodo.includes('EFECTIVO');
           const cuenta = await this.prisma.cashAccount.findFirst({
             where: {
