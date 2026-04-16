@@ -37,7 +37,7 @@ export class MacheteController {
   cerrar(@Param('loteId') id: string) {
     return this.svc.cerrarLote(id);
   }
-  
+
   @Put('products/:productId')
   updateProduct(@Param('productId') id: string, @Body() body: any) {
     return this.svc.updateProduct(id, body);
@@ -56,21 +56,21 @@ export class MacheteController {
     return this.svc.comprarInsumo(cid, body);
   }
 
-@Post('products')
-createProduct(@Param('companyId') cid: string, @Body() body: any) {
-  return this.svc.createProduct(cid, body);
-}
+  @Post('products')
+  createProduct(@Param('companyId') cid: string, @Body() body: any) {
+    return this.svc.createProduct(cid, body);
+  }
 
-@Post('insumos')
-createInsumo(@Param('companyId') cid: string, @Body() body: any) {
-  return this.svc.createInsumo(cid, body);
-}
+  @Post('insumos')
+  createInsumo(@Param('companyId') cid: string, @Body() body: any) {
+    return this.svc.createInsumo(cid, body);
+  }
 
-@Put('insumos/:insumoId')
-updateInsumo(@Param('insumoId') id: string, @Body() body: any) {
-  return this.svc.updateInsumo(id, body);
-}
-  
+  @Put('insumos/:insumoId')
+  updateInsumo(@Param('insumoId') id: string, @Body() body: any) {
+    return this.svc.updateInsumo(id, body);
+  }
+
   @Get('recipes')
   getRecipes(@Param('companyId') cid: string) { return this.svc.getRecipes(cid); }
 
@@ -91,5 +91,22 @@ updateInsumo(@Param('insumoId') id: string, @Body() body: any) {
   @Get('reports/sales')
   salesReport(@Param('companyId') cid: string, @Query('period') period: string) {
     return this.svc.getSales(cid, period);
+  }
+
+  // ── COMPRAS ─────────────────────────────────────────────────
+  @Get('compras')
+  getCompras(
+    @Param('companyId') cid: string,
+    @Query('proveedorId') proveedorId?: string,
+    @Query('fechaIni')    fechaIni?: string,
+    @Query('fechaFin')    fechaFin?: string,
+    @Query('status')      status?: string,
+  ) {
+    return this.svc.getCompras(cid, { proveedorId, fechaIni, fechaFin, status });
+  }
+
+  @Post('compras')
+  crearCompra(@Param('companyId') cid: string, @Body() body: any, @Request() req: any) {
+    return this.svc.crearCompra(cid, req.user.sub, body);
   }
 }
