@@ -295,6 +295,97 @@ export class MacheteService {
     return { success: true, total };
   }
 
+  async getCompras(companyId: string, filters?: any) {
+    const where: any = { companyId };
+    if (filters?.proveedorId) where.supplierId = filters.proveedorId;
+    if (filters?.fechaIni || filters?.fechaFin) {
+      where.date = {};
+      if (filters.fechaIni) where.date.gte = new Date(filters.fechaIni);
+      if (filters.fechaFin) where.date.lte = new Date(filters.fechaFin);
+    }
+    if (filters?.status) where.status = filters.status;
+    return this.prisma.purchase.findMany({
+      where,
+      include: { supplier: { select: { id:true, name:true } }, items: true },
+      orderBy: { fecha: 'desc' },
+    });
+  }
+
+  async crearCompra(companyId: string, userId: string, data: any) {
+    const lineas = data.lineas || [];
+    if (lineas.length === 0) throw new Error('Debe incluir al menos un insumo');
+    const total = lineas.reduce((t: number, l: any) => t + Number(l.cantidad) * Number(l.costoUnitario), 0);
+
+    // Generar folio COM-YYYYMM-XXXX
+    const now = new Date();
+    const prefix = `COM-${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}`;
+    const count = await this.prisma.purchase.count({ where: { companyId } });
+    const folio = `${prefix}-${String(count + 1).padStart(4, '0')}`;
+
+    const compra = await this.prisma.purchase.create({
+      data: {
+        companyId,
+        userId,
+        supplierId:      data.proveedorId || null,
+        folio,
+        date:            new Date(data.fecha),
+        concept:         'Compra de insumos',
+        total,
+        totalMxn:        total,
+        metodoPago:      data.metodoPago || 'EFECTIVO',
+        paymentStatus:   'PAGADO',
+        status:          'RECIBIDA',
+        affectsInventory: true,
+        invoiceRef:      data.referencia || null,
+        referencia:      data.referencia || null,
+        notas:           data.notas || null,
+        items: {
+          create: lineas.map((l: any) => ({
+            insumoId:    l.insumoId || null,
+            nombre:      l.nombre || '',
+            description: l.nombre || 'Insumo',
+            quantity:    Number(l.cantidad),
+            unit:        l.unidad || 'kg',
+            unitCost:    Number(l.costoUnitario),
+            total:       Number(l.cantidad) * Number(l.costoUnitario),
+          })),
+        },
+      },
+      include: { supplier: { select: { id: true, name: true } }, items: true },
+    });
+
+    // Actualizar stock e insumos
+    for (const l of lineas) {
+      if (l.insumoId) {
+        await (this.prisma as any).insumo.update({
+          where: { id: l.insumoId },
+          data:  { stock: { increment: Number(l.cantidad) }, costUnit: Number(l.costoUnitario) },
+        });
+      }
+    }
+
+    // Registrar salida en flujo si no es crédito
+    const branch = await this.prisma.branch.findFirst({ where: { companyId } });
+    if (data.metodoPago !== 'CREDITO_CLIENTE' && branch) {
+      const cuenta = await this.prisma.cashAccount.findFirst({
+        where: { companyId, code: data.cuentaId || 'efectivo_mxn', isActive: true },
+      });
+      if (cuenta) {
+        await this.prisma.flowMovement.create({
+          data: {
+            companyId, branchId: branch.id, cashAccountId: cuenta.id,
+            date: new Date(data.fecha), type: 'SALIDA', originType: 'COMPRA_INSUMO',
+            originId: compra.id, amount: total, currency: 'MXN',
+            exchangeRate: 1, amountMxn: total,
+            notes: `Compra ${folio}`,
+          },
+        });
+      }
+    }
+
+    return compra;
+  }
+
   getRecipes(companyId: string) {
     return this.prisma.recipe.findMany({
       where: { companyId, isActive: true },
