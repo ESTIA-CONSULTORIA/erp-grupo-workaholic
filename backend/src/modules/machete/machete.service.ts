@@ -303,11 +303,10 @@ export class MacheteService {
       if (filters.fechaIni) where.date.gte = new Date(filters.fechaIni);
       if (filters.fechaFin) where.date.lte = new Date(filters.fechaFin);
     }
-    if (filters?.status) where.status = filters.status;
     return this.prisma.purchase.findMany({
       where,
-      include: { supplier: { select: { id:true, name:true } }, items: true },
-      orderBy: { fecha: 'desc' },
+      include: { supplier: { select: { id: true, name: true } }, items: true },
+      orderBy: { date: 'desc' },
     });
   }
 
@@ -327,22 +326,15 @@ export class MacheteService {
         companyId,
         userId,
         supplierId:      data.proveedorId || null,
-        folio,
         date:            new Date(data.fecha),
-        concept:         'Compra de insumos',
+        concept:         `Compra ${folio} — ${lineas.length} insumo(s)`,
         total,
         totalMxn:        total,
-        metodoPago:      data.metodoPago || 'EFECTIVO',
         paymentStatus:   'PAGADO',
-        status:          'RECIBIDA',
         affectsInventory: true,
         invoiceRef:      data.referencia || null,
-        referencia:      data.referencia || null,
-        notas:           data.notas || null,
         items: {
           create: lineas.map((l: any) => ({
-            insumoId:    l.insumoId || null,
-            nombre:      l.nombre || '',
             description: l.nombre || 'Insumo',
             quantity:    Number(l.cantidad),
             unit:        l.unidad || 'kg',
