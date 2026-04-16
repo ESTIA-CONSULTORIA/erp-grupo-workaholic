@@ -14,7 +14,18 @@ export class ExpensesService {
     }
     return this.prisma.expense.findMany({
       where,
-      include: { rubric: true, supplier: true },
+      include: {
+        supplier: true,
+        rubric: {
+          include: {
+            group: {
+              include: {
+                section: { select: { name: true } }
+              }
+            }
+          }
+        }
+      },
       orderBy: { date: 'desc' },
     });
   }
@@ -45,7 +56,18 @@ export class ExpensesService {
         isExternal:    data.isExternal    || false,
         externalNotes: data.externalNotes || null,
       },
-      include: { rubric: true, supplier: true },
+      include: {
+        supplier: true,
+        rubric: {
+          include: {
+            group: {
+              include: {
+                section: { select: { name: true } }
+              }
+            }
+          }
+        }
+      },
     });
 
     // Registrar salida en flujo de efectivo si es pago inmediato
