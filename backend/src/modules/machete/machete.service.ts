@@ -322,6 +322,18 @@ export class MacheteService {
     });
   }
 
+  // Normalizar método de pago a valores canónicos
+  private _normalizarMetodo(method: string): string {
+    const map: Record<string,string> = {
+      'efectivo': 'EFECTIVO', 'EFECTIVO_MXN': 'EFECTIVO', 'EFECTIVO_USD': 'EFECTIVO',
+      'tarjeta': 'TARJETA_DEBITO', 'TARJETA': 'TARJETA_DEBITO', 'debito': 'TARJETA_DEBITO',
+      'credito_card': 'TARJETA_CREDITO', 'TARJETA_CREDITO_CARD': 'TARJETA_CREDITO',
+      'transferencia': 'TRANSFERENCIA', 'TRANSFERENCIA_BANCARIA': 'TRANSFERENCIA',
+      'credito': 'CREDITO_CLIENTE', 'CREDITO': 'CREDITO_CLIENTE',
+    };
+    return map[method] || (method ? method.toUpperCase() : 'EFECTIVO');
+  }
+
   async registerSale(companyId: string, data: any) {
     const total = data.lines.reduce((t: number, l: any) => t + l.quantity * l.unitPrice, 0);
 
@@ -390,7 +402,7 @@ export class MacheteService {
           clientId:      data.clientId      || null,
           isCredit:      data.isCredit      || false,
           total,
-          paymentMethod: data.paymentMethod || 'efectivo',
+          paymentMethod: this._normalizarMetodo(data.paymentMethod || 'EFECTIVO'),
           lines: {
             create: data.lines.map((l: any) => ({
               productId: l.productId,
@@ -414,7 +426,7 @@ export class MacheteService {
     });
 
     // Crear CxC para ventas a crédito sin OC
-    if ((data.isCredit === true || data.isCredit === 'true' || data.paymentMethod === 'credito') && data.clientId) {
+    if ((data.isCredit === true || data.isCredit === 'true' || data.paymentMethod === 'CREDITO_CLIENTE' || data.paymentMethod === 'credito') && data.clientId) {
       try {
         const saleDate = new Date(data.date);
         saleDate.setHours(0, 0, 0, 0);
