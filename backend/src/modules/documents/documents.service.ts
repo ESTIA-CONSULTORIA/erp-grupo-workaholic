@@ -104,7 +104,24 @@ Si no puedes leer algún campo, usa null. Si no es un ticket o factura, responde
     }
   }
 
-  update(docId: string, data: any) {
+  async update(docId: string, data: any) {
+    // If cancelling a VALIDADO document, reverse the linked record
+    if (data.status === 'CANCELADO') {
+      const doc = await this.prisma.document.findUnique({ where: { id: docId } });
+      if (doc?.linkedId && doc?.linkedType) {
+        if (doc.linkedType === 'GASTO') {
+          await this.prisma.expense.update({
+            where: { id: doc.linkedId },
+            data:  { paymentStatus: 'CANCELADO' },
+          }).catch(() => {});
+        } else if (doc.linkedType === 'COMPRA') {
+          await this.prisma.purchase.update({
+            where: { id: doc.linkedId },
+            data:  { paymentStatus: 'CANCELADO' },
+          }).catch(() => {});
+        }
+      }
+    }
     return this.prisma.document.update({
       where: { id: docId },
       data,
