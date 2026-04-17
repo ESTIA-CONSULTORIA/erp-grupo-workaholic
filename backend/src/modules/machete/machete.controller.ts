@@ -99,6 +99,11 @@ export class MacheteController {
   }
 
   // ── COMPRAS ─────────────────────────────────────────────────
+  @Put('compras/:compraId/cancelar')
+  cancelarCompra(@Param('companyId') cid: string, @Param('compraId') compraId: string) {
+    return this.svc.cancelarCompra(cid, compraId);
+  }
+
   @Get('compras')
   getCompras(
     @Param('companyId') cid: string,

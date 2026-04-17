@@ -312,6 +312,13 @@ export class MacheteService {
     return { success: true, total };
   }
 
+  async cancelarCompra(companyId: string, compraId: string) {
+    return this.prisma.purchase.update({
+      where: { id: compraId, companyId },
+      data:  { paymentStatus: 'CANCELADO' },
+    });
+  }
+
   async getCompras(companyId: string, filters?: any) {
     const where: any = { companyId };
     if (filters?.proveedorId) where.supplierId = filters.proveedorId;
