@@ -1206,8 +1206,8 @@ model CorteCaja {
   efectivoContado Decimal  @db.Decimal(12,2) @default(0)
   efectivoReal    Decimal? @db.Decimal(12,2)
   diferencia      Decimal  @db.Decimal(12,2) @default(0)
-  notasCajero     String?
-  notasValidador  String?
+  notasCajero     String?  @db.Text
+  notasValidador  String?  @db.Text
   validadoPor     String?
   validadoAt      DateTime?
   detalleVentas   Json?
