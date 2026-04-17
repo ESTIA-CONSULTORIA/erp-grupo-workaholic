@@ -1152,7 +1152,9 @@ model OrdenCompra {
   montoTotal  Decimal  @db.Decimal(12,2)
   montoSurtido Decimal @db.Decimal(12,2) @default(0)
   saldo       Decimal  @db.Decimal(12,2)
-  status      String   @default("PENDIENTE")
+  status            String   @default("PENDIENTE")
+  fechaEntregaSol   DateTime? @db.Date
+  fechaEntregaReal  DateTime? @db.Date
   notes       String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
