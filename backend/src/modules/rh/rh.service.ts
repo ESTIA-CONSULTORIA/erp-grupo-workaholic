@@ -138,6 +138,25 @@ export class RhService {
     });
   }
 
+  updateEmployee(id: string, data: any) {
+    const { id: _id, companyId: _c, createdAt: _ca, updatedAt: _ua,
+            documents: _d, vacations: _v, hrEvents: _e, payrollLines: _p,
+            ...updateData } = data;
+    return this.prisma.employee.update({
+      where: { id },
+      data: {
+        ...updateData,
+        grossSalary: updateData.grossSalary ? Number(updateData.grossSalary) : undefined,
+        dailySalary: updateData.dailySalary ? Number(updateData.dailySalary) : undefined,
+        endDate:     updateData.endDate ? new Date(updateData.endDate) : undefined,
+      },
+    });
+  }
+
+  updateVacation(id: string, data: any) {
+    return this.prisma.vacationRequest.update({ where: { id }, data });
+  }
+
   approveVacation(id: string, userId: string, approved: boolean) {
     return this.prisma.vacationRequest.update({
       where: { id },

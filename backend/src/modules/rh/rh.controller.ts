@@ -47,6 +47,19 @@ export class RhController {
     return this.svc.requestVacation(cid, eid, body);
   }
 
+  @Put('employees/:id')
+  updateEmployee(@Param('id') id: string, @Body() body: any) {
+    return this.svc.updateEmployee(id, body);
+  }
+
+  @Put('vacations/:vacId')
+  updateVacation(@Param('vacId') id: string, @Body() body: any, @Request() req: any) {
+    if (body.status) {
+      return this.svc.approveVacation(id, req.user.sub, body.status === 'APROBADO');
+    }
+    return this.svc.updateVacation(id, body);
+  }
+
   @Put('vacations/:vacId/approve')
   approveVac(@Param('vacId') id: string, @Request() req: any, @Body() body: { approved: boolean }) {
     return this.svc.approveVacation(id, req.user.sub, body.approved);
