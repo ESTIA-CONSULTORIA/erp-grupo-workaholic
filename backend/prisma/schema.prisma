@@ -153,6 +153,8 @@ cxcs             CxC[]
 ordenesCompra    OrdenCompra[]
 cortesCaja       CorteCaja[]
 lotesProduccion  LoteProduccion[]
+  transfersFrom IntercompanyTransfer[] @relation("TransferFrom")
+  transfersTo   IntercompanyTransfer[] @relation("TransferTo")
   @@map("companies")
 }
 
@@ -1275,4 +1277,24 @@ model LoteEmpaque {
   lote    LoteProduccion @relation(fields: [loteId], references: [id], onDelete: Cascade)
   product Product        @relation(fields: [productId], references: [id])
   @@map("lote_empaques")
+}
+
+model IntercompanyTransfer {
+  id            String   @id @default(cuid())
+  fromCompanyId String
+  toCompanyId   String
+  amount        Decimal  @db.Decimal(12,2)
+  currency      String   @default("MXN")
+  concept       String
+  date          DateTime @db.Date
+  status        String   @default("PENDIENTE") // PENDIENTE | APROBADO | RECHAZADO
+  requestedById String
+  approvedById  String?
+  approvedAt    DateTime?
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  fromCompany   Company  @relation("TransferFrom", fields: [fromCompanyId], references: [id])
+  toCompany     Company  @relation("TransferTo",   fields: [toCompanyId],   references: [id])
+  @@map("intercompany_transfers")
 }
