@@ -36,11 +36,10 @@ model User {
   purchases       Purchase[]
   documentUploads DocumentUpload[]
   auditLogs       AuditLog[]
-documents        Document[]
-pin           String?
-cortesCajero     CorteCaja[] @relation("CorteCajaCajero")
-  cortesValidador  CorteCaja[] @relation("CorteCajaValidador")
-  auditLogs   AuditLog[]
+  documents       Document[]
+  pin             String?
+  cortesCajero    CorteCaja[] @relation("CorteCajaCajero")
+  cortesValidador CorteCaja[] @relation("CorteCajaValidador")
   @@map("users")
 }
 
