@@ -222,10 +222,27 @@ export class MacheteService {
     });
     return products.map(p => ({
       ...p,
-      stock:    (p as any).currentStock?.stock    || 0,
-      minStock: (p as any).currentStock?.minStock || 5,
-      lowStock: ((p as any).currentStock?.stock || 0) < ((p as any).currentStock?.minStock || 5),
+      stock:    Number((p as any).currentStock?.stock    || 0),
+      minStock: Number((p as any).currentStock?.minStock || 5),
+      maxStock: Number((p as any).currentStock?.maxStock || 0),
+      lowStock: Number((p as any).currentStock?.stock || 0) < Number((p as any).currentStock?.minStock || 5),
     }));
+  }
+
+  async updateProductStock(productId: string, data: any) {
+    return this.prisma.productStock.upsert({
+      where:  { productId },
+      update: {
+        minStock: data.minStock !== undefined ? Number(data.minStock) : undefined,
+        maxStock: data.maxStock !== undefined ? Number(data.maxStock) : undefined,
+      },
+      create: {
+        productId,
+        stock:    0,
+        minStock: data.minStock !== undefined ? Number(data.minStock) : 5,
+        maxStock: data.maxStock !== undefined ? Number(data.maxStock) : 0,
+      },
+    });
   }
 
   getInsumos(companyId: string) {

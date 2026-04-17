@@ -43,6 +43,11 @@ export class MacheteController {
     return this.svc.updateProduct(id, body);
   }
 
+  @Put('products/:productId/stock-limits')
+  updateStockLimits(@Param('productId') id: string, @Body() body: any) {
+    return this.svc.updateProductStock(id, body);
+  }
+
   @Get('inventory/pt')
   getPT(@Param('companyId') cid: string) { return this.svc.getPTInventory(cid); }
 
