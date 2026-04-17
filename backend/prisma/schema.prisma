@@ -40,6 +40,7 @@ documents        Document[]
 pin           String?
 cortesCajero     CorteCaja[] @relation("CorteCajaCajero")
   cortesValidador  CorteCaja[] @relation("CorteCajaValidador")
+  auditLogs   AuditLog[]
   @@map("users")
 }
 

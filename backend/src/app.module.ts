@@ -13,6 +13,7 @@ import { ReportsModule } from './modules/reports/reports.module';
 import { MacheteModule } from './modules/machete/machete.module';
 import { RhModule } from './modules/rh/rh.module';
 import { BulkImportModule } from './modules/bulk-import/bulk-import.module';
+import { AuditModule } from './modules/audit/audit.module';
 import { IntercompanyModule } from './modules/intercompany/intercompany.module';
 import { CorteCajaModule } from './modules/corte-caja/corte-caja.module';
 
@@ -32,6 +33,7 @@ import { CorteCajaModule } from './modules/corte-caja/corte-caja.module';
     MacheteModule,
     RhModule,
     BulkImportModule,
+    AuditModule,
     IntercompanyModule,
     CorteCajaModule,
   ],
