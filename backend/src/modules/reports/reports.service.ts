@@ -57,21 +57,35 @@ export class ReportsService {
       else totalGastos += amount;
     }
 
-    // 5. Costo de ventas real (desde LoteEmpaque)
+    // 5. Costo de ventas real (desde LoteEmpaque) — optimizado con una sola query
     const saleLines = await this.prisma.saleLine.findMany({
       where: { sale: { companyId, date: { gte: start, lte: end } } },
-      include: { product: true },
+      select: { productId: true, quantity: true },
     });
 
-    let costoVentas = 0;
+    // Agrupar cantidades por producto
+    const cantidadesPorProducto: Record<string, number> = {};
     for (const line of saleLines) {
-      // Buscar el último costo unitario registrado para este producto
-      const ultimoEmpaque = await this.prisma.loteEmpaque.findFirst({
-        where: { productId: line.productId },
-        orderBy: { createdAt: 'desc' },
-      });
-      if (ultimoEmpaque && Number(ultimoEmpaque.costoUnit) > 0) {
-        costoVentas += Number(ultimoEmpaque.costoUnit) * Number(line.quantity);
+      cantidadesPorProducto[line.productId] = (cantidadesPorProducto[line.productId] || 0) + Number(line.quantity);
+    }
+    const productIds = Object.keys(cantidadesPorProducto);
+
+    // Obtener último costo de cada producto en UNA sola query por producto
+    let costoVentas = 0;
+    if (productIds.length > 0) {
+      const ultimosEmpaques = await Promise.all(
+        productIds.map(pid =>
+          this.prisma.loteEmpaque.findFirst({
+            where: { productId: pid, costoUnit: { gt: 0 } },
+            orderBy: { createdAt: 'desc' },
+            select: { productId: true, costoUnit: true },
+          })
+        )
+      );
+      for (const emp of ultimosEmpaques) {
+        if (emp && Number(emp.costoUnit) > 0) {
+          costoVentas += Number(emp.costoUnit) * (cantidadesPorProducto[emp.productId] || 0);
+        }
       }
     }
 
