@@ -104,6 +104,13 @@ Si no puedes leer algún campo, usa null. Si no es un ticket o factura, responde
     }
   }
 
+  update(docId: string, data: any) {
+    return this.prisma.document.update({
+      where: { id: docId },
+      data,
+    });
+  }
+
   validate(docId: string, validatedData: any) {
     return this.prisma.document.update({
       where: { id: docId },

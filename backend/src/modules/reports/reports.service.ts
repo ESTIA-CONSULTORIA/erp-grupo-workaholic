@@ -333,15 +333,35 @@ export class ReportsService {
       ventasMeses.push({ period: per, label: d.toLocaleDateString('es-MX', { month: 'short' }), total: erM.ventas?.total || 0 });
     }
 
+    // Top 3 productos más vendidos
+    const saleLines = await this.prisma.saleLine.findMany({
+      where: { sale: { companyId, date: { gte: start, lte: end } } },
+      include: { product: { select: { id:true, sku:true, name:true } } },
+    }).catch(() => []);
+
+    const prodMap: Record<string, { sku:string; name:string; qty:number; total:number }> = {};
+    for (const l of saleLines) {
+      const key = l.productId;
+      if (!prodMap[key]) prodMap[key] = { sku: l.product?.sku||'', name: l.product?.name||'', qty:0, total:0 };
+      prodMap[key].qty   += Number(l.quantity);
+      prodMap[key].total += Number(l.subtotal || 0);
+    }
+    const topProductos = Object.values(prodMap)
+      .sort((a,b) => b.total - a.total)
+      .slice(0,3);
+
     return {
       period,
       ventas:            er.ventas?.total || 0,
       resultado:         er.resultadoEjercicio || 0,
       totalGastos:       er.totalGastos || 0,
+      costoVentas:       er.costoVentas || 0,
+      utilidadBruta:     er.utilidadBruta || 0,
       cxcPendiente:      totalCxC,
       cxpPendiente:      Number(cxpPend._sum.balance || 0),
       cortesPendientes,
       ventasMeses,
+      topProductos,
     };
   }
 

@@ -26,6 +26,11 @@ export class DocumentsController {
     return this.svc.extract(cid, id);
   }
 
+  @Put(':id')
+  update(@Param('id') id: string, @Body() body: any) {
+    return this.svc.update(id, body);
+  }
+
   @Put(':id/validate')
   validate(@Param('id') id: string, @Body() body: any) {
     return this.svc.validate(id, body.validatedData);
