@@ -251,7 +251,7 @@ export class CompaniesService {
       include: { lineas: { include: { product: true } } },
     });
 
-    // Crear Receivable — la OC es una preventa, el ingreso se registra al crearla
+    // Al crear OC: registrar venta (ER/dashboard) + CxC (por cobrar)
     if (montoTotal > 0) {
       try {
         const fecha = new Date(data.fecha);
@@ -259,6 +259,28 @@ export class CompaniesService {
         const dueDate = new Date(fecha);
         dueDate.setDate(dueDate.getDate() + 30);
 
+        // Sale — para que aparezca en ER, dashboard y reportes de ventas
+        await this.prisma.sale.create({
+          data: {
+            companyId,
+            clientId,
+            date:          fecha,
+            channel:       data.canal || 'MOSTRADOR',
+            isCredit:      true,
+            total:         montoTotal,
+            paymentMethod: 'CREDITO_CLIENTE',
+            lines: oc.lineas ? {
+              create: oc.lineas.map((l: any) => ({
+                productId: l.productId,
+                quantity:  l.cantidad,
+                unitPrice: l.precioUnitario,
+                total:     l.total,
+              })),
+            } : undefined,
+          },
+        });
+
+        // CxC — para que aparezca en módulo de cuentas por cobrar
         await this.prisma.receivable.create({
           data: {
             companyId,
@@ -274,7 +296,7 @@ export class CompaniesService {
           },
         });
       } catch (e: any) {
-        console.error('ERROR CXC OC:', e.message);
+        console.error('ERROR OC Sale/CXC:', e.message);
       }
     }
 
@@ -309,6 +331,18 @@ export class CompaniesService {
     const nuevoMontoSurtido = Number(orden.montoSurtido) + montoSurtido;
     const nuevoSaldo        = Number(orden.montoTotal)   - nuevoMontoSurtido;
     const nuevoStatus       = nuevoSaldo <= 0 ? 'SURTIDO_COMPLETO' : 'SURTIDO_PARCIAL';
+
+    // Descontar inventario al surtir
+    if (data.lineas && data.lineas.length > 0) {
+      for (const ls of data.lineas) {
+        const linea = orden.lineas.find((l: any) => l.id === ls.lineaId);
+        if (!linea) continue;
+        await this.prisma.productStock.updateMany({
+          where: { productId: linea.productId },
+          data:  { stock: { decrement: Number(ls.cantidad) } },
+        }).catch(() => {});
+      }
+    }
 
     return this.prisma.$transaction([
       this.prisma.surtidoOC.create({
