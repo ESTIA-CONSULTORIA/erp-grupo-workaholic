@@ -36,6 +36,29 @@ function lftVacationDays(yearsWorked: number): number {
 export class RhService {
   constructor(private prisma: PrismaService) {}
 
+  // Portal empleado: obtener mi perfil por userId
+  async getMyProfile(companyId: string, userId: string) {
+    const emp = await this.prisma.employee.findFirst({
+      where: { companyId, userId },
+      include: {
+        documents: { orderBy: { createdAt: 'desc' } },
+        vacations: { orderBy: { startDate: 'desc' } },
+        hrEvents:  { orderBy: { date: 'desc' } },
+      },
+    });
+    if (!emp) return null;
+    const balance = await this.getVacationBalance(emp.id);
+    return { ...emp, vacationBalance: balance };
+  }
+
+  // Vincular usuario a empleado
+  async linkUserToEmployee(employeeId: string, userId: string) {
+    return this.prisma.employee.update({
+      where: { id: employeeId },
+      data: { userId },
+    });
+  }
+
   getDashboard(companyId: string) {
     return Promise.all([
       this.prisma.employee.count({ where: { companyId } }),

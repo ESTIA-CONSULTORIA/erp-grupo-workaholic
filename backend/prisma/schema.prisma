@@ -999,6 +999,7 @@ model Employee {
   repseNumber    String?
   repseExpiry    DateTime?
   status         String   @default("ACTIVO")
+  userId         String?  @unique // vinculo con usuario del sistema
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   company       Company            @relation(fields: [companyId], references: [id])

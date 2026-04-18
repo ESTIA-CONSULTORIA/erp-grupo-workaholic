@@ -7,6 +7,25 @@ import { RhService } from './rh.service';
 export class RhController {
   constructor(private svc: RhService) {}
 
+  // Portal empleado
+  @Get('me')
+  myProfile(@Param('companyId') cid: string, @Request() req: any) {
+    return this.svc.getMyProfile(cid, req.user.sub);
+  }
+
+  @Post('me/vacations')
+  myRequest(@Param('companyId') cid: string, @Request() req: any, @Body() body: any) {
+    return this.svc.getMyProfile(cid, req.user.sub).then(async emp => {
+      if (!emp) throw new Error('No tienes un expediente vinculado');
+      return this.svc.requestVacation(cid, emp.id, req.user.sub, body);
+    });
+  }
+
+  @Put('employees/:id/link-user')
+  linkUser(@Param('id') id: string, @Body() body: any) {
+    return this.svc.linkUserToEmployee(id, body.userId);
+  }
+
   @Get('dashboard')
   dashboard(@Param('companyId') cid: string) { return this.svc.getDashboard(cid); }
 
