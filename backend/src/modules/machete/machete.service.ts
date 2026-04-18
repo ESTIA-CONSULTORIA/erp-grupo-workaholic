@@ -490,6 +490,28 @@ export class MacheteService {
               notes:         `Entrega desde POS`,
             },
           });
+
+          // Crear Sale para que aparezca en reportes/ER
+          // (el cobro se registrará cuando el cliente pague la CxC)
+          await this.prisma.sale.create({
+            data: {
+              companyId,
+              date:          new Date(data.date),
+              channel:       data.channel || orden.canal || 'MOSTRADOR',
+              clientId:      orden.clientId || null,
+              isCredit:      true,
+              total,
+              paymentMethod: 'CREDITO_CLIENTE',
+              lines: {
+                create: data.lines.map((l: any) => ({
+                  productId: l.productId,
+                  quantity:  l.quantity,
+                  unitPrice: l.unitPrice,
+                  total:     l.quantity * l.unitPrice,
+                })),
+              },
+            },
+          });
         }
       } catch (e: any) {
         console.error('ERROR OC:', e.message);
