@@ -177,6 +177,34 @@ export class CorteCajaService {
     });
   }
 
+  async getVentasDelDia(companyId: string, fecha: string) {
+    const start = new Date(fecha);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(fecha);
+    end.setHours(23, 59, 59, 999);
+
+    const sales = await this.prisma.sale.findMany({
+      where: { companyId, date: { gte: start, lte: end } },
+      include: { lines: { include: { product: { select: { name: true, sku: true } } } } },
+    });
+
+    const totalVentas   = sales.reduce((t, s) => t + Number(s.total), 0);
+    const totalEfectivo = sales.filter(s => s.paymentMethod === 'EFECTIVO' || s.paymentMethod === 'EFECTIVO_MXN')
+                               .reduce((t, s) => t + Number(s.total), 0);
+    const totalTarjeta  = sales.filter(s => ['TARJETA_DEBITO','TARJETA_CREDITO'].includes(s.paymentMethod || ''))
+                               .reduce((t, s) => t + Number(s.total), 0);
+    const totalTransfer = sales.filter(s => s.paymentMethod === 'TRANSFERENCIA')
+                               .reduce((t, s) => t + Number(s.total), 0);
+    const totalCredito  = sales.filter(s => s.isCredit)
+                               .reduce((t, s) => t + Number(s.total), 0);
+
+    return {
+      fecha, totalVentas, totalEfectivo, totalTarjeta, totalTransfer, totalCredito,
+      numVentas: sales.length,
+      ventas: sales,
+    };
+  }
+
   // Parsear historial — soporta tanto formato viejo (string) como nuevo (JSON)
   private _parsearHistorial(notasCajero: string | null): any[] {
     if (!notasCajero) return [];
