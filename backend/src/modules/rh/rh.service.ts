@@ -9,13 +9,19 @@ const DIAS_FESTIVOS_MX = [
   '01-01','02-05','03-21','05-01','09-16','11-02','11-20','12-25',
 ];
 
-function calcBusinessDays(start: Date, end: Date): number {
+// workDays: 5 = L-V (administración), 6 = L-S (operación/producción)
+function calcBusinessDays(start: Date, end: Date, workDays: 5|6 = 6): number {
   let count = 0;
   const cur = new Date(start);
   while (cur <= end) {
     const dow = cur.getDay();
     const mmdd = `${String(cur.getMonth()+1).padStart(2,'0')}-${String(cur.getDate()).padStart(2,'0')}`;
-    if (dow !== 0 && dow !== 6 && !DIAS_FESTIVOS_MX.includes(mmdd)) count++;
+    const esFestivo = DIAS_FESTIVOS_MX.includes(mmdd);
+    const esDomingo  = dow === 0;
+    const esSabado   = dow === 6;
+    // 6 días: solo excluye domingo y festivos
+    // 5 días: excluye sábado, domingo y festivos
+    if (!esDomingo && !esFestivo && !(workDays === 5 && esSabado)) count++;
     cur.setDate(cur.getDate() + 1);
   }
   return count;
@@ -144,9 +150,12 @@ export class RhService {
   // Saldo de vacaciones con cálculo LFT
   async getVacationBalance(employeeId: string) {
     const emp = await this.prisma.employee.findUnique({ where: { id: employeeId } });
-    if (!emp) return { years: 0, entitled: 0, businessDays: 0, used: 0, balance: 0, primaVacacional: 0 };
+    if (!emp) return { years: 0, entitled: 0, businessDays: 0, used: 0, balance: 0, primaVacacional: 0, workDays: 6 };
     const years = Math.floor((Date.now() - new Date(emp.startDate).getTime()) / (365.25 * 24 * 60 * 60 * 1000));
     const entitled = lftVacationDays(years);
+    const deptAdmin = ['administracion','administración','admin','finanzas','rh','recursos humanos','contabilidad'];
+    const dept = (emp.department || '').toLowerCase();
+    const workDays: 5|6 = deptAdmin.some(d => dept.includes(d)) ? 5 : 6;
     const used = await this.prisma.vacationRequest.aggregate({
       where: { employeeId, status: 'APROBADO', type: 'VACACIONES' },
       _sum: { days: true },
@@ -154,16 +163,20 @@ export class RhService {
     const usedDays = used._sum.days || 0;
     const dailySalary = Number(emp.dailySalary || 0);
     const primaVacacional = dailySalary * entitled * 0.25;
-    return { years, entitled, businessDays: entitled, used: usedDays, balance: entitled - usedDays, primaVacacional };
+    return { years, entitled, businessDays: entitled, used: usedDays, balance: entitled - usedDays, primaVacacional, workDays, department: emp.department };
   }
 
   // Solicitar permiso/vacaciones con cálculo LFT
   async requestVacation(companyId: string, employeeId: string, userId: string, data: any) {
     const start = new Date(data.startDate);
     const end   = new Date(data.endDate);
-    const businessDays = calcBusinessDays(start, end);
-    const totalDays = Math.ceil((end.getTime() - start.getTime()) / (24*60*60*1000)) + 1;
     const emp = await this.prisma.employee.findUnique({ where: { id: employeeId } });
+    // Administración trabaja 5 días, operación/producción trabaja 6 días
+    const deptAdmin = ['administracion','administración','admin','finanzas','rh','recursos humanos','contabilidad'];
+    const dept = (emp?.department || '').toLowerCase();
+    const workDays: 5|6 = deptAdmin.some(d => dept.includes(d)) ? 5 : 6;
+    const businessDays = calcBusinessDays(start, end, workDays);
+    const totalDays = Math.ceil((end.getTime() - start.getTime()) / (24*60*60*1000)) + 1;
     const dailySalary = Number(emp?.dailySalary || 0);
     const type = data.type || 'VACACIONES';
     const conGoce = data.conGoce !== undefined ? data.conGoce : true;
