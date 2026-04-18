@@ -1033,18 +1033,24 @@ model EmployeeDocument {
 }
 
 model VacationRequest {
-  id           String   @id @default(cuid())
-  companyId    String
-  employeeId   String
-  type         String   @default("VACACIONES")
-  startDate    DateTime
-  endDate      DateTime
-  days         Int
-  status       String   @default("PENDIENTE")
-  approvedById String?
-  approvedAt   DateTime?
-  notes        String?
-  createdAt    DateTime @default(now())
+  id              String    @id @default(cuid())
+  companyId       String
+  employeeId      String
+  type            String    @default("VACACIONES") // VACACIONES | PERMISO_CON_GOCE | PERMISO_SIN_GOCE | SUSPENSION
+  startDate       DateTime
+  endDate         DateTime
+  days            Int
+  businessDays    Int?      // días hábiles LFT
+  primaVacacional Decimal?  @db.Decimal(10,2) // 25% sobre salario diario × días
+  conGoce         Boolean   @default(true)     // afecta nómina si false
+  status          String    @default("PENDIENTE") // PENDIENTE | APROBADO_JEFE | APROBADO | RECHAZADO | CANCELADO
+  requestedById   String?   // userId que solicitó
+  approvedByJefe  String?   // userId jefe directo
+  approvedByRH    String?   // userId RH
+  approvedAt      DateTime?
+  rejectedReason  String?
+  notes           String?
+  createdAt       DateTime  @default(now())
   employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
   @@map("vacation_requests")
 }
