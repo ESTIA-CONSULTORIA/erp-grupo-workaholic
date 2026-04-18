@@ -365,6 +365,60 @@ export class ReportsService {
     };
   }
 
+  async fixOCSalesRetroactive(companyId: string) {
+    const ocs = await this.prisma.ordenCompra.findMany({
+      where: { companyId, status: { not: 'CANCELADA' } },
+      include: { lineas: { include: { product: true } } },
+    });
+
+    let created = 0;
+    const errors: string[] = [];
+
+    for (const oc of ocs) {
+      const existing = await this.prisma.sale.findFirst({
+        where: {
+          companyId,
+          clientId:  oc.clientId,
+          isCredit:  true,
+          total:     oc.montoTotal,
+          date: {
+            gte: new Date(new Date(oc.fecha).setHours(0,0,0,0)),
+            lte: new Date(new Date(oc.fecha).setHours(23,59,59,999)),
+          },
+        },
+      });
+
+      if (existing) continue;
+
+      try {
+        await this.prisma.sale.create({
+          data: {
+            companyId,
+            clientId:      oc.clientId,
+            date:          new Date(oc.fecha),
+            channel:       (oc as any).canal || 'MOSTRADOR',
+            isCredit:      true,
+            total:         oc.montoTotal,
+            paymentMethod: 'CREDITO_CLIENTE',
+            lines: oc.lineas.length > 0 ? {
+              create: oc.lineas.map((l: any) => ({
+                productId: l.productId,
+                quantity:  l.cantidad,
+                unitPrice: l.precioUnitario,
+                total:     l.total,
+              })),
+            } : undefined,
+          },
+        });
+        created++;
+      } catch (e: any) {
+        errors.push(`OC ${oc.numero}: ${e.message}`);
+      }
+    }
+
+    return { total: ocs.length, created, errors };
+  }
+
   async getConsolidado(period: string) {
     const companies = await this.prisma.company.findMany({ where: { isActive: true } });
     const results   = await Promise.all(companies.map(async c => {

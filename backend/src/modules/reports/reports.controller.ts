@@ -43,4 +43,10 @@ export class ReportsController {
   consolidated(@Query('period') period: string) {
     return this.svc.getConsolidado(period || currentPeriod());
   }
+
+  // ── Endpoint de mantenimiento (usar una sola vez) ──────────
+  @Post('companies/:companyId/maintenance/fix-oc-sales')
+  async fixOCSales(@Param('companyId') cid: string) {
+    return this.svc.fixOCSalesRetroactive(cid);
+  }
 }
