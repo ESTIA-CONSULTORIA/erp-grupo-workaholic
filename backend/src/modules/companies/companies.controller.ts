@@ -17,6 +17,11 @@ export class CompaniesController {
   findOne(@Param('id') id: string) { return this.svc.findOne(id); }
 
   // ── Usuarios ──────────────────────────────────────────────
+  @Get(':id/cash-accounts')
+  getCashAccounts(@Param('id') id: string) {
+    return this.svc.getCashAccounts(id);
+  }
+
   @Get(':id/users')
   getUsers(@Param('id') id: string) {
     return this.svc.getUsers(id);

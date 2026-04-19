@@ -58,6 +58,13 @@ export class CompaniesService {
   }
 
   // ── Usuarios ──────────────────────────────────────────────
+  getCashAccounts(companyId: string) {
+    return this.prisma.cashAccount.findMany({
+      where: { companyId, isActive: true },
+      orderBy: { name: 'asc' },
+    });
+  }
+
   getUsers(companyId: string) {
     return this.prisma.userCompanyRole.findMany({
       where: { companyId },
