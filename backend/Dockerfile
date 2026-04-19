@@ -5,7 +5,7 @@ COPY prisma ./prisma/
 RUN npm install
 COPY . .
 RUN rm -rf dist
-RUN node node_modules/.bin/prisma generate
+RUN ./node_modules/.bin/prisma generate
 RUN npm run build
 EXPOSE 4000
 CMD ["node", "dist/src/main"]
