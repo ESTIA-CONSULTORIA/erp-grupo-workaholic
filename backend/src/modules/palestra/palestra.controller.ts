@@ -80,6 +80,22 @@ export class PalestraController {
     return this.svc.importSoftRestaurant(cid, body, req.user.sub);
   }
 
+  // Productos con inventario
+  @Get('products')
+  getProducts(@Param('companyId') cid: string) { return this.svc.getProducts(cid); }
+
+  @Post('products')
+  createProduct(@Param('companyId') cid: string, @Body() body: any) { return this.svc.createProduct(cid, body); }
+
+  @Put('products/:id')
+  updateProduct(@Param('id') id: string, @Body() body: any) { return this.svc.updateProduct(id, body); }
+
+  @Put('products/:id/stock')
+  adjustStock(@Param('id') id: string, @Body() body: any) { return this.svc.adjustStock(id, body.qty, body.notes); }
+
+  @Get('products/low-stock')
+  getLowStock(@Param('companyId') cid: string) { return this.svc.getLowStock(cid); }
+
   // POS Palestra
   @Post('sales')
   registerSale(@Param('companyId') cid: string, @Request() req: any, @Body() body: any) {

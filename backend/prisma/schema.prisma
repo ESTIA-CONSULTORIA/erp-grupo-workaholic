@@ -1437,3 +1437,43 @@ model SoftRestaurantImport {
   company     Company  @relation(fields: [companyId], references: [id])
   @@map("soft_restaurant_imports")
 }
+
+// ══════════════════════════════════════════════════════════════
+//  PALESTRA — INVENTARIO DE PRODUCTOS
+// ══════════════════════════════════════════════════════════════
+
+model PalestraProduct {
+  id          String   @id @default(cuid())
+  companyId   String
+  sku         String
+  name        String
+  category    String   @default("GENERAL") // ROPA | ACCESORIOS | SUPLEMENTOS | GENERAL
+  description String?
+  price       Decimal  @db.Decimal(12,2)
+  cost        Decimal  @db.Decimal(12,2) @default(0)
+  stock       Decimal  @db.Decimal(10,2) @default(0)
+  minStock    Decimal  @db.Decimal(10,2) @default(2)
+  imageUrl    String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  company     Company  @relation(fields: [companyId], references: [id])
+  @@unique([companyId, sku])
+  @@map("palestra_products")
+}
+
+// ══════════════════════════════════════════════════════════════
+//  PERMISOS POR ROL
+// ══════════════════════════════════════════════════════════════
+
+model Permission {
+  id          String  @id @default(cuid())
+  roleCode    String  // admin | gerente | contador | cajero | rh | director
+  module      String  // pos | gastos | cxc | cxp | rh | reportes | admin | etc.
+  action      String  // ver | crear | editar | eliminar | aprobar | exportar
+  allowed     Boolean @default(true)
+  companyId   String? // null = aplica a todas las empresas
+  createdAt   DateTime @default(now())
+  @@unique([roleCode, module, action, companyId])
+  @@map("permissions")
+}

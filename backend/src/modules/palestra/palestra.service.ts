@@ -315,6 +315,46 @@ export class PalestraService {
     });
   }
 
+  // ── PRODUCTOS CON INVENTARIO ────────────────────────────────
+  getProducts(companyId: string) {
+    return this.prisma.palestraProduct.findMany({
+      where: { companyId, isActive: true },
+      orderBy: [{ category: 'asc' }, { name: 'asc' }],
+    });
+  }
+
+  createProduct(companyId: string, data: any) {
+    return this.prisma.palestraProduct.create({
+      data: {
+        companyId, sku: data.sku, name: data.name,
+        category: data.category || 'GENERAL',
+        description: data.description || null,
+        price: data.price, cost: data.cost || 0,
+        stock: data.stock || 0, minStock: data.minStock || 2,
+        imageUrl: data.imageUrl || null,
+      },
+    });
+  }
+
+  updateProduct(id: string, data: any) {
+    return this.prisma.palestraProduct.update({ where: { id }, data });
+  }
+
+  async adjustStock(id: string, qty: number, notes?: string) {
+    return this.prisma.palestraProduct.update({
+      where: { id },
+      data: { stock: { increment: qty } },
+    });
+  }
+
+  getLowStock(companyId: string) {
+    return this.prisma.$queryRaw`
+      SELECT * FROM palestra_products 
+      WHERE "companyId" = ${companyId} AND "isActive" = true AND stock <= "minStock"
+      ORDER BY stock ASC
+    `;
+  }
+
   // ── POS PALESTRA ─────────────────────────────────────────
   async registerSale(companyId: string, userId: string, data: any) {
     const total = data.lines.reduce((t: number, l: any) => t + Number(l.price) * Number(l.qty), 0);
@@ -332,8 +372,16 @@ export class PalestraService {
       },
     });
 
-    // Comisiones de coach si aplica
     for (const line of data.lines) {
+      // Descontar inventario si es producto físico
+      if (line.productId && line.type === 'PRODUCTO') {
+        await this.prisma.palestraProduct.update({
+          where: { id: line.productId },
+          data:  { stock: { decrement: Number(line.qty) } },
+        }).catch(() => {});
+      }
+
+      // Comisiones de coach si aplica
       if (line.coachId && line.coachRate) {
         await this.prisma.coachCommission.create({
           data: {
