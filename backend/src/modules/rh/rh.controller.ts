@@ -22,8 +22,22 @@ export class RhController {
   }
 
   @Put('employees/:id/link-user')
-  linkUser(@Param('id') id: string, @Body() body: any) {
-    return this.svc.linkUserToEmployee(id, body.userId);
+  async linkUser(@Param('id') id: string, @Body() body: any) {
+    try {
+      return await this.svc.linkUserToEmployee(id, body.userId);
+    } catch(e: any) {
+      console.error('linkUser error:', e.message, e.code);
+      if (e.code === 'P2002') {
+        throw { status: 400, message: 'Este usuario ya está vinculado a otro empleado' };
+      }
+      if (e.code === 'P2025') {
+        throw { status: 404, message: 'Empleado no encontrado' };
+      }
+      if (e.message?.includes('Unknown field')) {
+        throw { status: 500, message: 'El campo userId no existe en la BD. Corre npx prisma db push.' };
+      }
+      throw e;
+    }
   }
 
   @Get('dashboard')
