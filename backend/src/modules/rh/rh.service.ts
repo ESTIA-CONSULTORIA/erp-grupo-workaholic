@@ -53,17 +53,19 @@ export class RhService {
 
   // Vincular usuario a empleado
   async linkUserToEmployee(employeeId: string, userId: string | null) {
-    // Si el userId ya está vinculado a otro empleado, desvincularlo primero
+    // Usar raw SQL para evitar problemas con Prisma client cacheado
     if (userId) {
-      await this.prisma.employee.updateMany({
-        where: { userId, NOT: { id: employeeId } },
-        data: { userId: null },
-      });
+      // Desvincular si ya está en otro empleado
+      await this.prisma.$executeRaw`
+        UPDATE employees SET "userId" = NULL 
+        WHERE "userId" = ${userId} AND id != ${employeeId}
+      `;
     }
-    return this.prisma.employee.update({
-      where: { id: employeeId },
-      data: { userId: userId || null },
-    });
+    // Vincular (o desvincular si userId es null)
+    await this.prisma.$executeRaw`
+      UPDATE employees SET "userId" = ${userId} WHERE id = ${employeeId}
+    `;
+    return this.prisma.employee.findUnique({ where: { id: employeeId } });
   }
 
   getDashboard(companyId: string) {
