@@ -120,7 +120,7 @@ export class MacheteService {
 
     return this.prisma.loteProduccion.update({
       where: { id: loteId },
-      data: { kgSalida, kgGrasa, kgEscarchado, kgMerma, rendimiento, status: 'EN_PROCESO' },
+      data: { kgSalida, kgGrasa, kgEscarchado, kgMerma, rendimiento, status: 'EMPACADO' },
     });
   }
 
@@ -160,9 +160,24 @@ export class MacheteService {
       });
     }
 
+    // Verificar si ya se empacaron todos los kg disponibles → cerrar automáticamente
+    const loteActualizado = await this.prisma.loteProduccion.findUnique({
+      where: { id: loteId },
+      include: { empaques: { include: { product: true } } },
+    });
+
+    const kgYaEmpacados = (loteActualizado?.empaques || []).reduce((t: number, e: any) => {
+      const gramsWeight = Number(e.product?.gramsWeight || 0);
+      return t + (gramsWeight > 0 ? (Number(e.cantidad) * gramsWeight) / 1000 : 0);
+    }, 0);
+
+    const kgDisponibles = Math.max(0, Number(loteActualizado?.kgSalida || 0) - kgYaEmpacados);
+    const nuevoStatus = kgDisponibles <= 0.01 ? 'CERRADO' : 'EMPACADO';
+
     return this.prisma.loteProduccion.update({
       where: { id: loteId },
-      data:  { status: 'EMPACADO' },
+      data:  { status: nuevoStatus },
+      include: { empaques: { include: { product: true } }, insumos: true },
     });
   }
 
