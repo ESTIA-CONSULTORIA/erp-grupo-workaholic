@@ -223,15 +223,17 @@ export class RhService {
     const conGoce = data.conGoce !== undefined ? data.conGoce : true;
     const primaVacacional = type === 'VACACIONES' ? dailySalary * businessDays * 0.25 : null;
 
-    return this.prisma.vacationRequest.create({
-      data: {
-        companyId, employeeId, type, startDate: start, endDate: end,
-        days: totalDays, businessDays, primaVacacional,
-        conGoce, status: 'PENDIENTE',
-        requestedById: userId,
-        notes: data.notes || null,
-      },
-    });
+    // Raw SQL para evitar cliente Prisma cacheado
+    const id = `vac_${Date.now()}_${Math.random().toString(36).slice(2,8)}`;
+    await this.prisma.$executeRaw`
+      INSERT INTO vacation_requests 
+        (id, "companyId", "employeeId", type, "startDate", "endDate", days, 
+         "businessDays", "primaVacacional", "conGoce", status, "requestedById", notes, "createdAt")
+      VALUES 
+        (${id}, ${companyId}, ${employeeId}, ${type}, ${start}, ${end}, ${totalDays},
+         ${businessDays}, ${primaVacacional || null}, ${conGoce}, 'PENDIENTE', ${userId}, ${data.notes || null}, NOW())
+    `;
+    return this.prisma.vacationRequest.findUnique({ where: { id } });
   }
 
   // Aprobación doble: jefe primero, luego RH
@@ -239,31 +241,23 @@ export class RhService {
     const req = await this.prisma.vacationRequest.findUnique({ where: { id } });
     if (!req) throw new Error('Solicitud no encontrada');
 
-    // Jefe aprueba → pasa a APROBADO_JEFE
+    // Jefe aprueba → pasa a APROBADO_JEFE (raw SQL)
     if (role === 'jefe' || role === 'gerente') {
       if (!approved) {
-        return this.prisma.vacationRequest.update({
-          where: { id },
-          data: { status: 'RECHAZADO', approvedByJefe: userId, rejectedReason: reason || null },
-        });
+        await this.prisma.$executeRaw`UPDATE vacation_requests SET status='RECHAZADO', "approvedByJefe"=${userId}, "rejectedReason"=${reason||null} WHERE id=${id}`;
+      } else {
+        await this.prisma.$executeRaw`UPDATE vacation_requests SET status='APROBADO_JEFE', "approvedByJefe"=${userId} WHERE id=${id}`;
       }
-      return this.prisma.vacationRequest.update({
-        where: { id },
-        data: { status: 'APROBADO_JEFE', approvedByJefe: userId },
-      });
+      return this.prisma.vacationRequest.findUnique({ where: { id } });
     }
 
-    // RH/Admin aprueba → APROBADO final
+    // RH/Admin aprueba → APROBADO final (raw SQL)
     if (!approved) {
-      return this.prisma.vacationRequest.update({
-        where: { id },
-        data: { status: 'RECHAZADO', approvedByRH: userId, rejectedReason: reason || null },
-      });
+      await this.prisma.$executeRaw`UPDATE vacation_requests SET status='RECHAZADO', "approvedByRH"=${userId}, "rejectedReason"=${reason||null} WHERE id=${id}`;
+    } else {
+      await this.prisma.$executeRaw`UPDATE vacation_requests SET status='APROBADO', "approvedByRH"=${userId}, "approvedAt"=NOW() WHERE id=${id}`;
     }
-    return this.prisma.vacationRequest.update({
-      where: { id },
-      data: { status: 'APROBADO', approvedByRH: userId, approvedAt: new Date() },
-    });
+    return this.prisma.vacationRequest.findUnique({ where: { id } });
   }
 
   updateEmployee(id: string, data: any) {
