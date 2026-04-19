@@ -52,10 +52,17 @@ export class RhService {
   }
 
   // Vincular usuario a empleado
-  async linkUserToEmployee(employeeId: string, userId: string) {
+  async linkUserToEmployee(employeeId: string, userId: string | null) {
+    // Si el userId ya está vinculado a otro empleado, desvincularlo primero
+    if (userId) {
+      await this.prisma.employee.updateMany({
+        where: { userId, NOT: { id: employeeId } },
+        data: { userId: null },
+      });
+    }
     return this.prisma.employee.update({
       where: { id: employeeId },
-      data: { userId },
+      data: { userId: userId || null },
     });
   }
 
