@@ -1009,7 +1009,8 @@ model Employee {
   documents     EmployeeDocument[]
   vacations     VacationRequest[]
   hrEvents      HREvent[]
-  payrollLines  PayrollLine[]
+  payrollLines      PayrollLine[]
+  coachCommissions  CoachCommission[]
   @@unique([companyId, employeeNumber])
   @@map("employees")
 }
@@ -1308,4 +1309,131 @@ model IntercompanyTransfer {
   fromCompany   Company  @relation("TransferFrom", fields: [fromCompanyId], references: [id])
   toCompany     Company  @relation("TransferTo",   fields: [toCompanyId],   references: [id])
   @@map("intercompany_transfers")
+}
+
+// ══════════════════════════════════════════════════════════════
+//  PALESTRA — MEMBRESÍAS Y SERVICIOS
+// ══════════════════════════════════════════════════════════════
+
+model ServiceCatalog {
+  id          String   @id @default(cuid())
+  companyId   String
+  name        String
+  description String?
+  type        String   @default("SERVICIO") // MEMBRESIA | SERVICIO | CLASE | CLINICA | RENTA | MANTENIMIENTO
+  price       Decimal  @db.Decimal(12,2)
+  duration    Int?     // minutos (para clases/rentas)
+  isActive    Boolean  @default(true)
+  coachable   Boolean  @default(false) // genera comisión de coach
+  coachRate   Decimal? @db.Decimal(12,2) // monto fijo de comisión
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  company     Company  @relation(fields: [companyId], references: [id])
+  @@map("service_catalog")
+}
+
+model MembershipType {
+  id              String   @id @default(cuid())
+  companyId       String
+  name            String   // "Individual", "Familiar", "Corporativa"
+  description     String?
+  entryFee        Decimal  @db.Decimal(12,2) // costo de entrada (único)
+  monthlyFee      Decimal  @db.Decimal(12,2) // mantenimiento mensual
+  maxMembers      Int      @default(1)        // miembros por membresía
+  graceDays       Int      @default(5)        // días de gracia antes de bloquear
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  company         Company  @relation(fields: [companyId], references: [id])
+  memberships     Membership[]
+  @@map("membership_types")
+}
+
+model Membership {
+  id              String    @id @default(cuid())
+  companyId       String
+  membershipTypeId String
+  folio           String    // PALS-0001
+  status          String    @default("ACTIVA") // ACTIVA | MOROSA | SUSPENDIDA | CANCELADA
+  holderName      String    // nombre del titular
+  holderEmail     String?
+  holderPhone     String?
+  holderRfc       String?
+  groupName       String?   // nombre del grupo si aplica
+  startDate       DateTime  @db.Date
+  entryPaid       Boolean   @default(false)
+  entryPaidAt     DateTime?
+  lastPaymentDate DateTime? @db.Date
+  nextDueDate     DateTime? @db.Date
+  notes           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  company         Company         @relation(fields: [companyId], references: [id])
+  membershipType  MembershipType  @relation(fields: [membershipTypeId], references: [id])
+  members         MembershipMember[]
+  payments        MembershipPayment[]
+  @@map("memberships")
+}
+
+model MembershipMember {
+  id           String  @id @default(cuid())
+  membershipId String
+  name         String
+  email        String?
+  phone        String?
+  isHolder     Boolean @default(false)
+  createdAt    DateTime @default(now())
+  membership   Membership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+  @@map("membership_members")
+}
+
+model MembershipPayment {
+  id             String   @id @default(cuid())
+  membershipId   String
+  companyId      String
+  concept        String   // "Mantenimiento Abril 2026"
+  amount         Decimal  @db.Decimal(12,2)
+  paymentMethod  String   @default("EFECTIVO")
+  reference      String?
+  dueDate        DateTime @db.Date
+  paidAt         DateTime?
+  status         String   @default("PENDIENTE") // PENDIENTE | PAGADO | VENCIDO
+  createdAt      DateTime @default(now())
+  membership     Membership @relation(fields: [membershipId], references: [id])
+  @@map("membership_payments")
+}
+
+model CoachCommission {
+  id            String   @id @default(cuid())
+  companyId     String
+  employeeId    String   // coach (Employee)
+  saleId        String?  // venta que generó la comisión
+  clientName    String
+  service       String   // nombre del servicio/clínica
+  amount        Decimal  @db.Decimal(12,2) // monto de comisión
+  status        String   @default("PENDIENTE") // PENDIENTE | LIBERADA | PAGADA | CONGELADA
+  frozenReason  String?  // motivo de congelamiento
+  weekPeriod    String   // "2026-W17"
+  paidInPeriodId String? // PayrollPeriod
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  company       Company  @relation(fields: [companyId], references: [id])
+  employee      Employee @relation(fields: [employeeId], references: [id])
+  @@map("coach_commissions")
+}
+
+model SoftRestaurantImport {
+  id          String   @id @default(cuid())
+  companyId   String
+  fecha       DateTime @db.Date
+  totalVentas Decimal  @db.Decimal(12,2)
+  totalEfectivo Decimal @db.Decimal(12,2) @default(0)
+  totalTarjeta  Decimal @db.Decimal(12,2) @default(0)
+  totalOtros    Decimal @db.Decimal(12,2) @default(0)
+  numTransacciones Int  @default(0)
+  rawData     Json?
+  importedById String?
+  createdAt   DateTime @default(now())
+  company     Company  @relation(fields: [companyId], references: [id])
+  @@map("soft_restaurant_imports")
 }
