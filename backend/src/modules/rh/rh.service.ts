@@ -36,10 +36,19 @@ function lftVacationDays(yearsWorked: number): number {
 export class RhService {
   constructor(private prisma: PrismaService) {}
 
-  // Portal empleado: obtener mi perfil por userId
+  // Portal empleado: obtener mi perfil por userId (raw SQL para evitar cliente cacheado)
   async getMyProfile(companyId: string, userId: string) {
-    const emp = await this.prisma.employee.findFirst({
-      where: { companyId, userId },
+    // Buscar empleado por userId usando raw SQL
+    const rows = await this.prisma.$queryRaw<any[]>`
+      SELECT id FROM employees 
+      WHERE "companyId" = ${companyId} AND "userId" = ${userId}
+      LIMIT 1
+    `;
+    if (!rows || rows.length === 0) return null;
+    
+    const empId = rows[0].id;
+    const emp = await this.prisma.employee.findUnique({
+      where: { id: empId },
       include: {
         documents: { orderBy: { createdAt: 'desc' } },
         vacations: { orderBy: { startDate: 'desc' } },
