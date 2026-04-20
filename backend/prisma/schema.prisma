@@ -1014,18 +1014,428 @@ model VacationRequest {
   id              String    @id @default(cuid())
   companyId       String
   employeeId      String
-  type            String    @default("VACACIONES")
+  type            String    @default("VACACIONES") // VACACIONES | PERMISO_CON_GOCE | PERMISO_SIN_GOCE | SUSPENSION
   startDate       DateTime
   endDate         DateTime
   days            Int
-  businessDays    Int?
-  primaVacacional Decimal?  @db.Decimal(10,2)
-  conGoce         Boolean   @default(true)
-  status          String    @default("PENDIENTE")
-  requestedById   String?
-  approvedByJefe  String?
-  approvedByRH    String?
+  businessDays    Int?      // días hábiles LFT
+  primaVacacional Decimal?  @db.Decimal(10,2) // 25% sobre salario diario × días
+  conGoce         Boolean   @default(true)     // afecta nómina si false
+  status          String    @default("PENDIENTE") // PENDIENTE | APROBADO_JEFE | APROBADO | RECHAZADO | CANCELADO
+  requestedById   String?   // userId que solicitó
+  approvedByJefe  String?   // userId jefe directo
+  approvedByRH    String?   // userId RH
   approvedAt      DateTime?
   rejectedReason  String?
   notes           String?
-  createdAt      
+  createdAt       DateTime  @default(now())
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  @@map("vacation_requests")
+}
+
+model HREvent {
+  id           String   @id @default(cuid())
+  companyId    String
+  employeeId   String
+  createdById  String?
+  type         String
+  date         DateTime
+  description  String
+  resolution   String?
+  createdAt    DateTime @default(now())
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  @@map("hr_events")
+}
+
+model CompanyHRConfig {
+  id          String  @id @default(cuid())
+  companyId   String  @unique
+  hasRepse    Boolean @default(false)
+  payrollType String  @default("QUINCENAL")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  company Company @relation(fields: [companyId], references: [id])
+  @@map("company_hr_configs")
+}
+
+// ══════════════════════════════════════════════════════════════
+//  NÓMINA
+// ══════════════════════════════════════════════════════════════
+model PayrollPeriod {
+  id           String   @id @default(cuid())
+  companyId    String
+  type         String   @default("QUINCENAL")
+  period       String
+  periodEnd    String
+  periodLabel  String
+  status       String   @default("ABIERTO")
+  totalGross   Decimal? @db.Decimal(12,2)
+  totalNet     Decimal? @db.Decimal(12,2)
+  totalIMSS    Decimal? @db.Decimal(12,2)
+  totalISR     Decimal? @db.Decimal(12,2)
+  exportedAt   DateTime?
+  paidAt       DateTime?
+  paidById     String?
+  flowMovementId String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  company Company       @relation(fields: [companyId], references: [id])
+  lines   PayrollLine[]
+  @@map("payroll_periods")
+}
+
+model PayrollLine {
+  id               String  @id @default(cuid())
+  payrollPeriodId  String
+  employeeId       String
+  companyId        String
+  baseSalary       Decimal @db.Decimal(12,2) @default(0)
+  overtime         Decimal @db.Decimal(12,2) @default(0)
+  bonus            Decimal @db.Decimal(12,2) @default(0)
+  commission       Decimal @db.Decimal(12,2) @default(0)
+  vacationPremium  Decimal @db.Decimal(12,2) @default(0)
+  otherPerceptions Decimal @db.Decimal(12,2) @default(0)
+  totalPerceptions Decimal @db.Decimal(12,2) @default(0)
+  imssEmployee     Decimal @db.Decimal(12,2) @default(0)
+  isrRetention     Decimal @db.Decimal(12,2) @default(0)
+  infonavit        Decimal @db.Decimal(12,2) @default(0)
+  loans            Decimal @db.Decimal(12,2) @default(0)
+  otherDeductions  Decimal @db.Decimal(12,2) @default(0)
+  totalDeductions  Decimal @db.Decimal(12,2) @default(0)
+  netPay           Decimal @db.Decimal(12,2) @default(0)
+  imssEmployer     Decimal @db.Decimal(12,2) @default(0)
+  notes            String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  period   PayrollPeriod @relation(fields: [payrollPeriodId], references: [id], onDelete: Cascade)
+  employee Employee      @relation(fields: [employeeId],      references: [id])
+  @@unique([payrollPeriodId, employeeId])
+  @@map("payroll_lines")
+}
+
+model Insumo {
+  id        String  @id @default(cuid())
+  companyId String
+  sku       String
+  name      String
+  unit      String  @default("kg")
+  costUnit  Decimal @db.Decimal(12,4) @default(0)
+  group     String  @default("GENERAL")
+  stock     Decimal @db.Decimal(12,4) @default(0)
+  minStock  Decimal @db.Decimal(12,4) @default(0)
+  isActive  Boolean @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  company Company @relation(fields: [companyId], references: [id])
+  @@unique([companyId, sku])
+  @@map("insumos")
+}
+
+model OrdenCompra {
+  id          String   @id @default(cuid())
+  companyId   String
+  clientId    String
+  numero      String
+  fecha       DateTime
+  montoTotal  Decimal  @db.Decimal(12,2)
+  montoSurtido Decimal @db.Decimal(12,2) @default(0)
+  saldo       Decimal  @db.Decimal(12,2)
+  status            String   @default("PENDIENTE")
+  fechaEntregaSol   DateTime? @db.Date
+  fechaEntregaReal  DateTime? @db.Date
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  company   Company        @relation(fields: [companyId], references: [id])
+  client    Client         @relation(fields: [clientId],  references: [id])
+  surtidos  SurtidoOC[]
+  lineas    LineaOC[]
+  @@unique([companyId, numero])
+  @@map("ordenes_compra")
+}
+
+model SurtidoOC {
+  id           String   @id @default(cuid())
+  ordenCompraId String
+  fecha        DateTime
+  monto        Decimal  @db.Decimal(12,2)
+  notes        String?
+  createdAt    DateTime @default(now())
+  ordenCompra OrdenCompra @relation(fields: [ordenCompraId], references: [id], onDelete: Cascade)
+  @@map("surtidos_oc")
+}
+
+model LineaOC {
+  id           String   @id @default(cuid())
+  ordenCompraId String
+  productId    String
+  cantidad     Int
+  cantidadSurtida Int   @default(0)
+  precioUnitario Decimal @db.Decimal(12,2)
+  total        Decimal  @db.Decimal(12,2)
+  createdAt    DateTime @default(now())
+  ordenCompra OrdenCompra @relation(fields: [ordenCompraId], references: [id], onDelete: Cascade)
+  product     Product     @relation(fields: [productId],     references: [id])
+  @@map("lineas_oc")
+}
+
+model CorteCaja {
+  id              String   @id @default(cuid())
+  companyId       String
+  branchId        String?
+  cajeroId        String
+  fecha           DateTime @db.Date
+  status          String   @default("PENDIENTE")
+  totalVentas     Decimal  @db.Decimal(12,2) @default(0)
+  totalEfectivo   Decimal  @db.Decimal(12,2) @default(0)
+  totalTarjeta    Decimal  @db.Decimal(12,2) @default(0)
+  totalTransfer   Decimal  @db.Decimal(12,2) @default(0)
+  totalCredito    Decimal  @db.Decimal(12,2) @default(0)
+  efectivoContado Decimal  @db.Decimal(12,2) @default(0)
+  efectivoReal    Decimal? @db.Decimal(12,2)
+  diferencia      Decimal  @db.Decimal(12,2) @default(0)
+  notasCajero     String?  @db.Text
+  notasValidador  String?  @db.Text
+  validadoPor     String?
+  validadoAt      DateTime?
+  detalleVentas   Json?
+  desgloseDenominaciones Json?
+  desgloseTerminales     Json?
+  desgloseDelivery       Json?
+  totalDelivery          Decimal  @db.Decimal(12,2) @default(0)
+  totalTerminal          Decimal  @db.Decimal(12,2) @default(0)
+  diferenciEfectivo      Decimal  @db.Decimal(12,2) @default(0)
+  diferenciaTerminal     Decimal  @db.Decimal(12,2) @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  company  Company @relation(fields: [companyId], references: [id])
+  cajero   User    @relation("CorteCajaCajero",    fields: [cajeroId],    references: [id])
+  validador User?  @relation("CorteCajaValidador", fields: [validadoPor], references: [id])
+  @@map("cortes_caja")
+}
+
+model LoteProduccion {
+  id          String   @id @default(cuid())
+  companyId   String
+  fecha       DateTime @db.Date
+  tipo        String
+  // MACHETE_RES | CHICALI_RES | CERDO | MACHACA
+  status      String   @default("EN_PROCESO")
+  // EN_PROCESO | EMPACADO | CERRADO
+  kgEntrada   Decimal  @db.Decimal(10,3) @default(0)
+  kgSalida    Decimal  @db.Decimal(10,3) @default(0)
+  kgGrasa     Decimal  @db.Decimal(10,3) @default(0)
+  kgMerma     Decimal  @db.Decimal(10,3) @default(0)
+  rendimiento Decimal  @db.Decimal(5,2)  @default(0)
+  // porcentaje calculado
+  kgEscarchado Decimal @db.Decimal(10,3) @default(0)
+  notas       String?
+  creadoPor   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  company   Company            @relation(fields: [companyId], references: [id])
+  insumos   LoteInsumo[]
+  empaques  LoteEmpaque[]
+  @@map("lotes_produccion")
+}
+
+model LoteInsumo {
+  id              String  @id @default(cuid())
+  loteId          String
+  insumoId        String?
+  nombre          String
+  cantidad        Decimal @db.Decimal(10,3)
+  unidad          String  @default("kg")
+  costoUnitario   Decimal @db.Decimal(12,4) @default(0)
+  costoTotal      Decimal @db.Decimal(12,2) @default(0)
+  createdAt       DateTime @default(now())
+  lote   LoteProduccion @relation(fields: [loteId], references: [id], onDelete: Cascade)
+  @@map("lote_insumos")
+}
+
+model LoteEmpaque {
+  id         String  @id @default(cuid())
+  loteId     String
+  productId  String
+  cantidad   Int
+  costoUnit  Decimal @db.Decimal(12,4) @default(0)
+  createdAt  DateTime @default(now())
+  lote    LoteProduccion @relation(fields: [loteId], references: [id], onDelete: Cascade)
+  product Product        @relation(fields: [productId], references: [id])
+  @@map("lote_empaques")
+}
+
+model IntercompanyTransfer {
+  id            String   @id @default(cuid())
+  fromCompanyId String
+  toCompanyId   String
+  amount        Decimal  @db.Decimal(12,2)
+  currency      String   @default("MXN")
+  concept       String
+  date          DateTime @db.Date
+  status        String   @default("PENDIENTE") // PENDIENTE | APROBADO | RECHAZADO
+  requestedById String
+  approvedById  String?
+  approvedAt    DateTime?
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  fromCompany   Company  @relation("TransferFrom", fields: [fromCompanyId], references: [id])
+  toCompany     Company  @relation("TransferTo",   fields: [toCompanyId],   references: [id])
+  @@map("intercompany_transfers")
+}
+
+// ══════════════════════════════════════════════════════════════
+//  PALESTRA — MEMBRESÍAS Y SERVICIOS
+// ══════════════════════════════════════════════════════════════
+
+model ServiceCatalog {
+  id          String   @id @default(cuid())
+  companyId   String
+  name        String
+  description String?
+  type        String   @default("SERVICIO") // MEMBRESIA | SERVICIO | CLASE | CLINICA | RENTA | MANTENIMIENTO
+  price       Decimal  @db.Decimal(12,2)
+  duration    Int?     // minutos (para clases/rentas)
+  isActive    Boolean  @default(true)
+  coachable   Boolean  @default(false) // genera comisión de coach
+  coachRate   Decimal? @db.Decimal(12,2) // monto fijo de comisión
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  company     Company  @relation(fields: [companyId], references: [id])
+  @@map("service_catalog")
+}
+
+model MembershipType {
+  id              String   @id @default(cuid())
+  companyId       String
+  name            String   // "Individual", "Familiar", "Corporativa"
+  description     String?
+  entryFee        Decimal  @db.Decimal(12,2) // costo de entrada (único)
+  monthlyFee      Decimal  @db.Decimal(12,2) // mantenimiento mensual
+  maxMembers      Int      @default(1)        // miembros por membresía
+  graceDays       Int      @default(5)        // días de gracia antes de bloquear
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  company         Company  @relation(fields: [companyId], references: [id])
+  memberships     Membership[]
+  @@map("membership_types")
+}
+
+model Membership {
+  id              String    @id @default(cuid())
+  companyId       String
+  membershipTypeId String
+  folio           String    // PALS-0001
+  status          String    @default("ACTIVA") // ACTIVA | MOROSA | SUSPENDIDA | CANCELADA
+  holderName      String    // nombre del titular
+  holderEmail     String?
+  holderPhone     String?
+  holderRfc       String?
+  groupName       String?   // nombre del grupo si aplica
+  startDate       DateTime  @db.Date
+  entryPaid       Boolean   @default(false)
+  entryPaidAt     DateTime?
+  lastPaymentDate DateTime? @db.Date
+  nextDueDate     DateTime? @db.Date
+  notes           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  company         Company         @relation(fields: [companyId], references: [id])
+  membershipType  MembershipType  @relation(fields: [membershipTypeId], references: [id])
+  members         MembershipMember[]
+  payments        MembershipPayment[]
+  @@map("memberships")
+}
+
+model MembershipMember {
+  id           String  @id @default(cuid())
+  membershipId String
+  name         String
+  email        String?
+  phone        String?
+  isHolder     Boolean @default(false)
+  createdAt    DateTime @default(now())
+  membership   Membership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+  @@map("membership_members")
+}
+
+model MembershipPayment {
+  id             String   @id @default(cuid())
+  membershipId   String
+  companyId      String
+  concept        String   // "Mantenimiento Abril 2026"
+  amount         Decimal  @db.Decimal(12,2)
+  paymentMethod  String   @default("EFECTIVO")
+  reference      String?
+  dueDate        DateTime @db.Date
+  paidAt         DateTime?
+  status         String   @default("PENDIENTE") // PENDIENTE | PAGADO | VENCIDO
+  createdAt      DateTime @default(now())
+  membership     Membership @relation(fields: [membershipId], references: [id])
+  @@map("membership_payments")
+}
+
+model CoachCommission {
+  id            String   @id @default(cuid())
+  companyId     String
+  employeeId    String   // coach (Employee)
+  saleId        String?  // venta que generó la comisión
+  clientName    String
+  service       String   // nombre del servicio/clínica
+  amount        Decimal  @db.Decimal(12,2) // monto de comisión
+  status        String   @default("PENDIENTE") // PENDIENTE | LIBERADA | PAGADA | CONGELADA
+  frozenReason  String?  // motivo de congelamiento
+  weekPeriod    String   // "2026-W17"
+  paidInPeriodId String? // PayrollPeriod
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  company       Company  @relation(fields: [companyId], references: [id])
+  employee      Employee @relation(fields: [employeeId], references: [id])
+  @@map("coach_commissions")
+}
+
+model SoftRestaurantImport {
+  id          String   @id @default(cuid())
+  companyId   String
+  fecha       DateTime @db.Date
+  totalVentas Decimal  @db.Decimal(12,2)
+  totalEfectivo Decimal @db.Decimal(12,2) @default(0)
+  totalTarjeta  Decimal @db.Decimal(12,2) @default(0)
+  totalOtros    Decimal @db.Decimal(12,2) @default(0)
+  numTransacciones Int  @default(0)
+  rawData     Json?
+  importedById String?
+  createdAt   DateTime @default(now())
+  company     Company  @relation(fields: [companyId], references: [id])
+  @@map("soft_restaurant_imports")
+}
+
+// ══════════════════════════════════════════════════════════════
+//  PALESTRA — INVENTARIO DE PRODUCTOS
+// ══════════════════════════════════════════════════════════════
+
+model PalestraProduct {
+  id          String   @id @default(cuid())
+  companyId   String
+  sku         String
+  name        String
+  category    String   @default("GENERAL") // ROPA | ACCESORIOS | SUPLEMENTOS | GENERAL
+  description String?
+  price       Decimal  @db.Decimal(12,2)
+  cost        Decimal  @db.Decimal(12,2) @default(0)
+  stock       Decimal  @db.Decimal(10,2) @default(0)
+  minStock    Decimal  @db.Decimal(10,2) @default(2)
+  imageUrl    String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  company     Company  @relation(fields: [companyId], references: [id])
+  @@unique([companyId, sku])
+  @@map("palestra_products")
+}
+
+// ══════════════════════════════════════════════════════════════
+//  PERMISOS POR ROL (NUEVO SISTEMA) - Ya definido arriba como RoleModulePermission
+// ══════════════════════════════════════════════════════════════
