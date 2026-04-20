@@ -96,7 +96,7 @@ export class PermissionsService {
 
   // Obtener permisos de un rol (DB primero, luego defaults)
   async getPermissions(roleCode: string, companyId?: string) {
-    const dbPerms = await this.prisma.permission.findMany({
+    const dbPerms = await this.prisma.rolPermiso.findMany({
       where: {
         roleCode,
         OR: [{ companyId: companyId || null }, { companyId: null }],
@@ -128,7 +128,7 @@ export class PermissionsService {
 
   // Verificar si un rol puede hacer una acción en un módulo
   async can(roleCode: string, module: string, action: string, companyId?: string): Promise<boolean> {
-    const dbPerm = await this.prisma.permission.findFirst({
+    const dbPerm = await this.prisma.rolPermiso.findFirst({
       where: { roleCode, module, action,
         OR: [{ companyId: companyId || null }, { companyId: null }] },
     });
@@ -142,7 +142,7 @@ export class PermissionsService {
 
   // Actualizar permisos (upsert)
   async updatePermission(roleCode: string, module: string, action: string, allowed: boolean, companyId?: string) {
-    return this.prisma.permission.upsert({
+    return this.prisma.rolPermiso.upsert({
       where: { roleCode_module_action_companyId: { roleCode, module, action, companyId: companyId || null } },
       update: { allowed },
       create: { roleCode, module, action, allowed, companyId: companyId || null },
@@ -151,7 +151,7 @@ export class PermissionsService {
 
   // Resetear a defaults
   async resetToDefaults(roleCode: string, companyId?: string) {
-    await this.prisma.permission.deleteMany({
+    await this.prisma.rolPermiso.deleteMany({
       where: { roleCode, OR: [{ companyId: companyId || null }, { companyId: null }] },
     });
     return { reset: true, role: roleCode };

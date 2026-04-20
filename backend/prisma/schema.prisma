@@ -1486,3 +1486,14 @@ model PalestraProduct {
   @@unique([companyId, sku])
   @@map("palestra_products")
 }
+
+model RolPermiso {
+  id          String  @id @default(cuid())
+  roleCode    String
+  module      String
+  action      String
+  allowed     Boolean @default(true)
+  companyId   String?
+  createdAt   DateTime @default(now())
+  @@map("rol_permisos")
+}
