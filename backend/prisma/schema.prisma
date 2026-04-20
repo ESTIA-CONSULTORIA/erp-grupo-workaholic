@@ -47,6 +47,7 @@ model User {
 model Role {
   id          String @id @default(cuid())
   code        String @unique
+  // admin | gerente | contador | capturista
   name        String
   description String
 
@@ -58,7 +59,7 @@ model Role {
 }
 
 // ══════════════════════════════════════════════════════════════
-//  PERMISOS (Sistema Legacy - por código)
+//  PERMISOS LEGACY
 // ══════════════════════════════════════════════════════════════
 
 model Permission {
@@ -131,16 +132,17 @@ model UserBranchRole {
 // ══════════════════════════════════════════════════════════════
 
 model Company {
-  id            String  @id @default(cuid())
-  code          String  @unique
-  name          String
-  color         String  @default("#3b82f6")
-  logoUrl       String?
-  hasAB         Boolean @default(true)
-  hasProduction Boolean @default(false)
-  isActive      Boolean @default(true)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id          String  @id @default(cuid())
+  code        String  @unique
+  // machete | workaholic | palestra | lonche
+  name        String
+  color       String  @default("#3b82f6")
+  logoUrl     String?
+  hasAB       Boolean @default(true)  // tiene A&B
+  hasProduction Boolean @default(false) // tiene producción (Machete)
+  isActive    Boolean @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   branches         Branch[]
   userRoles        UserCompanyRole[]
@@ -156,6 +158,7 @@ model Company {
   flowMovements    FlowMovement[]
   periodClosures   PeriodClosure[]
   documentUploads  DocumentUpload[]
+  // Machete específico
   products         Product[]
   recipes          Recipe[]
   productionBatches ProductionBatch[]
@@ -171,12 +174,13 @@ model Company {
   transfersFrom    IntercompanyTransfer[] @relation("TransferFrom")
   transfersTo      IntercompanyTransfer[] @relation("TransferTo")
 
-  // Palestra
-  serviceCatalog   ServiceCatalog[]
-  membershipTypes  MembershipType[]
-  memberships      Membership[]
-  coachCommissions CoachCommission[]
-  palestraProducts PalestraProduct[]
+  // ──────────────────── PALESTRA Y NUEVOS MÓDULOS ────────────────────
+  serviceCatalog         ServiceCatalog[]
+  membershipTypes        MembershipType[]
+  memberships            Membership[]
+  coachCommissions       CoachCommission[]
+  softRestaurantImports  SoftRestaurantImport[]
+  palestraProducts       PalestraProduct[]
 
   @@map("companies")
 }
@@ -185,6 +189,8 @@ model Branch {
   id        String  @id @default(cuid())
   companyId String
   code      String
+  // vizcaya | colegio | xochimilco | compuertas (Lonche)
+  // unica (resto de empresas)
   name      String
   isActive  Boolean @default(true)
   createdAt DateTime @default(now())
@@ -207,7 +213,7 @@ model Branch {
 model FinancialSchema {
   id        String  @id @default(cuid())
   companyId String  @unique
-  name      String
+  name      String  // "Esquema Palestra 2026"
   version   Int     @default(1)
   isActive  Boolean @default(true)
   createdAt DateTime @default(now())
@@ -220,13 +226,16 @@ model FinancialSchema {
 }
 
 model FinancialSection {
-  id            String  @id @default(cuid())
-  schemaId      String
-  code          String
-  name          String
-  order         Int
-  isVisible     Boolean @default(true)
-  affectsResult Boolean @default(true)
+  id               String  @id @default(cuid())
+  schemaId         String
+  code             String
+  // INGRESOS | COSTO_VENTA | GASTOS_GENERALES |
+  // OBLIGACIONES | INVERSIONES | OPERACIONES_EXTERNAS | COMPROBACION
+  name             String  // título visible editable
+  order            Int
+  isVisible        Boolean @default(true)
+  affectsResult    Boolean @default(true)
+  // false para OPERACIONES_EXTERNAS (se muestra pero no afecta operativo)
 
   schema FinancialSchema  @relation(fields: [schemaId], references: [id], onDelete: Cascade)
   groups FinancialGroup[]
@@ -239,9 +248,10 @@ model FinancialGroup {
   id        String  @id @default(cuid())
   sectionId String
   code      String
-  name      String
+  name      String  // título visible editable
   order     Int
   isSummary Boolean @default(false)
+  // true = muestra subtotal del grupo
 
   section FinancialSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
   rubrics FinancialRubric[]
@@ -254,10 +264,15 @@ model FinancialRubric {
   id      String @id @default(cuid())
   groupId String
   code    String
-  name    String
+  name    String  // título visible editable (ej: "Ingreso por membresías")
   order   Int
 
+  // ── Atributos funcionales (lógica por metadata, no por nombre) ──
   rubricType        String
+  // INGRESO | COSTO | GASTO | OBLIGACION | INVERSION |
+  // TRASPASO | OPERACION_EXTERNA | CORTESIA | DESCUENTO
+
+  // Qué acepta este rubro en captura
   allowsContado     Boolean @default(false)
   allowsCxC         Boolean @default(false)
   allowsDiscount    Boolean @default(false)
@@ -266,6 +281,8 @@ model FinancialRubric {
   requiresSupplier  Boolean @default(false)
   requiresBank      Boolean @default(false)
   requiresTerminal  Boolean @default(false)
+
+  // Qué afecta este rubro en reportes
   affectsGrossSale  Boolean @default(false)
   affectsNetSale    Boolean @default(false)
   affectsFlow       Boolean @default(false)
@@ -275,10 +292,13 @@ model FinancialRubric {
   affectsExpense    Boolean @default(false)
   affectsResult     Boolean @default(true)
   affectsExternalOp Boolean @default(false)
+
+  // Visibilidad en reportes
   showInSummary     Boolean @default(true)
   showInStatement   Boolean @default(true)
   showInDashboard   Boolean @default(true)
-  isActive          Boolean @default(true)
+
+  isActive Boolean @default(true)
 
   group    FinancialGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
   cutLines CutLine[]
@@ -294,18 +314,18 @@ model FinancialRubric {
 // ══════════════════════════════════════════════════════════════
 
 model Client {
-  id          String   @id @default(cuid())
-  companyId   String
-  name        String
-  email       String?
-  phone       String?
-  rfc         String?
-  address     String?
-  creditLimit Decimal  @default(0) @db.Decimal(12,2)
-  creditDays  Int      @default(30)
-  notes       String?
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
+  id            String   @id @default(cuid())
+  companyId     String
+  name          String
+  email         String?
+  phone         String?
+  creditLimit   Decimal  @default(0) @db.Decimal(12,2)
+  notes         String?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  rfc           String?
+  address       String?
+  creditDays    Int      @default(30)
 
   company     Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
   cutLines    CutLine[]
@@ -336,15 +356,19 @@ model Supplier {
 }
 
 model CashAccount {
-  id            String  @id @default(cuid())
-  companyId     String
-  code          String
-  name          String
-  type          String
-  currency      String  @default("MXN")
-  bankName      String?
+  id        String  @id @default(cuid())
+  companyId String
+  code      String
+  // efectivo_mxn | efectivo_usd | banregio_mxn | banregio_usd |
+  // mercado_pago | stripe | caja_chica
+  name      String
+  type      String
+  // EFECTIVO | BANCO | PLATAFORMA | CAJA_CHICA
+  currency  String  @default("MXN")
+  // MXN | USD
+  bankName  String?
   accountNumber String?
-  isActive      Boolean @default(true)
+  isActive  Boolean @default(true)
 
   company       Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
   cutLines      CutLine[]
@@ -367,8 +391,9 @@ model Cut {
   branchId     String
   folio        String
   date         DateTime @db.Date
-  shift        String?
+  shift        String?  // MATUTINO | VESPERTINO | NOCTURNO
   status       String   @default("BORRADOR")
+  // BORRADOR | ENVIADO | APROBADO | RECHAZADO
   notes        String?
   createdById  String
   approvedById String?
@@ -394,21 +419,24 @@ model CutLine {
   cashAccountId String?
 
   paymentType   String
+  // CONTADO | CXC
   currency      String  @default("MXN")
+  // MXN | USD
   exchangeRate  Decimal @default(1) @db.Decimal(10,4)
 
   grossAmount   Decimal @db.Decimal(12,2)
   discount      Decimal @default(0) @db.Decimal(12,2)
   courtesy      Decimal @default(0) @db.Decimal(12,2)
   netAmount     Decimal @db.Decimal(12,2)
+  // netAmount = grossAmount - discount - courtesy
 
   reference     String?
   notes         String?
 
-  cut         Cut            @relation(fields: [cutId],         references: [id], onDelete: Cascade)
-  rubric      FinancialRubric @relation(fields: [rubricId],     references: [id])
-  client      Client?         @relation(fields: [clientId],     references: [id])
-  cashAccount CashAccount?    @relation(fields: [cashAccountId],references: [id])
+  cut         Cut          @relation(fields: [cutId],         references: [id], onDelete: Cascade)
+  rubric      FinancialRubric @relation(fields: [rubricId],  references: [id])
+  client      Client?      @relation(fields: [clientId],     references: [id])
+  cashAccount CashAccount? @relation(fields: [cashAccountId],references: [id])
 
   @@map("cut_lines")
 }
@@ -424,13 +452,16 @@ model FlowMovement {
   cashAccountId String
   date          DateTime @db.Date
   type          String
+  // ENTRADA | SALIDA | TRASPASO_ORIGEN | TRASPASO_DESTINO
   originType    String
+  // CORTE | GASTO | COMPRA | ABONO_CXC | PAGO_CXP | TRASPASO | AJUSTE
   originId      String?
   rubricId      String?
   amount        Decimal  @db.Decimal(12,2)
   currency      String   @default("MXN")
   exchangeRate  Decimal  @default(1) @db.Decimal(10,4)
   amountMxn     Decimal  @db.Decimal(12,2)
+  // monto convertido a MXN
   reference     String?
   notes         String?
   createdAt     DateTime @default(now())
@@ -443,24 +474,30 @@ model FlowMovement {
 }
 
 model CashCount {
-  id                String   @id @default(cuid())
-  companyId         String
-  branchId          String
-  cashAccountId     String
-  date              DateTime @db.Date
-  periodId          String?
+  id            String   @id @default(cuid())
+  companyId     String
+  branchId      String
+  cashAccountId String
+  date          DateTime @db.Date
+  periodId      String?
 
-  openingBalance    Decimal @db.Decimal(12,2)
-  inflows           Decimal @db.Decimal(12,2)
-  outflows          Decimal @db.Decimal(12,2)
+  openingBalance  Decimal @db.Decimal(12,2)
+  inflows         Decimal @db.Decimal(12,2)
+  outflows        Decimal @db.Decimal(12,2)
   theoreticalBalance Decimal @db.Decimal(12,2)
-  physicalCount     Decimal @db.Decimal(12,2)
-  difference        Decimal @db.Decimal(12,2)
-  differenceNotes   String?
+  // openingBalance + inflows - outflows
+  physicalCount   Decimal @db.Decimal(12,2)
+  difference      Decimal @db.Decimal(12,2)
+  // physicalCount - theoreticalBalance
+  differenceNotes String?
 
-  countDetail       Json?
-  evidenceUrl       String?
-  status            String  @default("BORRADOR")
+  // Detalle del conteo físico (JSON)
+  countDetail     Json?
+  // { billetes: {1000:3, 500:10...}, monedas: {10:5...}, usd: {100:2...} }
+
+  evidenceUrl     String?
+  status          String  @default("BORRADOR")
+  // BORRADOR | CERRADO
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -479,7 +516,7 @@ model Receivable {
   id             String   @id @default(cuid())
   companyId      String
   clientId       String
-  cutLineId      String?
+  cutLineId      String?  // origen de la CxC
   rubricId       String?
   date           DateTime @db.Date
   dueDate        DateTime? @db.Date
@@ -487,7 +524,9 @@ model Receivable {
   originalAmount Decimal  @db.Decimal(12,2)
   paidAmount     Decimal  @default(0) @db.Decimal(12,2)
   balance        Decimal  @db.Decimal(12,2)
+  // balance = originalAmount - paidAmount
   status         String   @default("PENDIENTE")
+  // PENDIENTE | PARCIAL | PAGADO | VENCIDO
   notes          String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
@@ -508,6 +547,7 @@ model ReceivablePayment {
   currency      String   @default("MXN")
   exchangeRate  Decimal  @default(1) @db.Decimal(10,4)
   paymentMethod String
+  // EFECTIVO_MXN | EFECTIVO_USD | TRANSFERENCIA | TARJETA
   reference     String?
   notes         String?
   createdAt     DateTime @default(now())
@@ -534,6 +574,7 @@ model Payable {
   paidAmount     Decimal  @default(0) @db.Decimal(12,2)
   balance        Decimal  @db.Decimal(12,2)
   status         String   @default("PENDIENTE")
+  // PENDIENTE | PARCIAL | PAGADO
   notes          String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
@@ -586,20 +627,23 @@ model Expense {
   totalMxn      Decimal  @db.Decimal(12,2)
 
   paymentStatus String   @default("PAGADO")
+  // PAGADO | PENDIENTE | MIXTO
   paymentMethod String?
+  // EFECTIVO_MXN | EFECTIVO_USD | TRANSFERENCIA | TARJETA
 
-  invoiceRef    String?
+  invoiceRef    String?  // número de factura
   isExternal    Boolean  @default(false)
+  // true = operación externa al negocio (separada del resultado operativo)
   externalNotes String?
 
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  company     Company          @relation(fields: [companyId],    references: [id])
-  supplier    Supplier?        @relation(fields: [supplierId],   references: [id])
-  rubric      FinancialRubric? @relation(fields: [rubricId],     references: [id])
-  cashAccount CashAccount?     @relation(fields: [cashAccountId],references: [id])
-  user        User             @relation(fields: [userId],       references: [id])
+  company     Company         @relation(fields: [companyId],    references: [id])
+  supplier    Supplier?       @relation(fields: [supplierId],   references: [id])
+  rubric      FinancialRubric? @relation(fields: [rubricId],    references: [id])
+  cashAccount CashAccount?    @relation(fields: [cashAccountId],references: [id])
+  user        User            @relation(fields: [userId],       references: [id])
   documents   DocumentUpload[]
 
   @@map("expenses")
@@ -651,7 +695,7 @@ model PurchaseItem {
 }
 
 // ══════════════════════════════════════════════════════════════
-//  BANDEJA DOCUMENTAL
+//  BANDEJA DOCUMENTAL (tickets, facturas, cortes en foto)
 // ══════════════════════════════════════════════════════════════
 
 model DocumentUpload {
@@ -661,20 +705,29 @@ model DocumentUpload {
   expenseId   String?
 
   type        String
+  // CORTE | COMPRA | GASTO | FACTURA | TICKET | RECIBO
+
   fileUrl     String
   fileName    String
   mimeType    String
 
+  // OCR / Extracción IA
   rawText     String?  @db.Text
   extractedJson Json?
+  // { proveedor, fecha, total, subtotal, iva, conceptos[] }
   validatedJson Json?
+  // JSON revisado y editado por el usuario
 
+  // Quién revisó
   validatedById String?
   validatedAt   DateTime?
 
   originRecordId String?
+  // ID del gasto/compra/corte que se generó desde este documento
 
   status      String   @default("CARGADO")
+  // CARGADO | PROCESANDO | PENDIENTE_VALIDACION |
+  // VALIDADO | RECHAZADO | ARCHIVADO
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -694,10 +747,13 @@ model PeriodClosure {
   id        String   @id @default(cuid())
   companyId String
   period    String
+  // "2026-03" — año-mes
   status    String   @default("ABIERTO")
+  // ABIERTO | EN_CIERRE | CERRADO
   closedAt  DateTime?
   closedById String?
 
+  // Snapshots del estado financiero al cierre
   incomeStatement Json?
   cashFlowSummary Json?
   balanceSummary  Json?
@@ -721,7 +777,8 @@ model AuditLog {
   userId     String
   companyId  String?
   action     String
-  entity     String
+  // CREATE | UPDATE | DELETE | APPROVE | REJECT | LOGIN | CLOSE_PERIOD
+  entity     String   // cuts | expenses | receivables | etc.
   entityId   String?
   before     Json?
   after      Json?
@@ -741,13 +798,15 @@ model Product {
   id           String  @id @default(cuid())
   companyId    String
   sku          String
+  // RES-NAT-100G | CER-CHI-500G etc.
   name         String
-  meatType     String
-  flavor       String
-  presentation String
+  meatType     String  // RES | CER
+  flavor       String  // NAT | CHI | BBQ
+  presentation String  // 100G | 250G | 500G | 1KG
   gramsWeight  Int?
   isActive     Boolean @default(true)
 
+  // Precios por canal
   priceMostrador Decimal? @db.Decimal(10,2)
   priceMayoreo   Decimal? @db.Decimal(10,2)
   priceOnline    Decimal? @db.Decimal(10,2)
@@ -779,7 +838,9 @@ model Recipe {
   id              String   @id @default(cuid())
   companyId       String
   key             String
+  // RES-NAT | RES-CHI | CER-BBQ etc.
   theoreticalYield Decimal @db.Decimal(5,4)
+  // 0.38 = 38% rendimiento kg salida / kg entrada
   versionNumber   Int      @default(1)
   isActive        Boolean  @default(true)
   changedById     String?
@@ -797,9 +858,10 @@ model Recipe {
 model RecipeIngredient {
   id             String  @id @default(cuid())
   recipeId       String
-  inputName      String
+  inputName      String  // CARNE_RES | SAL | CHILE_ROJO etc.
   quantityPer100g Decimal @db.Decimal(8,4)
-  unit           String
+  // cantidad de insumo por 100g de producto terminado
+  unit           String  // kg | lt | pza
 
   recipe Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
 
@@ -814,6 +876,7 @@ model ProductionBatch {
   startDate    DateTime @db.Date
   endDate      DateTime? @db.Date
   status       String   @default("MARINANDO")
+  // MARINANDO | SECANDO | TERMINADO
 
   kgInput      Decimal  @db.Decimal(10,3)
   kgOutput     Decimal? @db.Decimal(10,3)
@@ -822,7 +885,9 @@ model ProductionBatch {
   yieldOk      Boolean?
 
   inputsUsed   Json?
+  // [{ inputName, quantity, unit }]
   distribution Json?
+  // [{ sku, units }]
 
   notes        String?
   createdAt    DateTime @default(now())
@@ -838,18 +903,17 @@ model Sale {
   id          String   @id @default(cuid())
   companyId   String
   date        DateTime @db.Date
-  channel     String
+  channel     String   // MOSTRADOR | MAYOREO | ONLINE | ML
   clientName  String?
-  clientId    String?
   total       Decimal  @db.Decimal(12,2)
-  paymentMethod String
-  cutId       String?
-  isCredit    Boolean  @default(false)
+  paymentMethod String // efectivo | tarjeta
+  cutId       String?  // corte ERP generado
   createdAt   DateTime @default(now())
 
   lines SaleLine[]
-  client Client? @relation(fields: [clientId], references: [id])
-
+  clientId    String?
+  isCredit    Boolean  @default(false)
+  client      Client?  @relation(fields: [clientId], references: [id])
   @@map("sales")
 }
 
@@ -870,7 +934,6 @@ model SaleLine {
 // ══════════════════════════════════════════════════════════════
 //  CXC — CUENTAS POR COBRAR
 // ══════════════════════════════════════════════════════════════
-
 model CxC {
   id             String   @id @default(cuid())
   companyId      String
@@ -886,11 +949,9 @@ model CxC {
   notes          String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
-
   company  Company       @relation(fields: [companyId], references: [id])
   client   Client?       @relation(fields: [clientId],  references: [id])
   payments CxCPayment[]
-
   @@map("cxc")
 }
 
@@ -904,17 +965,14 @@ model CxCPayment {
   reference     String?
   cashAccountId String?
   createdAt     DateTime @default(now())
-
-  cxc         CxC          @relation(fields: [cxcId], references: [id], onDelete: Cascade)
+  cxc         CxC         @relation(fields: [cxcId], references: [id], onDelete: Cascade)
   cashAccount CashAccount? @relation(fields: [cashAccountId], references: [id])
-
   @@map("cxc_payments")
 }
 
 // ══════════════════════════════════════════════════════════════
 //  DOCUMENTOS
 // ══════════════════════════════════════════════════════════════
-
 model Document {
   id            String   @id @default(cuid())
   companyId     String
@@ -926,21 +984,18 @@ model Document {
   status        String   @default("CARGADO")
   extractedJson Json?
   validatedJson Json?
-  linkedId      String?
-  linkedType    String?
+  linkedId      String?  // ID del gasto o compra creado
+  linkedType    String?  // 'GASTO' | 'COMPRA'
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
-
   company Company @relation(fields: [companyId], references: [id])
   user    User    @relation(fields: [userId],    references: [id])
-
   @@map("documents")
 }
 
 // ══════════════════════════════════════════════════════════════
 //  RH — RECURSOS HUMANOS
 // ══════════════════════════════════════════════════════════════
-
 model Employee {
   id             String   @id @default(cuid())
   companyId      String
@@ -970,19 +1025,17 @@ model Employee {
   repseNumber    String?
   repseExpiry    DateTime?
   status         String   @default("ACTIVO")
-  userId         String?  @unique
+  userId         String?  @unique // vinculo con usuario del sistema
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
-
-  company          Company            @relation(fields: [companyId], references: [id])
-  branch           Branch?            @relation(fields: [branchId],  references: [id])
-  user             User?              @relation("UserEmployee", fields: [userId], references: [id])
-  documents        EmployeeDocument[]
-  vacations        VacationRequest[]
-  hrEvents         HREvent[]
-  payrollLines     PayrollLine[]
-  coachCommissions CoachCommission[]
-
+  company       Company            @relation(fields: [companyId], references: [id])
+  branch        Branch?            @relation(fields: [branchId],  references: [id])
+  user          User?              @relation("UserEmployee", fields: [userId], references: [id])
+  documents     EmployeeDocument[]
+  vacations     VacationRequest[]
+  hrEvents      HREvent[]
+  payrollLines      PayrollLine[]
+  coachCommissions  CoachCommission[]
   @@unique([companyId, employeeNumber])
   @@map("employees")
 }
@@ -1004,9 +1057,7 @@ model EmployeeDocument {
   status       String   @default("VIGENTE")
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
-
   employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-
   @@map("employee_documents")
 }
 
@@ -1435,7 +1486,3 @@ model PalestraProduct {
   @@unique([companyId, sku])
   @@map("palestra_products")
 }
-
-// ══════════════════════════════════════════════════════════════
-//  PERMISOS POR ROL (NUEVO SISTEMA) - Ya definido arriba como RoleModulePermission
-// ══════════════════════════════════════════════════════════════
