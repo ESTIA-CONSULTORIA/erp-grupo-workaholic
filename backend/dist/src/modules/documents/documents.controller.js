@@ -30,6 +30,9 @@ let DocumentsController = class DocumentsController {
     extract(cid, id) {
         return this.svc.extract(cid, id);
     }
+    update(id, body) {
+        return this.svc.update(id, body);
+    }
     validate(id, body) {
         return this.svc.validate(id, body.validatedData);
     }
@@ -61,6 +64,14 @@ __decorate([
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", void 0)
 ], DocumentsController.prototype, "extract", null);
+__decorate([
+    (0, common_1.Put)(':id'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], DocumentsController.prototype, "update", null);
 __decorate([
     (0, common_1.Put)(':id/validate'),
     __param(0, (0, common_1.Param)('id')),

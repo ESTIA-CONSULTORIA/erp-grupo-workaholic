@@ -41,6 +41,9 @@ export class PalestraController {
   @Post('memberships')
   createMembership(@Param('companyId') cid: string, @Body() body: any) { return this.svc.createMembership(cid, body); }
 
+  @Post('memberships/check-overdue')
+  checkOverdue(@Param('companyId') cid: string) { return this.svc.checkAndBlockOverdue(cid); }
+
   @Post('memberships/:id/members')
   addMember(@Param('id') id: string, @Body() body: any) { return this.svc.addMember(id, body); }
 
@@ -52,9 +55,6 @@ export class PalestraController {
 
   @Post('memberships/:id/payments')
   registerPayment(@Param('id') id: string, @Body() body: any) { return this.svc.registerPayment(id, body); }
-
-  @Post('memberships/check-overdue')
-  checkOverdue(@Param('companyId') cid: string) { return this.svc.checkAndBlockOverdue(cid); }
 
   // Comisiones de coach
   @Get('commissions')
@@ -81,6 +81,9 @@ export class PalestraController {
   }
 
   // Productos con inventario
+  @Get('products/low-stock')
+  getLowStock(@Param('companyId') cid: string) { return this.svc.getLowStock(cid); }
+
   @Get('products')
   getProducts(@Param('companyId') cid: string) { return this.svc.getProducts(cid); }
 
@@ -92,9 +95,6 @@ export class PalestraController {
 
   @Put('products/:id/stock')
   adjustStock(@Param('id') id: string, @Body() body: any) { return this.svc.adjustStock(id, body.qty, body.notes); }
-
-  @Get('products/low-stock')
-  getLowStock(@Param('companyId') cid: string) { return this.svc.getLowStock(cid); }
 
   // POS Palestra
   @Post('sales')

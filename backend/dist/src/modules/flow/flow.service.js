@@ -71,6 +71,61 @@ let FlowService = class FlowService {
             }),
         ]);
     }
+    async createMovement(companyId, userId, data) {
+        const branch = await this.prisma.branch.findFirst({ where: { companyId } });
+        if (!branch)
+            throw new Error('No hay sucursal configurada');
+        let cashAccountId = data.cashAccountId;
+        if (!cashAccountId) {
+            const cuentaEfectivo = await this.prisma.cashAccount.findFirst({
+                where: { companyId, type: 'EFECTIVO', currency: 'MXN', isActive: true },
+            });
+            if (!cuentaEfectivo)
+                throw new Error('No hay cuenta de efectivo configurada');
+            cashAccountId = cuentaEfectivo.id;
+        }
+        return this.prisma.flowMovement.create({
+            data: {
+                companyId,
+                branchId: branch.id,
+                cashAccountId,
+                date: new Date(data.date || new Date()),
+                type: data.type,
+                originType: data.originType || 'AJUSTE',
+                amount: Number(data.amount),
+                currency: data.currency || 'MXN',
+                exchangeRate: 1,
+                amountMxn: Number(data.amount),
+                notes: data.notes || null,
+            },
+        });
+    }
+    async getMovements(companyId, fecha, period) {
+        const where = { companyId };
+        if (fecha) {
+            const start = new Date(fecha + 'T00:00:00');
+            const end = new Date(fecha + 'T23:59:59');
+            where.date = { gte: start, lte: end };
+        }
+        else if (period) {
+            const [y, m] = period.split('-').map(Number);
+            where.date = { gte: new Date(y, m - 1, 1), lte: new Date(y, m, 0) };
+        }
+        return this.prisma.flowMovement.findMany({
+            where,
+            include: { cashAccount: { select: { id: true, name: true, type: true } } },
+            orderBy: { createdAt: 'desc' },
+        });
+    }
+    async updateAccount(accountId, data) {
+        return this.prisma.cashAccount.update({
+            where: { id: accountId },
+            data: {
+                name: data.name !== undefined ? data.name : undefined,
+                isActive: data.isActive !== undefined ? data.isActive : undefined,
+            },
+        });
+    }
 };
 exports.FlowService = FlowService;
 exports.FlowService = FlowService = __decorate([

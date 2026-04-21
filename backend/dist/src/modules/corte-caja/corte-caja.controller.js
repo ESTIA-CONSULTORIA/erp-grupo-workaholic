@@ -35,6 +35,9 @@ let CorteCajaController = class CorteCajaController {
     rechazar(id, body, req) {
         return this.svc.rechazarCorte(id, req.user.sub, body.notas || '');
     }
+    responder(id, body, req) {
+        return this.svc.responderCorte(id, req.user.sub, body.respuesta || '', body.ticketUrl, body.ticketNombre);
+    }
 };
 exports.CorteCajaController = CorteCajaController;
 __decorate([
@@ -80,9 +83,18 @@ __decorate([
     __metadata("design:paramtypes", [String, Object, Object]),
     __metadata("design:returntype", void 0)
 ], CorteCajaController.prototype, "rechazar", null);
+__decorate([
+    (0, common_1.Put)(':corteId/responder'),
+    __param(0, (0, common_1.Param)('corteId')),
+    __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object, Object]),
+    __metadata("design:returntype", void 0)
+], CorteCajaController.prototype, "responder", null);
 exports.CorteCajaController = CorteCajaController = __decorate([
     (0, common_1.UseGuards)(auth_guards_1.JwtAuthGuard),
-    (0, common_1.Controller)('api/v1/companies/:companyId/corte-caja'),
+    (0, common_1.Controller)('companies/:companyId/corte-caja'),
     __metadata("design:paramtypes", [corte_caja_service_1.CorteCajaService])
 ], CorteCajaController);
 //# sourceMappingURL=corte-caja.controller.js.map

@@ -27,6 +27,15 @@ let FlowController = class FlowController {
     transfer(id, body) {
         return this.svc.transfer(id, body);
     }
+    createMovement(id, body, req) {
+        return this.svc.createMovement(id, req.user.sub, body);
+    }
+    getMovements(id, fecha, period) {
+        return this.svc.getMovements(id, fecha, period);
+    }
+    updateAccount(accountId, body) {
+        return this.svc.updateAccount(accountId, body);
+    }
 };
 exports.FlowController = FlowController;
 __decorate([
@@ -44,6 +53,32 @@ __decorate([
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], FlowController.prototype, "transfer", null);
+__decorate([
+    (0, common_1.Post)('movements'),
+    __param(0, (0, common_1.Param)('companyId')),
+    __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object, Object]),
+    __metadata("design:returntype", void 0)
+], FlowController.prototype, "createMovement", null);
+__decorate([
+    (0, common_1.Get)('movements'),
+    __param(0, (0, common_1.Param)('companyId')),
+    __param(1, (0, common_1.Query)('fecha')),
+    __param(2, (0, common_1.Query)('period')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, String]),
+    __metadata("design:returntype", void 0)
+], FlowController.prototype, "getMovements", null);
+__decorate([
+    (0, common_1.Put)('accounts/:accountId'),
+    __param(0, (0, common_1.Param)('accountId')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], FlowController.prototype, "updateAccount", null);
 exports.FlowController = FlowController = __decorate([
     (0, swagger_1.ApiTags)('Flow'),
     (0, swagger_1.ApiBearerAuth)(),

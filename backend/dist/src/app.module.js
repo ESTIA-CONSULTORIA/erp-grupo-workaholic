@@ -15,10 +15,19 @@ const flow_module_1 = require("./modules/flow/flow.module");
 const cuts_module_1 = require("./modules/cuts/cuts.module");
 const expenses_module_1 = require("./modules/expenses/expenses.module");
 const cxc_module_1 = require("./modules/cxc/cxc.module");
+const cxp_module_1 = require("./modules/cxp/cxp.module");
+const suppliers_module_1 = require("./modules/suppliers/suppliers.module");
 const documents_module_1 = require("./modules/documents/documents.module");
 const reports_module_1 = require("./modules/reports/reports.module");
 const machete_module_1 = require("./modules/machete/machete.module");
 const rh_module_1 = require("./modules/rh/rh.module");
+const bulk_import_module_1 = require("./modules/bulk-import/bulk-import.module");
+const audit_module_1 = require("./modules/audit/audit.module");
+const permissions_module_1 = require("./modules/permissions/permissions.module");
+const permissions_controller_1 = require("./modules/permissions/permissions.controller");
+const palestra_module_1 = require("./modules/palestra/palestra.module");
+const maintenance_module_1 = require("./modules/maintenance/maintenance.module");
+const intercompany_module_1 = require("./modules/intercompany/intercompany.module");
 const corte_caja_module_1 = require("./modules/corte-caja/corte-caja.module");
 let AppModule = class AppModule {
 };
@@ -33,12 +42,21 @@ exports.AppModule = AppModule = __decorate([
             cuts_module_1.CutsModule,
             expenses_module_1.ExpensesModule,
             cxc_module_1.CxcModule,
+            cxp_module_1.CxpModule,
+            suppliers_module_1.SuppliersModule,
             documents_module_1.DocumentsModule,
             reports_module_1.ReportsModule,
             machete_module_1.MacheteModule,
             rh_module_1.RhModule,
+            bulk_import_module_1.BulkImportModule,
+            audit_module_1.AuditModule,
+            palestra_module_1.PalestraModule,
+            permissions_module_1.PermissionsModule,
+            maintenance_module_1.MaintenanceModule,
+            intercompany_module_1.IntercompanyModule,
             corte_caja_module_1.CorteCajaModule,
         ],
+        controllers: [permissions_controller_1.PermissionsController],
     })
 ], AppModule);
 //# sourceMappingURL=app.module.js.map

@@ -35,18 +35,30 @@ export declare class CompaniesService {
         createdAt: Date;
         updatedAt: Date;
     }, null, import("@prisma/client/runtime/library").DefaultArgs>;
+    getFinancialRubrics(companyId: string): Promise<any[]>;
+    getCashAccounts(companyId: string): import(".prisma/client").Prisma.PrismaPromise<{
+        id: string;
+        code: string;
+        name: string;
+        isActive: boolean;
+        companyId: string;
+        type: string;
+        currency: string;
+        bankName: string | null;
+        accountNumber: string | null;
+    }[]>;
     getUsers(companyId: string): import(".prisma/client").Prisma.PrismaPromise<({
-        user: {
-            id: string;
-            name: string;
-            isActive: boolean;
-            email: string;
-        };
         role: {
             id: string;
             code: string;
             name: string;
             description: string;
+        };
+        user: {
+            id: string;
+            name: string;
+            isActive: boolean;
+            email: string;
         };
     } & {
         id: string;
@@ -54,6 +66,39 @@ export declare class CompaniesService {
         userId: string;
         roleId: string;
     })[]>;
+    createUser(companyId: string, data: any): Promise<{
+        id: string;
+        name: string;
+        isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        email: string;
+        passwordHash: string;
+        phone: string | null;
+        pin: string | null;
+    }>;
+    updateUser(userId: string, data: any): Promise<{
+        id: string;
+        name: string;
+        isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        email: string;
+        passwordHash: string;
+        phone: string | null;
+        pin: string | null;
+    }>;
+    toggleUser(userId: string): Promise<{
+        id: string;
+        name: string;
+        isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        email: string;
+        passwordHash: string;
+        phone: string | null;
+        pin: string | null;
+    }>;
     getClients(companyId: string): import(".prisma/client").Prisma.PrismaPromise<({
         _count: {
             ordenesCompra: number;
@@ -146,8 +191,8 @@ export declare class CompaniesService {
             } & {
                 id: string;
                 createdAt: Date;
-                ordenCompraId: string;
                 productId: string;
+                ordenCompraId: string;
                 cantidad: number;
                 cantidadSurtida: number;
                 precioUnitario: import("@prisma/client/runtime/library").Decimal;
@@ -181,55 +226,6 @@ export declare class CompaniesService {
         address: string | null;
         creditDays: number;
     }, null, import("@prisma/client/runtime/library").DefaultArgs>;
-    getOrdenesByCliente(companyId: string, clientId: string, status?: string): Promise<({
-        surtidos: {
-            id: string;
-            createdAt: Date;
-            notes: string | null;
-            fecha: Date;
-            ordenCompraId: string;
-            monto: import("@prisma/client/runtime/library").Decimal;
-        }[];
-        lineas: ({
-            product: {
-                id: string;
-                name: string;
-                isActive: boolean;
-                companyId: string;
-                sku: string;
-                meatType: string;
-                flavor: string;
-                presentation: string;
-                gramsWeight: number | null;
-                priceMostrador: import("@prisma/client/runtime/library").Decimal | null;
-                priceMayoreo: import("@prisma/client/runtime/library").Decimal | null;
-                priceOnline: import("@prisma/client/runtime/library").Decimal | null;
-                priceML: import("@prisma/client/runtime/library").Decimal | null;
-            };
-        } & {
-            id: string;
-            createdAt: Date;
-            ordenCompraId: string;
-            productId: string;
-            cantidad: number;
-            cantidadSurtida: number;
-            precioUnitario: import("@prisma/client/runtime/library").Decimal;
-            total: import("@prisma/client/runtime/library").Decimal;
-        })[];
-    } & {
-        id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        companyId: string;
-        notes: string | null;
-        fecha: Date;
-        clientId: string;
-        numero: string;
-        montoTotal: import("@prisma/client/runtime/library").Decimal;
-        montoSurtido: import("@prisma/client/runtime/library").Decimal;
-        saldo: import("@prisma/client/runtime/library").Decimal;
-        status: string;
-    })[]>;
     getOrdenes(companyId: string, clientId?: string, status?: string): Promise<({
         client: {
             id: string;
@@ -262,8 +258,8 @@ export declare class CompaniesService {
         } & {
             id: string;
             createdAt: Date;
-            ordenCompraId: string;
             productId: string;
+            ordenCompraId: string;
             cantidad: number;
             cantidadSurtida: number;
             precioUnitario: import("@prisma/client/runtime/library").Decimal;
@@ -303,8 +299,8 @@ export declare class CompaniesService {
         } & {
             id: string;
             createdAt: Date;
-            ordenCompraId: string;
             productId: string;
+            ordenCompraId: string;
             cantidad: number;
             cantidadSurtida: number;
             precioUnitario: import("@prisma/client/runtime/library").Decimal;

@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.CompaniesService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../../common/prisma/prisma.service");
+const bcrypt = require("bcryptjs");
 let CompaniesService = class CompaniesService {
     constructor(prisma) {
         this.prisma = prisma;
@@ -25,6 +26,51 @@ let CompaniesService = class CompaniesService {
             include: { branches: true },
         });
     }
+    async getFinancialRubrics(companyId) {
+        const schema = await this.prisma.financialSchema.findFirst({
+            where: { companyId, isActive: true },
+            include: {
+                sections: {
+                    include: {
+                        groups: {
+                            include: {
+                                rubrics: {
+                                    where: { isActive: true },
+                                    orderBy: { order: 'asc' },
+                                },
+                            },
+                            orderBy: { order: 'asc' },
+                        },
+                    },
+                    orderBy: { order: 'asc' },
+                },
+            },
+        });
+        if (!schema)
+            return [];
+        const result = [];
+        for (const section of schema.sections) {
+            for (const group of section.groups) {
+                for (const rubric of group.rubrics) {
+                    result.push({
+                        id: rubric.id,
+                        code: rubric.code,
+                        name: rubric.name,
+                        groupName: group.name,
+                        sectionName: section.name,
+                        label: `${section.name} → ${group.name} → ${rubric.name}`,
+                    });
+                }
+            }
+        }
+        return result;
+    }
+    getCashAccounts(companyId) {
+        return this.prisma.cashAccount.findMany({
+            where: { companyId, isActive: true },
+            orderBy: { name: 'asc' },
+        });
+    }
     getUsers(companyId) {
         return this.prisma.userCompanyRole.findMany({
             where: { companyId },
@@ -32,6 +78,67 @@ let CompaniesService = class CompaniesService {
                 user: { select: { id: true, name: true, email: true, isActive: true } },
                 role: true,
             },
+        });
+    }
+    async createUser(companyId, data) {
+        const passwordHash = await bcrypt.hash(data.password, 10);
+        let role = await this.prisma.role.findUnique({ where: { code: data.roleCode } });
+        if (!role) {
+            role = await this.prisma.role.create({
+                data: { code: data.roleCode, name: data.roleCode, description: data.roleCode },
+            });
+        }
+        const user = await this.prisma.user.create({
+            data: {
+                name: data.name,
+                email: data.email,
+                passwordHash,
+                isActive: true,
+            },
+        });
+        const companyIds = data.companyIds || [companyId];
+        for (const cid of companyIds) {
+            await this.prisma.userCompanyRole.create({
+                data: { userId: user.id, companyId: cid, roleId: role.id },
+            });
+        }
+        return user;
+    }
+    async updateUser(userId, data) {
+        const updateData = {
+            name: data.name,
+        };
+        if (data.password && data.password.trim() !== '') {
+            updateData.passwordHash = await bcrypt.hash(data.password, 10);
+        }
+        const user = await this.prisma.user.update({
+            where: { id: userId },
+            data: updateData,
+        });
+        if (data.roleCode) {
+            let role = await this.prisma.role.findUnique({ where: { code: data.roleCode } });
+            if (!role) {
+                role = await this.prisma.role.create({
+                    data: { code: data.roleCode, name: data.roleCode, description: data.roleCode },
+                });
+            }
+            const userRoles = await this.prisma.userCompanyRole.findMany({ where: { userId } });
+            for (const ur of userRoles) {
+                await this.prisma.userCompanyRole.update({
+                    where: { id: ur.id },
+                    data: { roleId: role.id },
+                });
+            }
+        }
+        return user;
+    }
+    async toggleUser(userId) {
+        const user = await this.prisma.user.findUnique({ where: { id: userId } });
+        if (!user)
+            throw new Error('Usuario no encontrado');
+        return this.prisma.user.update({
+            where: { id: userId },
+            data: { isActive: !user.isActive },
         });
     }
     getClients(companyId) {
@@ -88,27 +195,16 @@ let CompaniesService = class CompaniesService {
             },
         });
     }
-    async getOrdenesByCliente(companyId, clientId, status) {
-        const where = { companyId, clientId };
-        if (status)
-            where.status = status;
-        return this.prisma.ordenCompra.findMany({
-            where,
-            include: {
-                lineas: {
-                    include: { product: true }
-                },
-                surtidos: true,
-            },
-            orderBy: { fecha: 'desc' },
-        });
-    }
     async getOrdenes(companyId, clientId, status) {
         const where = { companyId };
         if (clientId)
             where.clientId = clientId;
-        if (status)
+        if (status === 'ACTIVAS') {
+            where.status = { in: ['PENDIENTE', 'SURTIDO_PARCIAL'] };
+        }
+        else if (status) {
             where.status = status;
+        }
         return this.prisma.ordenCompra.findMany({
             where,
             include: {
@@ -123,7 +219,7 @@ let CompaniesService = class CompaniesService {
         const montoTotal = data.lineas
             ? data.lineas.reduce((t, l) => t + (l.cantidad * l.precioUnitario), 0)
             : Number(data.montoTotal || 0);
-        return this.prisma.ordenCompra.create({
+        const oc = await this.prisma.ordenCompra.create({
             data: {
                 companyId,
                 clientId,
@@ -144,6 +240,51 @@ let CompaniesService = class CompaniesService {
             },
             include: { lineas: { include: { product: true } } },
         });
+        if (montoTotal > 0) {
+            try {
+                const fecha = new Date(data.fecha);
+                fecha.setHours(0, 0, 0, 0);
+                const dueDate = new Date(fecha);
+                dueDate.setDate(dueDate.getDate() + 30);
+                await this.prisma.sale.create({
+                    data: {
+                        companyId,
+                        clientId,
+                        date: fecha,
+                        channel: data.canal || 'MOSTRADOR',
+                        isCredit: true,
+                        total: montoTotal,
+                        paymentMethod: 'CREDITO_CLIENTE',
+                        lines: oc.lineas ? {
+                            create: oc.lineas.map((l) => ({
+                                productId: l.productId,
+                                quantity: l.cantidad,
+                                unitPrice: l.precioUnitario,
+                                total: l.total,
+                            })),
+                        } : undefined,
+                    },
+                });
+                await this.prisma.receivable.create({
+                    data: {
+                        companyId,
+                        clientId,
+                        date: fecha,
+                        dueDate,
+                        originalAmount: montoTotal,
+                        paidAmount: 0,
+                        balance: montoTotal,
+                        currency: 'MXN',
+                        status: 'PENDIENTE',
+                        notes: `OC #${data.numero}`,
+                    },
+                });
+            }
+            catch (e) {
+                console.error('ERROR OC Sale/CXC:', e.message);
+            }
+        }
+        return oc;
     }
     async registrarSurtido(ordenId, data) {
         const orden = await this.prisma.ordenCompra.findUnique({
@@ -174,6 +315,17 @@ let CompaniesService = class CompaniesService {
         const nuevoMontoSurtido = Number(orden.montoSurtido) + montoSurtido;
         const nuevoSaldo = Number(orden.montoTotal) - nuevoMontoSurtido;
         const nuevoStatus = nuevoSaldo <= 0 ? 'SURTIDO_COMPLETO' : 'SURTIDO_PARCIAL';
+        if (data.lineas && data.lineas.length > 0) {
+            for (const ls of data.lineas) {
+                const linea = orden.lineas.find((l) => l.id === ls.lineaId);
+                if (!linea)
+                    continue;
+                await this.prisma.productStock.updateMany({
+                    where: { productId: linea.productId },
+                    data: { stock: { decrement: Number(ls.cantidad) } },
+                }).catch(() => { });
+            }
+        }
         return this.prisma.$transaction([
             this.prisma.surtidoOC.create({
                 data: {

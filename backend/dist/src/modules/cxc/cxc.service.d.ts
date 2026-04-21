@@ -2,7 +2,7 @@ import { PrismaService } from '../../common/prisma/prisma.service';
 export declare class CxcService {
     private prisma;
     constructor(prisma: PrismaService);
-    findAll(companyId: string, period?: string, status?: string, clientId?: string): import(".prisma/client").Prisma.PrismaPromise<({
+    findAll(companyId: string, period?: string, status?: string, clientId?: string, startDate?: string, endDate?: string): import(".prisma/client").Prisma.PrismaPromise<({
         client: {
             id: string;
             name: string;
@@ -26,8 +26,8 @@ export declare class CxcService {
             paymentMethod: string;
             amount: import("@prisma/client/runtime/library").Decimal;
             exchangeRate: import("@prisma/client/runtime/library").Decimal;
-            reference: string | null;
             cashAccountId: string | null;
+            reference: string | null;
             receivableId: string;
         }[];
     } & {
@@ -61,8 +61,8 @@ export declare class CxcService {
         paymentMethod: string;
         amount: import("@prisma/client/runtime/library").Decimal;
         exchangeRate: import("@prisma/client/runtime/library").Decimal;
-        reference: string | null;
         cashAccountId: string | null;
+        reference: string | null;
         receivableId: string;
     }, {
         id: string;

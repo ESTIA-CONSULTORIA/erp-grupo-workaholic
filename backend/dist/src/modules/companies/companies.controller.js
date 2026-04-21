@@ -23,8 +23,23 @@ let CompaniesController = class CompaniesController {
     }
     findAll() { return this.svc.findAll(); }
     findOne(id) { return this.svc.findOne(id); }
+    getCashAccounts(id) {
+        return this.svc.getCashAccounts(id);
+    }
     getUsers(id) {
         return this.svc.getUsers(id);
+    }
+    createUser(companyId, body) {
+        return this.svc.createUser(companyId, body);
+    }
+    updateUser(userId, body) {
+        return this.svc.updateUser(userId, body);
+    }
+    toggleUser(userId) {
+        return this.svc.toggleUser(userId);
+    }
+    getFinancialRubrics(id) {
+        return this.svc.getFinancialRubrics(id);
     }
     getClients(id) {
         return this.svc.getClients(id);
@@ -69,12 +84,49 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], CompaniesController.prototype, "findOne", null);
 __decorate([
+    (0, common_1.Get)(':id/cash-accounts'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], CompaniesController.prototype, "getCashAccounts", null);
+__decorate([
     (0, common_1.Get)(':id/users'),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], CompaniesController.prototype, "getUsers", null);
+__decorate([
+    (0, common_1.Post)(':id/users'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], CompaniesController.prototype, "createUser", null);
+__decorate([
+    (0, common_1.Put)(':id/users/:userId'),
+    __param(0, (0, common_1.Param)('userId')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], CompaniesController.prototype, "updateUser", null);
+__decorate([
+    (0, common_1.Put)(':id/users/:userId/toggle'),
+    __param(0, (0, common_1.Param)('userId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], CompaniesController.prototype, "toggleUser", null);
+__decorate([
+    (0, common_1.Get)(':id/financial-rubrics'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], CompaniesController.prototype, "getFinancialRubrics", null);
 __decorate([
     (0, common_1.Get)(':id/clients'),
     __param(0, (0, common_1.Param)('id')),

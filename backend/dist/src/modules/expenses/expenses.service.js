@@ -26,34 +26,99 @@ let ExpensesService = class ExpensesService {
         }
         return this.prisma.expense.findMany({
             where,
-            include: { rubric: true, supplier: true },
+            include: {
+                supplier: true,
+                rubric: {
+                    include: {
+                        group: {
+                            include: {
+                                section: { select: { name: true } }
+                            }
+                        }
+                    }
+                }
+            },
             orderBy: { date: 'desc' },
         });
     }
-    create(companyId, userId, data) {
-        return this.prisma.expense.create({
+    async create(companyId, userId, data) {
+        const subtotal = Number(data.subtotal || 0);
+        const tax = Number(data.tax || 0);
+        const total = subtotal + tax;
+        const expense = await this.prisma.expense.create({
             data: {
                 companyId,
                 rubricId: data.rubricId || null,
                 supplierId: data.supplierId || null,
                 cashAccountId: data.cashAccountId || null,
+                userId,
                 date: new Date(data.date),
                 concept: data.concept,
-                subtotal: data.subtotal || 0,
-                tax: data.tax || 0,
-                total: (data.subtotal || 0) + (data.tax || 0),
+                subtotal,
+                tax,
+                total,
                 currency: data.currency || 'MXN',
-                paymentMethod: data.paymentMethod || 'efectivo',
+                exchangeRate: 1,
+                totalMxn: total,
+                paymentMethod: data.paymentMethod || 'EFECTIVO',
                 paymentStatus: data.paymentStatus || 'PAGADO',
                 invoiceRef: data.invoiceRef || null,
-                userId: userId,
-                totalMxn: (data.subtotal || 0) + (data.tax || 0),
-                exchangeRate: 1,
                 isExternal: data.isExternal || false,
                 externalNotes: data.externalNotes || null,
             },
-            include: { rubric: true, supplier: true },
+            include: {
+                supplier: true,
+                rubric: {
+                    include: {
+                        group: {
+                            include: {
+                                section: { select: { name: true } }
+                            }
+                        }
+                    }
+                }
+            },
         });
+        if ((data.paymentStatus || 'PAGADO') === 'PAGADO' && data.paymentMethod !== 'CREDITO_CLIENTE' && data.paymentMethod !== 'credito') {
+            try {
+                const branch = await this.prisma.branch.findFirst({ where: { companyId } });
+                let cashAccountId = data.cashAccountId;
+                if (!cashAccountId) {
+                    const metodo = data.paymentMethod || 'EFECTIVO';
+                    const esEfectivo = metodo.includes('EFECTIVO');
+                    const cuenta = await this.prisma.cashAccount.findFirst({
+                        where: {
+                            companyId,
+                            isActive: true,
+                            type: esEfectivo ? 'EFECTIVO' : { in: ['BANCO', 'PLATAFORMA'] },
+                        },
+                    });
+                    cashAccountId = cuenta?.id;
+                }
+                if (branch && cashAccountId) {
+                    await this.prisma.flowMovement.create({
+                        data: {
+                            companyId,
+                            branchId: branch.id,
+                            cashAccountId,
+                            date: new Date(data.date),
+                            type: 'SALIDA',
+                            originType: 'GASTO',
+                            originId: expense.id,
+                            amount: total,
+                            currency: data.currency || 'MXN',
+                            exchangeRate: 1,
+                            amountMxn: total,
+                            notes: data.concept,
+                        },
+                    });
+                }
+            }
+            catch (e) {
+                console.error('ERROR FLOW GASTO:', e.message);
+            }
+        }
+        return expense;
     }
     delete(id) {
         return this.prisma.expense.delete({ where: { id } });

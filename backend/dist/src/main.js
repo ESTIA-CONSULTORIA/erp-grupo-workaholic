@@ -5,7 +5,9 @@ const app_module_1 = require("./app.module");
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 async function bootstrap() {
-    const app = await core_1.NestFactory.create(app_module_1.AppModule);
+    const app = await core_1.NestFactory.create(app_module_1.AppModule, { bodyParser: true });
+    app.use(require('express').json({ limit: '50mb' }));
+    app.use(require('express').urlencoded({ limit: '50mb', extended: true }));
     app.enableCors({ origin: '*' });
     app.setGlobalPrefix('api/v1');
     app.useGlobalPipes(new common_1.ValidationPipe({ transform: true, whitelist: true }));

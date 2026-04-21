@@ -49,8 +49,8 @@ export declare class CutsService {
             rubricId: string;
             cutId: string;
             exchangeRate: import("@prisma/client/runtime/library").Decimal;
-            reference: string | null;
             cashAccountId: string | null;
+            reference: string | null;
             paymentType: string;
             grossAmount: import("@prisma/client/runtime/library").Decimal;
             discount: import("@prisma/client/runtime/library").Decimal;
@@ -66,10 +66,10 @@ export declare class CutsService {
         createdAt: Date;
         updatedAt: Date;
         companyId: string;
+        shift: string | null;
         notes: string | null;
         status: string;
         date: Date;
-        shift: string | null;
         branchId: string;
         folio: string;
         createdById: string;
@@ -115,8 +115,8 @@ export declare class CutsService {
             rubricId: string;
             cutId: string;
             exchangeRate: import("@prisma/client/runtime/library").Decimal;
-            reference: string | null;
             cashAccountId: string | null;
+            reference: string | null;
             paymentType: string;
             grossAmount: import("@prisma/client/runtime/library").Decimal;
             discount: import("@prisma/client/runtime/library").Decimal;
@@ -128,10 +128,10 @@ export declare class CutsService {
         createdAt: Date;
         updatedAt: Date;
         companyId: string;
+        shift: string | null;
         notes: string | null;
         status: string;
         date: Date;
-        shift: string | null;
         branchId: string;
         folio: string;
         createdById: string;
@@ -143,10 +143,10 @@ export declare class CutsService {
         createdAt: Date;
         updatedAt: Date;
         companyId: string;
+        shift: string | null;
         notes: string | null;
         status: string;
         date: Date;
-        shift: string | null;
         branchId: string;
         folio: string;
         createdById: string;
@@ -158,10 +158,10 @@ export declare class CutsService {
         createdAt: Date;
         updatedAt: Date;
         companyId: string;
+        shift: string | null;
         notes: string | null;
         status: string;
         date: Date;
-        shift: string | null;
         branchId: string;
         folio: string;
         createdById: string;

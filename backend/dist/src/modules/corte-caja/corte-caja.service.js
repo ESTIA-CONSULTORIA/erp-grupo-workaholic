@@ -29,40 +29,14 @@ let CorteCajaService = class CorteCajaService {
             orderBy: { fecha: 'desc' },
         });
     }
-    async getVentasDelDia(companyId, fecha) {
-        const start = new Date(fecha);
-        start.setHours(0, 0, 0, 0);
-        const end = new Date(fecha);
-        end.setHours(23, 59, 59, 999);
-        const ventas = await this.prisma.sale.findMany({
-            where: { companyId, date: { gte: start, lte: end } },
+    async getCorteById(corteId) {
+        return this.prisma.corteCaja.findUnique({
+            where: { id: corteId },
+            include: {
+                cajero: { select: { id: true, name: true } },
+                validador: { select: { id: true, name: true } },
+            },
         });
-        const resumen = {
-            totalVentas: 0,
-            totalEfectivo: 0,
-            totalTarjeta: 0,
-            totalTransfer: 0,
-            totalCredito: 0,
-            totalDelivery: 0,
-            porMetodo: {},
-        };
-        for (const v of ventas) {
-            const total = Number(v.total);
-            resumen.totalVentas += total;
-            const metodo = v.paymentMethod?.toLowerCase() || 'efectivo';
-            resumen.porMetodo[metodo] = (resumen.porMetodo[metodo] || 0) + total;
-            if (metodo === 'efectivo')
-                resumen.totalEfectivo += total;
-            else if (metodo === 'tarjeta')
-                resumen.totalTarjeta += total;
-            else if (metodo === 'transferencia')
-                resumen.totalTransfer += total;
-            else if (metodo === 'credito')
-                resumen.totalCredito += total;
-            else if (['rappi', 'ubereats', 'didi', 'pedidosya'].includes(metodo))
-                resumen.totalDelivery += total;
-        }
-        return resumen;
     }
     async crearCorte(companyId, cajeroId, data) {
         const fecha = new Date(data.fecha);
@@ -87,7 +61,7 @@ let CorteCajaService = class CorteCajaService {
                 totalCredito: data.totalCredito || 0,
                 totalDelivery: data.totalDelivery || 0,
                 totalTerminal: terminalReportada,
-                efectivoContado: efectivoContado,
+                efectivoContado,
                 diferenciEfectivo: diferenciaEfectivo,
                 diferenciaTerminal,
                 diferencia,
@@ -104,8 +78,18 @@ let CorteCajaService = class CorteCajaService {
         const corte = await this.prisma.corteCaja.findUnique({ where: { id: corteId } });
         if (!corte)
             throw new Error('Corte no encontrado');
-        const efectivoFinal = data.efectivoReal !== undefined ? Number(data.efectivoReal) : Number(corte.efectivoContado);
+        const efectivoFinal = data.efectivoReal !== undefined
+            ? Number(data.efectivoReal)
+            : Number(corte.efectivoContado);
         const diferencia = efectivoFinal - Number(corte.totalEfectivo);
+        const historial = this._parsearHistorial(corte.notasCajero);
+        if (data.notasValidador) {
+            historial.push({
+                tipo: 'contador',
+                mensaje: data.notasValidador,
+                fecha: new Date().toISOString(),
+            });
+        }
         const updatedCorte = await this.prisma.corteCaja.update({
             where: { id: corteId },
             data: {
@@ -113,6 +97,7 @@ let CorteCajaService = class CorteCajaService {
                 efectivoReal: efectivoFinal,
                 diferencia,
                 notasValidador: data.notasValidador || null,
+                notasCajero: JSON.stringify(historial),
                 validadoPor: validadorId,
                 validadoAt: new Date(),
             },
@@ -142,15 +127,89 @@ let CorteCajaService = class CorteCajaService {
         return updatedCorte;
     }
     async rechazarCorte(corteId, validadorId, notas) {
+        const corte = await this.prisma.corteCaja.findUnique({ where: { id: corteId } });
+        if (!corte)
+            throw new Error('Corte no encontrado');
+        const historial = this._parsearHistorial(corte.notasCajero);
+        historial.push({
+            tipo: 'contador',
+            mensaje: notas,
+            fecha: new Date().toISOString(),
+            accion: 'rechazo',
+        });
         return this.prisma.corteCaja.update({
             where: { id: corteId },
             data: {
                 status: 'RECHAZADO',
                 notasValidador: notas,
+                notasCajero: JSON.stringify(historial),
                 validadoPor: validadorId,
                 validadoAt: new Date(),
             },
         });
+    }
+    async responderCorte(corteId, cajeroId, respuesta, ticketUrl, ticketNombre) {
+        const corte = await this.prisma.corteCaja.findUnique({ where: { id: corteId } });
+        if (!corte)
+            throw new Error('Corte no encontrado');
+        const historial = this._parsearHistorial(corte.notasCajero);
+        const entrada = {
+            tipo: 'cajero',
+            mensaje: respuesta,
+            fecha: new Date().toISOString(),
+        };
+        if (ticketUrl)
+            entrada.ticketUrl = ticketUrl;
+        if (ticketNombre)
+            entrada.ticketNombre = ticketNombre;
+        historial.push(entrada);
+        return this.prisma.corteCaja.update({
+            where: { id: corteId },
+            data: {
+                status: 'PENDIENTE',
+                notasCajero: JSON.stringify(historial),
+            },
+        });
+    }
+    async getVentasDelDia(companyId, fecha) {
+        const start = new Date(fecha);
+        start.setHours(0, 0, 0, 0);
+        const end = new Date(fecha);
+        end.setHours(23, 59, 59, 999);
+        const sales = await this.prisma.sale.findMany({
+            where: { companyId, date: { gte: start, lte: end } },
+            include: { lines: { include: { product: { select: { name: true, sku: true } } } } },
+        });
+        const totalVentas = sales.reduce((t, s) => t + Number(s.total), 0);
+        const totalEfectivo = sales.filter(s => s.paymentMethod === 'EFECTIVO' || s.paymentMethod === 'EFECTIVO_MXN')
+            .reduce((t, s) => t + Number(s.total), 0);
+        const totalTarjeta = sales.filter(s => ['TARJETA_DEBITO', 'TARJETA_CREDITO'].includes(s.paymentMethod || ''))
+            .reduce((t, s) => t + Number(s.total), 0);
+        const totalTransfer = sales.filter(s => s.paymentMethod === 'TRANSFERENCIA')
+            .reduce((t, s) => t + Number(s.total), 0);
+        const totalCredito = sales.filter(s => s.isCredit)
+            .reduce((t, s) => t + Number(s.total), 0);
+        return {
+            fecha, totalVentas, totalEfectivo, totalTarjeta, totalTransfer, totalCredito,
+            numVentas: sales.length,
+            ventas: sales,
+        };
+    }
+    _parsearHistorial(notasCajero) {
+        if (!notasCajero)
+            return [];
+        try {
+            const parsed = JSON.parse(notasCajero);
+            if (Array.isArray(parsed))
+                return parsed;
+        }
+        catch (e) { }
+        const mensajes = notasCajero.split('|').map(s => s.trim()).filter(Boolean);
+        return mensajes.map(m => ({
+            tipo: 'cajero',
+            mensaje: m.replace(/^RESPUESTA:\s*/i, ''),
+            fecha: new Date().toISOString(),
+        }));
     }
 };
 exports.CorteCajaService = CorteCajaService;

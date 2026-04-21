@@ -24,14 +24,14 @@ export declare class FlowController {
         notes: string | null;
         date: Date;
         rubricId: string | null;
-        originType: string;
-        originId: string | null;
+        amountMxn: import("@prisma/client/runtime/library").Decimal;
         amount: import("@prisma/client/runtime/library").Decimal;
         exchangeRate: import("@prisma/client/runtime/library").Decimal;
-        amountMxn: import("@prisma/client/runtime/library").Decimal;
-        reference: string | null;
         branchId: string;
         cashAccountId: string;
+        originType: string;
+        originId: string | null;
+        reference: string | null;
     }, {
         id: string;
         createdAt: Date;
@@ -41,13 +41,66 @@ export declare class FlowController {
         notes: string | null;
         date: Date;
         rubricId: string | null;
-        originType: string;
-        originId: string | null;
+        amountMxn: import("@prisma/client/runtime/library").Decimal;
         amount: import("@prisma/client/runtime/library").Decimal;
         exchangeRate: import("@prisma/client/runtime/library").Decimal;
-        amountMxn: import("@prisma/client/runtime/library").Decimal;
-        reference: string | null;
         branchId: string;
         cashAccountId: string;
+        originType: string;
+        originId: string | null;
+        reference: string | null;
     }]>;
+    createMovement(id: string, body: any, req: any): Promise<{
+        id: string;
+        createdAt: Date;
+        companyId: string;
+        type: string;
+        currency: string;
+        notes: string | null;
+        date: Date;
+        rubricId: string | null;
+        amountMxn: import("@prisma/client/runtime/library").Decimal;
+        amount: import("@prisma/client/runtime/library").Decimal;
+        exchangeRate: import("@prisma/client/runtime/library").Decimal;
+        branchId: string;
+        cashAccountId: string;
+        originType: string;
+        originId: string | null;
+        reference: string | null;
+    }>;
+    getMovements(id: string, fecha?: string, period?: string): Promise<({
+        cashAccount: {
+            id: string;
+            name: string;
+            type: string;
+        };
+    } & {
+        id: string;
+        createdAt: Date;
+        companyId: string;
+        type: string;
+        currency: string;
+        notes: string | null;
+        date: Date;
+        rubricId: string | null;
+        amountMxn: import("@prisma/client/runtime/library").Decimal;
+        amount: import("@prisma/client/runtime/library").Decimal;
+        exchangeRate: import("@prisma/client/runtime/library").Decimal;
+        branchId: string;
+        cashAccountId: string;
+        originType: string;
+        originId: string | null;
+        reference: string | null;
+    })[]>;
+    updateAccount(accountId: string, body: any): Promise<{
+        id: string;
+        code: string;
+        name: string;
+        isActive: boolean;
+        companyId: string;
+        type: string;
+        currency: string;
+        bankName: string | null;
+        accountNumber: string | null;
+    }>;
 }

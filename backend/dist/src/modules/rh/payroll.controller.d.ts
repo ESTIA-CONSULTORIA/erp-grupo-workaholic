@@ -48,10 +48,10 @@ export declare class PayrollController {
     getLines(id: string): import(".prisma/client").Prisma.PrismaPromise<({
         employee: {
             id: string;
-            position: string;
-            lastName: string;
-            firstName: string;
             employeeNumber: string;
+            firstName: string;
+            lastName: string;
+            position: string;
             bankAccount: string;
         };
     } & {

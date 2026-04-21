@@ -14,6 +14,19 @@ export declare class ExpensesController {
             notes: string | null;
         };
         rubric: {
+            group: {
+                section: {
+                    name: string;
+                };
+            } & {
+                id: string;
+                code: string;
+                name: string;
+                order: number;
+                sectionId: string;
+                isSummary: boolean;
+            };
+        } & {
             id: string;
             code: string;
             name: string;
@@ -48,8 +61,8 @@ export declare class ExpensesController {
         updatedAt: Date;
         companyId: string;
         currency: string;
-        userId: string;
         description: string | null;
+        userId: string;
         date: Date;
         rubricId: string | null;
         total: import("@prisma/client/runtime/library").Decimal;
@@ -66,7 +79,7 @@ export declare class ExpensesController {
         isExternal: boolean;
         externalNotes: string | null;
     })[]>;
-    create(cid: string, req: any, body: any): import(".prisma/client").Prisma.Prisma__ExpenseClient<{
+    create(cid: string, req: any, body: any): Promise<{
         supplier: {
             id: string;
             name: string;
@@ -78,6 +91,19 @@ export declare class ExpensesController {
             notes: string | null;
         };
         rubric: {
+            group: {
+                section: {
+                    name: string;
+                };
+            } & {
+                id: string;
+                code: string;
+                name: string;
+                order: number;
+                sectionId: string;
+                isSummary: boolean;
+            };
+        } & {
             id: string;
             code: string;
             name: string;
@@ -112,8 +138,8 @@ export declare class ExpensesController {
         updatedAt: Date;
         companyId: string;
         currency: string;
-        userId: string;
         description: string | null;
+        userId: string;
         date: Date;
         rubricId: string | null;
         total: import("@prisma/client/runtime/library").Decimal;
@@ -129,15 +155,15 @@ export declare class ExpensesController {
         invoiceRef: string | null;
         isExternal: boolean;
         externalNotes: string | null;
-    }, never, import("@prisma/client/runtime/library").DefaultArgs>;
+    }>;
     delete(id: string): import(".prisma/client").Prisma.Prisma__ExpenseClient<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
         companyId: string;
         currency: string;
-        userId: string;
         description: string | null;
+        userId: string;
         date: Date;
         rubricId: string | null;
         total: import("@prisma/client/runtime/library").Decimal;

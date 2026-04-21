@@ -16,19 +16,25 @@ let CxcService = class CxcService {
     constructor(prisma) {
         this.prisma = prisma;
     }
-    findAll(companyId, period, status, clientId) {
+    findAll(companyId, period, status, clientId, startDate, endDate) {
         const where = { companyId };
         if (status)
             where.status = status;
         if (clientId)
             where.clientId = clientId;
-        if (period) {
+        if (startDate && endDate) {
+            where.date = { gte: new Date(startDate), lte: new Date(endDate) };
+        }
+        else if (period) {
             const [y, m] = period.split('-').map(Number);
             where.date = { gte: new Date(y, m - 1, 1), lte: new Date(y, m, 0) };
         }
         return this.prisma.receivable.findMany({
             where,
-            include: { client: true, payments: true },
+            include: {
+                client: true,
+                payments: { orderBy: { date: 'desc' } },
+            },
             orderBy: { date: 'desc' },
         });
     }
@@ -38,7 +44,9 @@ let CxcService = class CxcService {
             where.clientId = clientId;
         const pending = await this.prisma.receivable.findMany({ where });
         const totalPending = pending.reduce((t, c) => t + Number(c.balance), 0);
-        const totalOverdue = pending.filter(c => c.status === 'VENCIDO').reduce((t, c) => t + Number(c.balance), 0);
+        const totalOverdue = pending
+            .filter(c => c.dueDate && new Date(c.dueDate) < new Date())
+            .reduce((t, c) => t + Number(c.balance), 0);
         return { totalPending, totalOverdue, pendingCount: pending.length };
     }
     async addPayment(receivableId, cashAccountId, data) {
@@ -47,6 +55,7 @@ let CxcService = class CxcService {
             throw new Error('CxC no encontrada');
         const newBalance = Number(rec.balance) - Number(data.amount);
         const newStatus = newBalance <= 0 ? 'PAGADO' : 'PARCIAL';
+        const fecha = new Date(data.date + 'T12:00:00');
         return this.prisma.$transaction([
             this.prisma.receivablePayment.create({
                 data: {
@@ -54,7 +63,7 @@ let CxcService = class CxcService {
                     amount: data.amount,
                     currency: data.currency || 'MXN',
                     paymentMethod: data.paymentMethod || 'EFECTIVO_MXN',
-                    date: new Date(data.date),
+                    date: fecha,
                     reference: data.reference || null,
                     cashAccountId: cashAccountId || null,
                 },
