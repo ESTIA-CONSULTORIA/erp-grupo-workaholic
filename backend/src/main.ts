@@ -1,26 +1,33 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { PermissionsController } from './modules/permissions/permissions.controller';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { bodyParser: true });
-app.use(require('express').json({ limit: '50mb' }));
-app.use(require('express').urlencoded({ limit: '50mb', extended: true }));
+  const app = await NestFactory.create(AppModule);
 
-  app.enableCors({ origin: '*' });
+  // Habilitar CORS para el frontend
+  app.enableCors({
+    origin: ['https://erp-grupoworka.netlify.app', 'http://localhost:3000'],
+    credentials: true,
+  });
+
+  // Prefijo global para todas las rutas
   app.setGlobalPrefix('api/v1');
-  app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }));
 
-  const config = new DocumentBuilder()
-    .setTitle('ERP Grupo Workaholic')
-    .setVersion('1.0')
-    .addBearerAuth()
-    .build();
-  SwaggerModule.setup('docs', app, SwaggerModule.createDocument(app, config));
+  // Forzar registro manual del controlador de permisos
+  // Esto soluciona el problema de que NestJS no lo escanea automáticamente
+  try {
+    const controller = app.get(PermissionsController);
+    // Registrar explícitamente en el adaptador HTTP
+    app.getHttpAdapter().registerRouter(
+      PermissionsController as any,
+      app.getHttpAdapter().getInstance()?.get(PermissionsController) || controller
+    );
+    console.log('✅ PermissionsController registrado manualmente');
+  } catch (error) {
+    console.error('❌ Error al registrar PermissionsController:', error.message);
+  }
 
-  const port = process.env.PORT || 4000;
-  await app.listen(port);
-  console.log(`🚀 Backend corriendo en puerto ${port}`);
+  await app.listen(process.env.PORT || 4000);
 }
 bootstrap();
