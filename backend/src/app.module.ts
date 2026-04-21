@@ -1,4 +1,5 @@
-import { Module } from '@nestjs/common';
+import { Module, OnModuleInit } from '@nestjs/common';
+import { HttpAdapterHost } from '@nestjs/core';
 import { PrismaModule } from './common/prisma/prisma.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { CompaniesModule } from './modules/companies/companies.module';
@@ -15,7 +16,7 @@ import { RhModule } from './modules/rh/rh.module';
 import { BulkImportModule } from './modules/bulk-import/bulk-import.module';
 import { AuditModule } from './modules/audit/audit.module';
 import { PermissionsModule } from './modules/permissions/permissions.module';
-import { PermissionsController } from './modules/permissions/permissions.controller';
+import { PermissionsService } from './modules/permissions/permissions.service';
 import { PalestraModule } from './modules/palestra/palestra.module';
 import { MaintenanceModule } from './modules/maintenance/maintenance.module';
 import { IntercompanyModule } from './modules/intercompany/intercompany.module';
@@ -44,6 +45,35 @@ import { CorteCajaModule } from './modules/corte-caja/corte-caja.module';
     IntercompanyModule,
     CorteCajaModule,
   ],
-  controllers: [PermissionsController], // 👈 FUERZA EL REGISTRO
 })
-export class AppModule {}
+export class AppModule implements OnModuleInit {
+  constructor(
+    private readonly httpAdapterHost: HttpAdapterHost,
+    private readonly permissionsService: PermissionsService,
+  ) {}
+
+  onModuleInit() {
+    const httpAdapter = this.httpAdapterHost.httpAdapter;
+    if (!httpAdapter) return;
+
+    // Registrar rutas de permisos manualmente para asegurar que estén disponibles
+    httpAdapter.get('/api/v1/permissions/defaults', (req, res) => {
+      res.status(200).json(this.permissionsService.getDefaultPermissions());
+    });
+
+    httpAdapter.get('/api/v1/permissions/all', async (req, res) => {
+      const companyId = req.query.companyId as string;
+      const all = await this.permissionsService.getAllPermissions(companyId);
+      res.status(200).json(all);
+    });
+
+    httpAdapter.put('/api/v1/permissions/roles/:roleCode/modules/:module/actions/:action', async (req, res) => {
+      const { roleCode, module, action } = req.params;
+      const { allowed, companyId } = req.body;
+      const updated = await this.permissionsService.updatePermission(roleCode, module, action, allowed, companyId);
+      res.status(200).json(updated);
+    });
+
+    console.log('✅ Rutas de permisos registradas desde AppModule');
+  }
+}
