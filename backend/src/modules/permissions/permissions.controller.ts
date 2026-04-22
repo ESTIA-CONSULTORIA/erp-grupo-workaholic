@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Put, Param, Body, Query } from '@nestjs/common';
 import { PermissionsService } from './permissions.service';
 
-@Controller('api/v1/permissions')
+@Controller('permissions')
 export class PermissionsController {
   constructor(private svc: PermissionsService) {}
 
