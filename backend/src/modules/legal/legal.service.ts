@@ -6,7 +6,7 @@ const LEGAL_TEMPLATES: Record<string, string> = {
   CARTA_TRABAJO: `
 Por medio del presente, {{companyName}} hace constar que {{employeeName}},
 con RFC {{rfc}}, labora en esta empresa desde el {{startDate}}
-desempeñando el puesto de {{position}} con un salario mensual de ${{salary}}.
+desempeñando el puesto de {{position}} con un salario mensual de {{salary}}.
 
 Se expide la presente a petición del interesado el día {{today}}.
 `,
@@ -15,7 +15,7 @@ Se expide la presente a petición del interesado el día {{today}}.
 En {{city}}, a {{today}}, comparecen {{companyName}} y {{employeeName}}
 para celebrar el presente finiquito.
 
-El trabajador declara haber recibido la cantidad de ${{amount}}
+El trabajador declara haber recibido la cantidad de {{amount}}
 por concepto de:
 - Salarios pendientes
 - Vacaciones
