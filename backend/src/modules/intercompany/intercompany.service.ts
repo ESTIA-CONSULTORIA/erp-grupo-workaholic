@@ -10,6 +10,7 @@ export class IntercompanyService {
     const where: any = {
       OR: [{ fromCompanyId: companyId }, { toCompanyId: companyId }],
     };
+
     if (period) {
       const [y, m] = period.split('-').map(Number);
       where.date = {
@@ -17,35 +18,37 @@ export class IntercompanyService {
         lte: new Date(y, m, 0),
       };
     }
+
     return this.prisma.intercompanyTransfer.findMany({
       where,
       include: {
         fromCompany: { select: { id: true, name: true, color: true } },
-        toCompany:   { select: { id: true, name: true, color: true } },
+        toCompany: { select: { id: true, name: true, color: true } },
       },
       orderBy: { date: 'desc' },
     });
   }
 
-  async async createTransfer(fromCompanyId: string, userId: string, data: any) {
+  async createTransfer(fromCompanyId: string, userId: string, data: any) {
     const count = await this.prisma.intercompanyTransfer.count();
     const folio = `ICT-${String(count + 1).padStart(4, '0')}`;
+
     return this.prisma.intercompanyTransfer.create({
       data: {
         folio,
         fromCompanyId,
-        toCompanyId:   data.toCompanyId,
-        amount:        Number(data.amount),
-        currency:      data.currency || 'MXN',
-        concept:       data.concept,
-        date:          new Date(data.date),
-        status:        'PENDIENTE',
+        toCompanyId: data.toCompanyId,
+        amount: Number(data.amount),
+        currency: data.currency || 'MXN',
+        concept: data.concept,
+        date: new Date(data.date),
+        status: 'PENDIENTE',
         requestedById: userId,
-        notes:         data.notes || null,
+        notes: data.notes || null,
       },
       include: {
         fromCompany: { select: { id: true, name: true } },
-        toCompany:   { select: { id: true, name: true } },
+        toCompany: { select: { id: true, name: true } },
       },
     });
   }
@@ -54,9 +57,9 @@ export class IntercompanyService {
     return this.prisma.intercompanyTransfer.update({
       where: { id: transferId },
       data: {
-        status:      approved ? 'APROBADO' : 'RECHAZADO',
+        status: approved ? 'APROBADO' : 'RECHAZADO',
         approvedById: userId,
-        approvedAt:   new Date(),
+        approvedAt: new Date(),
       },
     });
   }
