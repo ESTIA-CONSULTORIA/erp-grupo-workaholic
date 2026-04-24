@@ -32,109 +32,119 @@ export class ExpensesService {
 
   async create(companyId: string, userId: string, data: any) {
     const subtotal = Number(data.subtotal || 0);
-    const tax      = Number(data.tax      || 0);
-    const total    = subtotal + tax;
+    const tax = Number(data.tax || 0);
+    const total = subtotal + tax;
+    const currency = data.currency || 'MXN';
+    const exchangeRate = Number(data.exchangeRate || 1);
+    const totalMxn = currency === 'MXN' ? total : total * exchangeRate;
+    const paymentStatus = data.paymentStatus || 'PAGADO';
+    const paymentMethod = data.paymentMethod || (paymentStatus === 'PENDIENTE' ? 'CREDITO' : 'EFECTIVO');
 
-    const expense = await this.prisma.expense.create({
-      data: {
-        companyId,
-        rubricId:      data.rubricId      || null,
-        supplierId:    data.supplierId    || null,
-        cashAccountId: data.cashAccountId || null,
-        userId,
-        date:          new Date(data.date),
-        concept:       data.concept,
-        subtotal,
-        tax,
-        total,
-        currency:      data.currency      || 'MXN',
-        exchangeRate:  1,
-        totalMxn:      total,
-        paymentMethod: data.paymentMethod || 'EFECTIVO',
-        paymentStatus: data.paymentStatus || 'PAGADO',
-        invoiceRef:    data.invoiceRef    || null,
-        isExternal:    data.isExternal    || false,
-        externalNotes: data.externalNotes || null,
-      },
-      include: {
-        supplier: true,
-        rubric: {
-          include: {
-            group: {
-              include: {
-                section: { select: { name: true } }
+    return this.prisma.$transaction(async (tx) => {
+      const expense = await tx.expense.create({
+        data: {
+          companyId,
+          rubricId: data.rubricId || null,
+          supplierId: data.supplierId || null,
+          cashAccountId: data.cashAccountId || null,
+          userId,
+          date: new Date(data.date),
+          concept: data.concept,
+          description: data.description || null,
+          subtotal,
+          tax,
+          total,
+          currency,
+          exchangeRate,
+          totalMxn,
+          paymentMethod,
+          paymentStatus,
+          invoiceRef: data.invoiceRef || null,
+          isExternal: data.isExternal || false,
+          externalNotes: data.externalNotes || null,
+        },
+        include: {
+          supplier: true,
+          rubric: {
+            include: {
+              group: {
+                include: {
+                  section: { select: { name: true } }
+                }
               }
             }
           }
-        }
-      },
-    });
+        },
+      });
 
-    // Registrar salida en flujo de efectivo si es pago inmediato
-    if ((data.paymentStatus || 'PAGADO') === 'PAGADO' && data.paymentMethod !== 'CREDITO_CLIENTE' && data.paymentMethod !== 'credito') {
-      try {
-        const branch = await this.prisma.branch.findFirst({ where: { companyId } });
+      // PENDIENTE o crédito: genera CxP correctamente.
+      // Antes intentaba crear pendingAmount, campo que no existe en Prisma, y el catch ocultaba el error.
+      if (paymentStatus === 'PENDIENTE' || paymentMethod === 'CREDITO') {
+        const dueDate = data.dueDate
+          ? new Date(data.dueDate)
+          : new Date(new Date(data.date || new Date()).setDate(new Date(data.date || new Date()).getDate() + 30));
 
-        // Determinar cuenta según método de pago
+        await tx.payable.create({
+          data: {
+            companyId,
+            supplierId: data.supplierId || null,
+            rubricId: data.rubricId || null,
+            concept: `Gasto: ${data.concept}`,
+            date: new Date(data.date),
+            dueDate,
+            currency,
+            originalAmount: total,
+            paidAmount: 0,
+            balance: total,
+            status: 'PENDIENTE',
+            notes: `Generado automáticamente del gasto ${expense.id}${data.invoiceRef ? ` · Factura ${data.invoiceRef}` : ''}`,
+          },
+        });
+      }
+
+      // PAGADO: registra salida en flujo de efectivo.
+      if (paymentStatus === 'PAGADO' && paymentMethod !== 'CREDITO' && paymentMethod !== 'CREDITO_CLIENTE') {
+        const branch = await tx.branch.findFirst({ where: { companyId } });
+
         let cashAccountId = data.cashAccountId;
         if (!cashAccountId) {
-          const metodo = data.paymentMethod || 'EFECTIVO';
+          const metodo = String(paymentMethod || '').toUpperCase();
           const esEfectivo = metodo.includes('EFECTIVO');
-          const cuenta = await this.prisma.cashAccount.findFirst({
+          const cuenta = await tx.cashAccount.findFirst({
             where: {
               companyId,
               isActive: true,
               type: esEfectivo ? 'EFECTIVO' : { in: ['BANCO', 'PLATAFORMA'] },
+              currency,
             },
           });
           cashAccountId = cuenta?.id;
         }
 
         if (branch && cashAccountId) {
-          await this.prisma.flowMovement.create({
+          await tx.flowMovement.create({
             data: {
               companyId,
-              branchId:      branch.id,
+              branchId: branch.id,
               cashAccountId,
-              date:          new Date(data.date),
-              type:          'SALIDA',
-              originType:    'GASTO',
-              originId:      expense.id,
-              amount:        total,
-              currency:      data.currency || 'MXN',
-              exchangeRate:  1,
-              amountMxn:     total,
-              notes:         data.concept,
+              date: new Date(data.date),
+              type: 'SALIDA',
+              originType: 'GASTO',
+              originId: expense.id,
+              rubricId: data.rubricId || null,
+              amount: total,
+              currency,
+              exchangeRate,
+              amountMxn: totalMxn,
+              reference: data.invoiceRef || null,
+              notes: data.concept,
             },
           });
         }
-      } catch (e: any) {
-        console.error('ERROR FLOW GASTO:', e.message);
       }
-    }
 
-    // Si tiene proveedor y método CREDITO → crear CxP automáticamente
-    if (data.supplierId && data.paymentMethod === 'CREDITO') {
-      try {
-        const dueDate = data.dueDate
-          ? new Date(data.dueDate)
-          : new Date(new Date().setDate(new Date().getDate() + 30));
-        await this.prisma.payable.create({
-          data: {
-            companyId,
-            supplierId:     data.supplierId,
-            concept:        `Gasto: ${data.concept}`,
-            originalAmount: total,
-            pendingAmount:  total,
-            dueDate,
-            status:         'PENDIENTE',
-            notes:          `Generado automáticamente del gasto`,
-          },
-        });
-      } catch(e) {}
-    }
-
-    return expense;
+      return expense;
+    });
   }
 
   delete(id: string) {
