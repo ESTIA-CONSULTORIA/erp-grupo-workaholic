@@ -76,7 +76,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], PermissionsController.prototype, "reset", null);
 exports.PermissionsController = PermissionsController = __decorate([
-    (0, common_1.Controller)('api/v1/permissions'),
+    (0, common_1.Controller)('permissions'),
     __metadata("design:paramtypes", [permissions_service_1.PermissionsService])
 ], PermissionsController);
 //# sourceMappingURL=permissions.controller.js.map

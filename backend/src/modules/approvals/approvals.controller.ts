@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { Controller, Get, Post, Put, Param, Body, Query, Request, UseGuards } from '@nestjs/common';
+import { PermissionGuard, RequirePermission } from '../permissions/permission.guard';
 import { JwtAuthGuard } from '../auth/auth.guards';
 import { ApprovalsService } from './approvals.service';
 

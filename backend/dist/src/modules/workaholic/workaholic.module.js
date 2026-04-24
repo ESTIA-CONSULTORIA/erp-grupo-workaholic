@@ -6,21 +6,20 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.PermissionsModule = void 0;
+exports.WorkaholicModule = void 0;
 const common_1 = require("@nestjs/common");
-const permissions_controller_1 = require("./permissions.controller");
-const permissions_service_1 = require("./permissions.service");
-const permission_guard_1 = require("./permission.guard");
+const workaholic_controller_1 = require("./workaholic.controller");
+const workaholic_service_1 = require("./workaholic.service");
 const prisma_module_1 = require("../../common/prisma/prisma.module");
-let PermissionsModule = class PermissionsModule {
+let WorkaholicModule = class WorkaholicModule {
 };
-exports.PermissionsModule = PermissionsModule;
-exports.PermissionsModule = PermissionsModule = __decorate([
+exports.WorkaholicModule = WorkaholicModule;
+exports.WorkaholicModule = WorkaholicModule = __decorate([
     (0, common_1.Module)({
         imports: [prisma_module_1.PrismaModule],
-        controllers: [permissions_controller_1.PermissionsController],
-        providers: [permissions_service_1.PermissionsService, permission_guard_1.PermissionGuard],
-        exports: [permissions_service_1.PermissionsService, permission_guard_1.PermissionGuard],
+        controllers: [workaholic_controller_1.WorkaholicController],
+        providers: [workaholic_service_1.WorkaholicService],
+        exports: [workaholic_service_1.WorkaholicService],
     })
-], PermissionsModule);
-//# sourceMappingURL=permissions.module.js.map
+], WorkaholicModule);
+//# sourceMappingURL=workaholic.module.js.map

@@ -1752,3 +1752,112 @@ model PayrollReceipt {
   employee         Employee  @relation(fields: [employeeId], references: [id])
   @@map("payroll_receipts")
 }
+
+// ══════════════════════════════════════════════════════════════
+//  WORKAHOLIC — CENTRO DE NEGOCIOS
+// ══════════════════════════════════════════════════════════════
+
+model WorkaholicSpace {
+  id          String   @id @default(cuid())
+  companyId   String
+  name        String   // "Sala Boardroom", "Oficina 101", "Área Coworking A"
+  type        String   // OFICINA | SALA_JUNTAS | SALA_CAPACITACION | COWORKING | LOCKER
+  capacity    Int      @default(1)
+  floor       String?
+  amenities   Json?    // ["proyector", "pantalla", "videoconferencia", "pizarrón"]
+  pricePerHour  Decimal? @db.Decimal(12,2)
+  pricePerDay   Decimal? @db.Decimal(12,2)
+  pricePerMonth Decimal? @db.Decimal(12,2)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  company     Company  @relation(fields: [companyId], references: [id])
+  reservations WorkaholicReservation[]
+  @@map("workaholic_spaces")
+}
+
+model WorkaholicMembershipType {
+  id           String   @id @default(cuid())
+  companyId    String
+  name         String   // "Oficina Dedicada", "Hot Desk", "Virtual", "Sala de Juntas Pack"
+  description  String?
+  type         String   // OFICINA | COWORKING | VIRTUAL | SALA_PACK
+  duration     String   // MENSUAL | TRIMESTRAL | SEMESTRAL | ANUAL
+  price        Decimal  @db.Decimal(12,2)
+  hoursIncluded Int     @default(0)  // horas de sala incluidas
+  accessDays   String   @default("LUNES-VIERNES") // días de acceso
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  company      Company  @relation(fields: [companyId], references: [id])
+  memberships  WorkaholicMembership[]
+  @@map("workaholic_membership_types")
+}
+
+model WorkaholicMembership {
+  id              String    @id @default(cuid())
+  companyId       String
+  membershipTypeId String
+  folio           String    // WKH-0001
+  holderName      String
+  holderEmail     String?
+  holderPhone     String?
+  holderRfc       String?
+  companyName     String?   // empresa del cliente
+  startDate       DateTime  @db.Date
+  endDate         DateTime  @db.Date  // membresías por tiempo definido
+  status          String    @default("ACTIVA") // ACTIVA | VENCIDA | SUSPENDIDA | CANCELADA
+  hoursUsed       Decimal   @db.Decimal(10,2) @default(0)
+  autoRenew       Boolean   @default(false)
+  paymentMethod   String    @default("TRANSFERENCIA")
+  notes           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  company         Company   @relation(fields: [companyId], references: [id])
+  membershipType  WorkaholicMembershipType @relation(fields: [membershipTypeId], references: [id])
+  payments        WorkaholicPayment[]
+  reservations    WorkaholicReservation[]
+  @@map("workaholic_memberships")
+}
+
+model WorkaholicReservation {
+  id             String    @id @default(cuid())
+  companyId      String
+  spaceId        String
+  membershipId   String?   // si viene de membresía
+  clientName     String
+  clientEmail    String?
+  clientPhone    String?
+  clientCompany  String?
+  date           DateTime  @db.Date
+  startTime      String    // "09:00"
+  endTime        String    // "11:00"
+  hours          Decimal   @db.Decimal(5,2)
+  unitPrice      Decimal   @db.Decimal(12,2)
+  total          Decimal   @db.Decimal(12,2)
+  paymentMethod  String    @default("EFECTIVO")
+  fromMembership Boolean   @default(false) // descontado de horas membresía
+  status         String    @default("CONFIRMADA") // PENDIENTE | CONFIRMADA | EN_CURSO | COMPLETADA | CANCELADA
+  notes          String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  company        Company   @relation(fields: [companyId], references: [id])
+  space          WorkaholicSpace @relation(fields: [spaceId], references: [id])
+  membership     WorkaholicMembership? @relation(fields: [membershipId], references: [id])
+  @@map("workaholic_reservations")
+}
+
+model WorkaholicPayment {
+  id           String   @id @default(cuid())
+  companyId    String
+  membershipId String
+  concept      String
+  amount       Decimal  @db.Decimal(12,2)
+  paymentMethod String  @default("TRANSFERENCIA")
+  reference    String?
+  period       String?  // "Mayo 2026"
+  paidAt       DateTime @default(now())
+  status       String   @default("PAGADO")
+  company      Company  @relation(fields: [companyId], references: [id])
+  membership   WorkaholicMembership @relation(fields: [membershipId], references: [id])
+  @@map("workaholic_payments")
+}

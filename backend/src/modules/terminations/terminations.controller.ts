@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { Controller, Get, Post, Put, Param, Body, Request, UseGuards } from '@nestjs/common';
+import { PermissionGuard, RequirePermission } from '../permissions/permission.guard';
 import { JwtAuthGuard } from '../auth/auth.guards';
 import { TerminationsService } from './terminations.service';
 @Controller('companies/:companyId/terminations')
