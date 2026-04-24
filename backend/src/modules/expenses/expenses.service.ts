@@ -113,6 +113,27 @@ export class ExpensesService {
       }
     }
 
+    // Si tiene proveedor y método CREDITO → crear CxP automáticamente
+    if (data.supplierId && data.paymentMethod === 'CREDITO') {
+      try {
+        const dueDate = data.dueDate
+          ? new Date(data.dueDate)
+          : new Date(new Date().setDate(new Date().getDate() + 30));
+        await this.prisma.payable.create({
+          data: {
+            companyId,
+            supplierId:     data.supplierId,
+            concept:        `Gasto: ${data.concept}`,
+            originalAmount: total,
+            pendingAmount:  total,
+            dueDate,
+            status:         'PENDIENTE',
+            notes:          `Generado automáticamente del gasto`,
+          },
+        });
+      } catch(e) {}
+    }
+
     return expense;
   }
 
