@@ -36,6 +36,7 @@ const legal_module_1 = require("./modules/legal/legal.module");
 const payroll_receipts_module_1 = require("./modules/payroll-receipts/payroll-receipts.module");
 const permissions_module_1 = require("./modules/permissions/permissions.module");
 const permissions_service_1 = require("./modules/permissions/permissions.service");
+const lonche_module_1 = require("./modules/lonche/lonche.module");
 const workaholic_module_1 = require("./modules/workaholic/workaholic.module");
 const palestra_module_1 = require("./modules/palestra/palestra.module");
 const maintenance_module_1 = require("./modules/maintenance/maintenance.module");
@@ -86,6 +87,7 @@ exports.AppModule = AppModule = __decorate([
             rh_module_1.RhModule,
             bulk_import_module_1.BulkImportModule,
             audit_module_1.AuditModule,
+            lonche_module_1.LoncheModule,
             workaholic_module_1.WorkaholicModule,
             palestra_module_1.PalestraModule,
             approvals_module_1.ApprovalsModule,

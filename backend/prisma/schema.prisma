@@ -1861,3 +1861,158 @@ model WorkaholicPayment {
   membership   WorkaholicMembership @relation(fields: [membershipId], references: [id])
   @@map("workaholic_payments")
 }
+
+// ══════════════════════════════════════════════════════════════
+//  LONCHE — COOPERATIVA ESCOLAR
+// ══════════════════════════════════════════════════════════════
+
+model LoncheProduct {
+  id            String   @id @default(cuid())
+  companyId     String
+  sku           String
+  name          String
+  category      String   // DESAYUNO | LUNCH | SNACK | BEBIDA | DULCE | OTRO
+  price         Decimal  @db.Decimal(10,2)
+  cost          Decimal  @db.Decimal(10,2) @default(0)
+  cashbackPct   Decimal  @db.Decimal(5,2)  @default(0) // % de cashback al comprar
+  stock         Decimal  @db.Decimal(10,2) @default(0) // stock en almacén
+  isActive      Boolean  @default(true)
+  imageUrl      String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  company       Company  @relation(fields: [companyId], references: [id])
+  surtidoItems  LoncheSurtidoItem[]
+  saleItems     LoncheSaleItem[]
+  @@unique([companyId, sku])
+  @@map("lonche_products")
+}
+
+model LoncheTurno {
+  id            String    @id @default(cuid())
+  companyId     String
+  cajeroId      String    // userId del cajero
+  cajeroName    String
+  date          DateTime  @db.Date
+  status        String    @default("ABIERTO") // ABIERTO | CERRADO | VALIDADO
+  efectivoDeclarado Decimal? @db.Decimal(12,2)
+  efectivoSistema   Decimal? @db.Decimal(12,2)
+  diferencia        Decimal? @db.Decimal(12,2)
+  notasCierre   String?
+  validadoPor   String?
+  validadoAt    DateTime?
+  aperturaAt    DateTime  @default(now())
+  cierreAt      DateTime?
+  createdAt     DateTime  @default(now())
+  company       Company   @relation(fields: [companyId], references: [id])
+  surtidos      LoncheSurtido[]
+  sales         LoncheSale[]
+  @@map("lonche_turnos")
+}
+
+model LoncheSurtido {
+  id          String   @id @default(cuid())
+  turnoId     String
+  companyId   String
+  type        String   @default("INICIAL") // INICIAL | RESURTIDO
+  notes       String?
+  createdAt   DateTime @default(now())
+  createdById String?
+  turno       LoncheTurno @relation(fields: [turnoId], references: [id])
+  items       LoncheSurtidoItem[]
+  @@map("lonche_surtidos")
+}
+
+model LoncheSurtidoItem {
+  id          String  @id @default(cuid())
+  surtidoId   String
+  productId   String
+  qty         Decimal @db.Decimal(10,2)
+  costUnit    Decimal @db.Decimal(10,2) @default(0)
+  surtido     LoncheSurtido  @relation(fields: [surtidoId], references: [id], onDelete: Cascade)
+  product     LoncheProduct  @relation(fields: [productId], references: [id])
+  @@map("lonche_surtido_items")
+}
+
+model LoncheSale {
+  id            String   @id @default(cuid())
+  companyId     String
+  turnoId       String
+  studentId     String?  // si paga con prepago
+  studentName   String?
+  paymentMethod String   @default("EFECTIVO") // EFECTIVO | PREPAGO | MIXTO
+  total         Decimal  @db.Decimal(12,2)
+  cashbackEarned Decimal @db.Decimal(12,2) @default(0)
+  prepagoPaid   Decimal  @db.Decimal(12,2) @default(0)
+  efectivoPaid  Decimal  @db.Decimal(12,2) @default(0)
+  createdAt     DateTime @default(now())
+  turno         LoncheTurno @relation(fields: [turnoId], references: [id])
+  company       Company     @relation(fields: [companyId], references: [id])
+  items         LoncheSaleItem[]
+  @@map("lonche_sales")
+}
+
+model LoncheSaleItem {
+  id        String  @id @default(cuid())
+  saleId    String
+  productId String
+  name      String
+  qty       Decimal @db.Decimal(10,2)
+  price     Decimal @db.Decimal(10,2)
+  cashback  Decimal @db.Decimal(10,2) @default(0)
+  sale      LoncheSale    @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  product   LoncheProduct @relation(fields: [productId], references: [id])
+  @@map("lonche_sale_items")
+}
+
+// ── PREPAGO / RECOMPENSAS ─────────────────────────────────────
+
+model LoncheStudent {
+  id            String   @id @default(cuid())
+  companyId     String
+  code          String   // código QR / barras único
+  name          String
+  grade         String?  // "3B", "5A"
+  tutorName     String?
+  tutorEmail    String?
+  tutorPhone    String?
+  balance       Decimal  @db.Decimal(12,2) @default(0) // saldo prepago
+  cashback      Decimal  @db.Decimal(12,2) @default(0) // saldo cashback acumulado
+  dailyLimit    Decimal? @db.Decimal(10,2)              // tope diario del tutor
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  company       Company  @relation(fields: [companyId], references: [id])
+  recharges     LoncheRecharge[]
+  transactions  LoncheTransaction[]
+  @@unique([companyId, code])
+  @@map("lonche_students")
+}
+
+model LoncheRecharge {
+  id            String   @id @default(cuid())
+  companyId     String
+  studentId     String
+  amount        Decimal  @db.Decimal(12,2)
+  paymentMethod String   @default("EFECTIVO") // EFECTIVO | TRANSFERENCIA | EN_LINEA
+  reference     String?
+  rechargedById String?  // userId de cajero o null si fue en línea
+  createdAt     DateTime @default(now())
+  company       Company       @relation(fields: [companyId], references: [id])
+  student       LoncheStudent @relation(fields: [studentId], references: [id])
+  @@map("lonche_recharges")
+}
+
+model LoncheTransaction {
+  id          String   @id @default(cuid())
+  companyId   String
+  studentId   String
+  type        String   // RECARGA | COMPRA | CASHBACK | AJUSTE
+  amount      Decimal  @db.Decimal(12,2) // positivo = entrada, negativo = salida
+  balance     Decimal  @db.Decimal(12,2) // saldo después
+  saleId      String?
+  notes       String?
+  createdAt   DateTime @default(now())
+  company     Company       @relation(fields: [companyId], references: [id])
+  student     LoncheStudent @relation(fields: [studentId], references: [id])
+  @@map("lonche_transactions")
+}

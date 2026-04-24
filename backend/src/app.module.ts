@@ -24,6 +24,7 @@ import { LegalModule } from './modules/legal/legal.module';
 import { PayrollReceiptsModule } from './modules/payroll-receipts/payroll-receipts.module';
 import { PermissionsModule } from './modules/permissions/permissions.module';
 import { PermissionsService } from './modules/permissions/permissions.service';
+import { LoncheModule } from './modules/lonche/lonche.module';
 import { WorkaholicModule } from './modules/workaholic/workaholic.module';
 import { PalestraModule } from './modules/palestra/palestra.module';
 import { MaintenanceModule } from './modules/maintenance/maintenance.module';
@@ -47,6 +48,7 @@ import { CorteCajaModule } from './modules/corte-caja/corte-caja.module';
     RhModule,
     BulkImportModule,
     AuditModule,
+    LoncheModule,
     WorkaholicModule,
     PalestraModule,
     ApprovalsModule,
