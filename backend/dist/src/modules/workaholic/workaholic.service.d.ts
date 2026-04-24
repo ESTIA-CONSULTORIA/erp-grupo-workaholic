@@ -11,9 +11,19 @@ export declare class WorkaholicService {
     getMemberships(companyId: string, filters?: any): Promise<any>;
     createMembership(companyId: string, data: any): Promise<any>;
     registerPayment(membershipId: string, data: any): Promise<any>;
+    checkExpired(companyId: string): Promise<{
+        expired: any;
+    }>;
     getReservations(companyId: string, filters?: any): Promise<any>;
     createReservation(companyId: string, data: any): Promise<any>;
     updateReservation(id: string, data: any): any;
+    getDashboard(companyId: string): Promise<{
+        totalMem: any;
+        activeMem: any;
+        vencidas: any;
+        todayRes: any;
+        spaces: any;
+    }>;
     registerSale(companyId: string, data: any): Promise<{
         date: Date;
         id: string;
@@ -27,19 +37,9 @@ export declare class WorkaholicService {
         isCredit: boolean;
         clientId: string | null;
     }>;
-    getDashboard(companyId: string): Promise<{
-        totalMem: any;
-        activeMem: any;
-        vencidasMem: any;
-        todayRes: any;
-        spaces: any;
-    }>;
-    checkExpired(companyId: string): Promise<{
-        expired: any;
-    }>;
-    importSoftRestaurant(companyId: string, data: any, userId?: string): Promise<any>;
+    importSoftRestaurant(companyId: string, data: any, userId?: string): any;
     getSoftImports(companyId: string): any;
     private _calcEndDate;
     private _calcHours;
-    private _getPeriodLabel;
+    private _periodLabel;
 }

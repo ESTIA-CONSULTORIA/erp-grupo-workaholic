@@ -15,11 +15,6 @@ let WorkaholicModule = class WorkaholicModule {
 };
 exports.WorkaholicModule = WorkaholicModule;
 exports.WorkaholicModule = WorkaholicModule = __decorate([
-    (0, common_1.Module)({
-        imports: [prisma_module_1.PrismaModule],
-        controllers: [workaholic_controller_1.WorkaholicController],
-        providers: [workaholic_service_1.WorkaholicService],
-        exports: [workaholic_service_1.WorkaholicService],
-    })
+    (0, common_1.Module)({ imports: [prisma_module_1.PrismaModule], controllers: [workaholic_controller_1.WorkaholicController], providers: [workaholic_service_1.WorkaholicService] })
 ], WorkaholicModule);
 //# sourceMappingURL=workaholic.module.js.map

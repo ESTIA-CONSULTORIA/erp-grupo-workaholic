@@ -5,7 +5,7 @@ export declare class WorkaholicController {
     dashboard(cid: string): Promise<{
         totalMem: any;
         activeMem: any;
-        vencidasMem: any;
+        vencidas: any;
         todayRes: any;
         spaces: any;
     }>;
@@ -17,10 +17,10 @@ export declare class WorkaholicController {
     updateType(id: string, body: any): any;
     getMemberships(cid: string, q: any): Promise<any>;
     createMembership(cid: string, body: any): Promise<any>;
-    registerPayment(id: string, body: any): Promise<any>;
     checkExpired(cid: string): Promise<{
         expired: any;
     }>;
+    registerPayment(id: string, body: any): Promise<any>;
     getReservations(cid: string, q: any): Promise<any>;
     createReservation(cid: string, body: any): Promise<any>;
     updateReservation(id: string, body: any): any;
@@ -38,5 +38,5 @@ export declare class WorkaholicController {
         clientId: string | null;
     }>;
     getSoftImports(cid: string): any;
-    importSoft(cid: string, req: any, body: any): Promise<any>;
+    importSoft(cid: string, req: any, body: any): any;
 }

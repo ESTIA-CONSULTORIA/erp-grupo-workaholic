@@ -29,8 +29,8 @@ let WorkaholicController = class WorkaholicController {
     updateType(id, body) { return this.svc.updateMembershipType(id, body); }
     getMemberships(cid, q) { return this.svc.getMemberships(cid, q); }
     createMembership(cid, body) { return this.svc.createMembership(cid, body); }
-    registerPayment(id, body) { return this.svc.registerPayment(id, body); }
     checkExpired(cid) { return this.svc.checkExpired(cid); }
+    registerPayment(id, body) { return this.svc.registerPayment(id, body); }
     getReservations(cid, q) { return this.svc.getReservations(cid, q); }
     createReservation(cid, body) { return this.svc.createReservation(cid, body); }
     updateReservation(id, body) { return this.svc.updateReservation(id, body); }
@@ -111,6 +111,13 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], WorkaholicController.prototype, "createMembership", null);
 __decorate([
+    (0, common_1.Post)('memberships/check-expired'),
+    __param(0, (0, common_1.Param)('companyId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], WorkaholicController.prototype, "checkExpired", null);
+__decorate([
     (0, common_1.Post)('memberships/:id/payments'),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
@@ -118,13 +125,6 @@ __decorate([
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], WorkaholicController.prototype, "registerPayment", null);
-__decorate([
-    (0, common_1.Post)('memberships/check-expired'),
-    __param(0, (0, common_1.Param)('companyId')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", void 0)
-], WorkaholicController.prototype, "checkExpired", null);
 __decorate([
     (0, common_1.Get)('reservations'),
     __param(0, (0, common_1.Param)('companyId')),

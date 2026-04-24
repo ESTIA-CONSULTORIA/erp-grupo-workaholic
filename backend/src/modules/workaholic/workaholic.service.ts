@@ -20,9 +20,9 @@ export class WorkaholicService {
         companyId, name: data.name, type: data.type,
         capacity: data.capacity || 1, floor: data.floor || null,
         amenities: data.amenities || null,
-        pricePerHour: data.pricePerHour || null,
-        pricePerDay: data.pricePerDay || null,
-        pricePerMonth: data.pricePerMonth || null,
+        pricePerHour:  data.pricePerHour  ? Number(data.pricePerHour)  : null,
+        pricePerDay:   data.pricePerDay   ? Number(data.pricePerDay)   : null,
+        pricePerMonth: data.pricePerMonth ? Number(data.pricePerMonth) : null,
       },
     });
   }
@@ -35,7 +35,7 @@ export class WorkaholicService {
   getMembershipTypes(companyId: string) {
     return this.prisma.workaholicMembershipType.findMany({
       where: { companyId, isActive: true },
-      orderBy: { price: 'asc' },
+      orderBy: { name: 'asc' },
     });
   }
 
@@ -44,7 +44,7 @@ export class WorkaholicService {
       data: {
         companyId, name: data.name, description: data.description || null,
         type: data.type, duration: data.duration,
-        price: data.price, hoursIncluded: data.hoursIncluded || 0,
+        price: Number(data.price), hoursIncluded: Number(data.hoursIncluded || 0),
         accessDays: data.accessDays || 'LUNES-VIERNES',
       },
     });
@@ -60,18 +60,14 @@ export class WorkaholicService {
     if (filters.status) where.status = filters.status;
     if (filters.search) {
       where.OR = [
-        { holderName:   { contains: filters.search, mode: 'insensitive' } },
-        { companyName:  { contains: filters.search, mode: 'insensitive' } },
-        { folio:        { contains: filters.search, mode: 'insensitive' } },
+        { holderName:  { contains: filters.search, mode: 'insensitive' } },
+        { folio:       { contains: filters.search, mode: 'insensitive' } },
+        { companyName: { contains: filters.search, mode: 'insensitive' } },
       ];
     }
     return this.prisma.workaholicMembership.findMany({
       where,
-      include: {
-        membershipType: true,
-        payments:  { orderBy: { paidAt: 'desc' }, take: 3 },
-        reservations: { orderBy: { date: 'desc' }, take: 5 },
-      },
+      include: { membershipType: true, payments: { orderBy: { paidAt: 'desc' }, take: 3 } },
       orderBy: { folio: 'asc' },
     });
   }
@@ -83,10 +79,10 @@ export class WorkaholicService {
     const type = await this.prisma.workaholicMembershipType.findUnique({
       where: { id: data.membershipTypeId },
     });
+    if (!type) throw new Error('Tipo de membresía no encontrado');
 
-    const startDate = new Date(data.startDate || new Date());
-    startDate.setHours(0, 0, 0, 0);
-    const endDate = this._calcEndDate(startDate, type?.duration || 'MENSUAL');
+    const start = new Date(data.startDate);
+    const end   = this._calcEndDate(start, type.duration);
 
     const m = await this.prisma.workaholicMembership.create({
       data: {
@@ -97,34 +93,34 @@ export class WorkaholicService {
         holderPhone:  data.holderPhone  || null,
         holderRfc:    data.holderRfc    || null,
         companyName:  data.companyName  || null,
-        startDate, endDate,
+        startDate:    start,
+        endDate:      end,
+        status:       'ACTIVA',
         autoRenew:    data.autoRenew    || false,
-        paymentMethod: data.paymentMethod || 'TRANSFERENCIA',
+        paymentMethod:data.paymentMethod|| 'TRANSFERENCIA',
         notes:        data.notes        || null,
-        status: 'ACTIVA',
       },
     });
 
-    // Auto-register payment if paid upfront
-    if (data.paidNow) {
+    // Registrar pago inicial si aplica
+    if (data.registerPayment) {
       await this.prisma.workaholicPayment.create({
         data: {
           companyId, membershipId: m.id,
-          concept: `Alta membresía ${type?.name} — ${folio}`,
-          amount: type?.price || data.amount || 0,
+          concept: `Membresía ${type.name} — ${type.duration}`,
+          amount:  type.price,
           paymentMethod: data.paymentMethod || 'TRANSFERENCIA',
           reference: data.reference || null,
-          period: this._getPeriodLabel(startDate),
+          period: this._periodLabel(start),
           status: 'PAGADO',
         },
       });
-      // Register as Sale for ER
+      // Afecta ER como Sale
       await this.prisma.sale.create({
         data: {
-          companyId, date: new Date(), channel: 'MOSTRADOR',
-          clientName: data.holderName,
-          total: type?.price || data.amount || 0,
-          paymentMethod: data.paymentMethod || 'TRANSFERENCIA',
+          companyId, date: new Date(),
+          channel: 'MOSTRADOR', clientName: data.holderName,
+          total: type.price, paymentMethod: data.paymentMethod || 'TRANSFERENCIA',
           isCredit: false,
         },
       });
@@ -138,42 +134,51 @@ export class WorkaholicService {
 
   async registerPayment(membershipId: string, data: any) {
     const m = await this.prisma.workaholicMembership.findUnique({
-      where: { id: membershipId },
-      include: { membershipType: true },
+      where: { id: membershipId }, include: { membershipType: true },
     });
     if (!m) throw new Error('Membresía no encontrada');
 
     const payment = await this.prisma.workaholicPayment.create({
       data: {
         companyId: m.companyId, membershipId,
-        concept: data.concept || `Renovación ${m.membershipType?.name}`,
-        amount: data.amount || m.membershipType?.price || 0,
+        concept: data.concept || `Membresía ${m.membershipType.name}`,
+        amount:  Number(data.amount || m.membershipType.price),
         paymentMethod: data.paymentMethod || 'TRANSFERENCIA',
         reference: data.reference || null,
-        period: data.period || this._getPeriodLabel(new Date()),
+        period: data.period || this._periodLabel(new Date()),
         status: 'PAGADO',
       },
     });
 
-    // Extend end date if renewal
-    if (data.isRenewal) {
-      const newEnd = this._calcEndDate(new Date(m.endDate), m.membershipType?.duration || 'MENSUAL');
+    // Renovar si vencida
+    if (m.status === 'VENCIDA' || data.renew) {
+      const newEnd = this._calcEndDate(new Date(), m.membershipType.duration);
       await this.prisma.workaholicMembership.update({
         where: { id: membershipId },
-        data: { endDate: newEnd, status: 'ACTIVA' },
+        data: { status: 'ACTIVA', endDate: newEnd },
       });
     }
 
-    // Register as Sale
+    // Afecta ER
     await this.prisma.sale.create({
       data: {
-        companyId: m.companyId, date: new Date(), channel: 'MOSTRADOR',
-        clientName: m.holderName, total: payment.amount,
-        paymentMethod: payment.paymentMethod, isCredit: false,
+        companyId: m.companyId, date: new Date(),
+        channel: 'MOSTRADOR', clientName: m.holderName,
+        total: payment.amount, paymentMethod: payment.paymentMethod,
+        isCredit: false,
       },
     });
 
     return payment;
+  }
+
+  async checkExpired(companyId: string) {
+    const today = new Date(); today.setHours(0,0,0,0);
+    const result = await this.prisma.workaholicMembership.updateMany({
+      where: { companyId, status: 'ACTIVA', endDate: { lt: today } },
+      data: { status: 'VENCIDA' },
+    });
+    return { expired: result.count };
   }
 
   // ── RESERVACIONES ─────────────────────────────────────────
@@ -184,10 +189,7 @@ export class WorkaholicService {
     if (filters.status)  where.status  = filters.status;
     return this.prisma.workaholicReservation.findMany({
       where,
-      include: {
-        space: { select: { name: true, type: true } },
-        membership: { select: { folio: true, holderName: true } },
-      },
+      include: { space: true, membership: true },
       orderBy: [{ date: 'asc' }, { startTime: 'asc' }],
     });
   }
@@ -196,39 +198,37 @@ export class WorkaholicService {
     const space = await this.prisma.workaholicSpace.findUnique({ where: { id: data.spaceId } });
     if (!space) throw new Error('Espacio no encontrado');
 
-    // Check availability
+    // Verificar disponibilidad
     const conflict = await this.prisma.workaholicReservation.findFirst({
       where: {
         companyId, spaceId: data.spaceId,
         date: new Date(data.date),
         status: { in: ['CONFIRMADA', 'EN_CURSO'] },
         OR: [
-          { startTime: { lte: data.startTime }, endTime: { gt: data.startTime } },
-          { startTime: { lt: data.endTime },    endTime: { gte: data.endTime } },
-          { startTime: { gte: data.startTime }, endTime: { lte: data.endTime } },
+          { startTime: { lt: data.endTime }, endTime: { gt: data.startTime } },
         ],
       },
     });
-    if (conflict) throw new Error(`Conflicto de horario: espacio ocupado de ${conflict.startTime} a ${conflict.endTime}`);
+    if (conflict) throw new Error(`Espacio ocupado de ${conflict.startTime} a ${conflict.endTime}`);
 
     const hours = this._calcHours(data.startTime, data.endTime);
     const unitPrice = Number(space.pricePerHour || 0);
-    const total = unitPrice * hours;
+    const total     = hours * unitPrice;
 
-    // Check if membership has hours
+    // Si viene de membresía, descontar horas
     let fromMembership = false;
     if (data.membershipId) {
-      const mem = await this.prisma.workaholicMembership.findUnique({
+      const m = await this.prisma.workaholicMembership.findUnique({
         where: { id: data.membershipId }, include: { membershipType: true },
       });
-      if (mem && mem.membershipType) {
-        const hoursLeft = Number(mem.membershipType.hoursIncluded) - Number(mem.hoursUsed);
-        if (hoursLeft >= hours) {
-          fromMembership = true;
+      if (m && m.status === 'ACTIVA') {
+        const remaining = Number(m.membershipType.hoursIncluded) - Number(m.hoursUsed);
+        if (remaining >= hours) {
           await this.prisma.workaholicMembership.update({
             where: { id: data.membershipId },
             data: { hoursUsed: { increment: hours } },
           });
+          fromMembership = true;
         }
       }
     }
@@ -241,23 +241,26 @@ export class WorkaholicService {
         clientEmail:   data.clientEmail   || null,
         clientPhone:   data.clientPhone   || null,
         clientCompany: data.clientCompany || null,
-        date: new Date(data.date),
-        startTime: data.startTime, endTime: data.endTime,
+        date:          new Date(data.date),
+        startTime:     data.startTime,
+        endTime:       data.endTime,
         hours, unitPrice, total: fromMembership ? 0 : total,
         paymentMethod: data.paymentMethod || 'EFECTIVO',
-        fromMembership, status: 'CONFIRMADA',
+        fromMembership,
+        status: 'CONFIRMADA',
         notes: data.notes || null,
       },
       include: { space: true },
     });
 
-    // Register sale if paid
+    // Registrar en ventas si no es de membresía
     if (!fromMembership && total > 0) {
       await this.prisma.sale.create({
         data: {
           companyId, date: new Date(), channel: 'MOSTRADOR',
-          clientName: data.clientName, total,
-          paymentMethod: data.paymentMethod || 'EFECTIVO', isCredit: false,
+          clientName: data.clientName,
+          total: total, paymentMethod: data.paymentMethod || 'EFECTIVO',
+          isCredit: false,
         },
       });
     }
@@ -269,77 +272,43 @@ export class WorkaholicService {
     return this.prisma.workaholicReservation.update({ where: { id }, data });
   }
 
+  // ── DASHBOARD ─────────────────────────────────────────────
+  async getDashboard(companyId: string) {
+    const today = new Date(); today.setHours(0,0,0,0);
+    const [totalMem, activeMem, vencidas, todayRes, spaces] = await Promise.all([
+      this.prisma.workaholicMembership.count({ where: { companyId } }),
+      this.prisma.workaholicMembership.count({ where: { companyId, status: 'ACTIVA' } }),
+      this.prisma.workaholicMembership.count({ where: { companyId, status: 'VENCIDA' } }),
+      this.prisma.workaholicReservation.count({ where: { companyId, date: today, status: { in: ['CONFIRMADA','EN_CURSO'] } } }),
+      this.prisma.workaholicSpace.count({ where: { companyId, isActive: true } }),
+    ]);
+    return { totalMem, activeMem, vencidas, todayRes, spaces };
+  }
+
   // ── POS WORKAHOLIC ────────────────────────────────────────
   async registerSale(companyId: string, data: any) {
-    const total = data.lines.reduce((t: number, l: any) => t + Number(l.price) * Number(l.qty), 0);
+    const total = (data.lines || []).reduce((t: number, l: any) => t + Number(l.price) * Number(l.qty), 0);
     return this.prisma.sale.create({
       data: {
-        companyId, date: new Date(data.date || new Date()),
-        channel: 'MOSTRADOR', clientName: data.clientName || null,
-        total, paymentMethod: data.paymentMethod || 'EFECTIVO', isCredit: false,
+        companyId, date: new Date(), channel: 'MOSTRADOR',
+        clientName: data.clientName || null,
+        total, paymentMethod: data.paymentMethod || 'EFECTIVO',
+        isCredit: false,
       },
     });
   }
 
-  // ── DASHBOARD ─────────────────────────────────────────────
-  async getDashboard(companyId: string) {
-    const today = new Date(); today.setHours(0, 0, 0, 0);
-    const [totalMem, activeMem, vencidasMem, todayRes, spaces] = await Promise.all([
-      this.prisma.workaholicMembership.count({ where: { companyId } }),
-      this.prisma.workaholicMembership.count({ where: { companyId, status: 'ACTIVA' } }),
-      this.prisma.workaholicMembership.count({ where: { companyId, status: 'VENCIDA' } }),
-      this.prisma.workaholicReservation.findMany({
-        where: { companyId, date: today, status: { in: ['CONFIRMADA','EN_CURSO'] } },
-        include: { space: { select: { name: true, type: true } } },
-        orderBy: { startTime: 'asc' },
-      }),
-      this.prisma.workaholicSpace.count({ where: { companyId, isActive: true } }),
-    ]);
-    return { totalMem, activeMem, vencidasMem, todayRes, spaces };
-  }
-
-  // ── CHECK VENCIDAS ────────────────────────────────────────
-  async checkExpired(companyId: string) {
-    const today = new Date(); today.setHours(0,0,0,0);
-    const result = await this.prisma.workaholicMembership.updateMany({
-      where: { companyId, status: 'ACTIVA', endDate: { lt: today } },
-      data: { status: 'VENCIDA' },
+  // ── SOFT RESTAURANT (mismo modelo que Palestra) ───────────
+  importSoftRestaurant(companyId: string, data: any, userId?: string) {
+    return this.prisma.softRestaurantImport.create({
+      data: {
+        companyId, fecha: new Date(data.fecha),
+        totalVentas: data.totalVentas, totalEfectivo: data.totalEfectivo || 0,
+        totalTarjeta: data.totalTarjeta || 0, totalOtros: data.totalOtros || 0,
+        numTransacciones: data.numTransacciones || 0,
+        rawData: data.rawData || null, importedById: userId || null,
+      },
     });
-    return { expired: result.count };
-  }
-
-  // ── SOFT RESTAURANT IMPORT ────────────────────────────────
-  async importSoftRestaurant(companyId: string, data: any, userId?: string) {
-    const fecha = new Date(data.fecha); fecha.setHours(0,0,0,0);
-    const existing = await this.prisma.softRestaurantImport.findFirst({ where: { companyId, fecha } });
-
-    const imp = existing
-      ? await this.prisma.softRestaurantImport.update({
-          where: { id: existing.id },
-          data: { totalVentas: data.totalVentas, totalEfectivo: data.totalEfectivo || 0,
-                  totalTarjeta: data.totalTarjeta || 0, totalOtros: data.totalOtros || 0,
-                  numTransacciones: data.numTransacciones || 0, rawData: data.rawData || null },
-        })
-      : await this.prisma.softRestaurantImport.create({
-          data: {
-            companyId, fecha, totalVentas: data.totalVentas,
-            totalEfectivo: data.totalEfectivo || 0, totalTarjeta: data.totalTarjeta || 0,
-            totalOtros: data.totalOtros || 0, numTransacciones: data.numTransacciones || 0,
-            rawData: data.rawData || null, importedById: userId || null,
-          },
-        });
-
-    // Register as Sale for ER
-    if (!existing) {
-      await this.prisma.sale.create({
-        data: {
-          companyId, date: fecha, channel: 'RESTAURANTE',
-          clientName: 'A&B Workaholic', total: data.totalVentas,
-          paymentMethod: 'MIXTO', isCredit: false,
-        },
-      });
-    }
-    return imp;
   }
 
   getSoftImports(companyId: string) {
@@ -351,11 +320,11 @@ export class WorkaholicService {
   // ── HELPERS ───────────────────────────────────────────────
   private _calcEndDate(start: Date, duration: string): Date {
     const d = new Date(start);
-    switch (duration) {
-      case 'MENSUAL':     d.setMonth(d.getMonth() + 1);      break;
-      case 'TRIMESTRAL':  d.setMonth(d.getMonth() + 3);      break;
-      case 'SEMESTRAL':   d.setMonth(d.getMonth() + 6);      break;
-      case 'ANUAL':       d.setFullYear(d.getFullYear() + 1); break;
+    switch(duration) {
+      case 'MENSUAL':     d.setMonth(d.getMonth() + 1);   break;
+      case 'TRIMESTRAL':  d.setMonth(d.getMonth() + 3);   break;
+      case 'SEMESTRAL':   d.setMonth(d.getMonth() + 6);   break;
+      case 'ANUAL':       d.setFullYear(d.getFullYear()+1); break;
       default:            d.setMonth(d.getMonth() + 1);
     }
     d.setDate(d.getDate() - 1);
@@ -365,10 +334,10 @@ export class WorkaholicService {
   private _calcHours(start: string, end: string): number {
     const [sh, sm] = start.split(':').map(Number);
     const [eh, em] = end.split(':').map(Number);
-    return ((eh * 60 + em) - (sh * 60 + sm)) / 60;
+    return Math.round(((eh * 60 + em) - (sh * 60 + sm)) / 60 * 100) / 100;
   }
 
-  private _getPeriodLabel(date: Date): string {
+  private _periodLabel(date: Date): string {
     return date.toLocaleDateString('es-MX', { month: 'long', year: 'numeric' });
   }
 }
