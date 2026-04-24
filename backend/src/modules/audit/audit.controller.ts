@@ -1,7 +1,7 @@
 import { Controller, Get, Param, Query } from '@nestjs/common';
 import { AuditService } from './audit.service';
 
-@Controller('api/v1/companies/:companyId/audit')
+@Controller('companies/:companyId/audit')
 export class AuditController {
   constructor(private readonly svc: AuditService) {}
 

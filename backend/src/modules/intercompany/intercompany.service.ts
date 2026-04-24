@@ -27,9 +27,12 @@ export class IntercompanyService {
     });
   }
 
-  async createTransfer(fromCompanyId: string, userId: string, data: any) {
+  async async createTransfer(fromCompanyId: string, userId: string, data: any) {
+    const count = await this.prisma.intercompanyTransfer.count();
+    const folio = `ICT-${String(count + 1).padStart(4, '0')}`;
     return this.prisma.intercompanyTransfer.create({
       data: {
+        folio,
         fromCompanyId,
         toCompanyId:   data.toCompanyId,
         amount:        Number(data.amount),
