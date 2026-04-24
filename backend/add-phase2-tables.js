@@ -108,3 +108,113 @@ async function main() {
 }
 
 main().catch(console.error).finally(() => prisma.$disconnect());
+
+// Workaholic tables
+const workahoticTables = [
+  `CREATE TABLE IF NOT EXISTS workaholic_spaces (
+    id TEXT PRIMARY KEY, "companyId" TEXT NOT NULL, name TEXT NOT NULL,
+    type TEXT NOT NULL, capacity INT NOT NULL DEFAULT 1, floor TEXT,
+    amenities JSONB, "pricePerHour" DECIMAL(12,2), "pricePerDay" DECIMAL(12,2),
+    "pricePerMonth" DECIMAL(12,2), "isActive" BOOLEAN NOT NULL DEFAULT TRUE,
+    "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(), "updatedAt" TIMESTAMP NOT NULL DEFAULT NOW()
+  )`,
+  `CREATE TABLE IF NOT EXISTS workaholic_membership_types (
+    id TEXT PRIMARY KEY, "companyId" TEXT NOT NULL, name TEXT NOT NULL,
+    description TEXT, type TEXT NOT NULL, duration TEXT NOT NULL,
+    price DECIMAL(12,2) NOT NULL, "hoursIncluded" INT NOT NULL DEFAULT 0,
+    "accessDays" TEXT NOT NULL DEFAULT 'LUNES-VIERNES', "isActive" BOOLEAN NOT NULL DEFAULT TRUE,
+    "createdAt" TIMESTAMP NOT NULL DEFAULT NOW()
+  )`,
+  `CREATE TABLE IF NOT EXISTS workaholic_memberships (
+    id TEXT PRIMARY KEY, "companyId" TEXT NOT NULL, "membershipTypeId" TEXT NOT NULL,
+    folio TEXT NOT NULL, "holderName" TEXT NOT NULL, "holderEmail" TEXT, "holderPhone" TEXT,
+    "holderRfc" TEXT, "companyName" TEXT, "startDate" DATE NOT NULL, "endDate" DATE NOT NULL,
+    status TEXT NOT NULL DEFAULT 'ACTIVA', "hoursUsed" DECIMAL(10,2) NOT NULL DEFAULT 0,
+    "autoRenew" BOOLEAN NOT NULL DEFAULT FALSE, "paymentMethod" TEXT NOT NULL DEFAULT 'TRANSFERENCIA',
+    notes TEXT, "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(), "updatedAt" TIMESTAMP NOT NULL DEFAULT NOW()
+  )`,
+  `CREATE TABLE IF NOT EXISTS workaholic_reservations (
+    id TEXT PRIMARY KEY, "companyId" TEXT NOT NULL, "spaceId" TEXT NOT NULL,
+    "membershipId" TEXT, "clientName" TEXT NOT NULL, "clientEmail" TEXT, "clientPhone" TEXT,
+    "clientCompany" TEXT, date DATE NOT NULL, "startTime" TEXT NOT NULL, "endTime" TEXT NOT NULL,
+    hours DECIMAL(5,2) NOT NULL, "unitPrice" DECIMAL(12,2) NOT NULL, total DECIMAL(12,2) NOT NULL,
+    "paymentMethod" TEXT NOT NULL DEFAULT 'EFECTIVO', "fromMembership" BOOLEAN NOT NULL DEFAULT FALSE,
+    status TEXT NOT NULL DEFAULT 'CONFIRMADA', notes TEXT,
+    "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(), "updatedAt" TIMESTAMP NOT NULL DEFAULT NOW()
+  )`,
+  `CREATE TABLE IF NOT EXISTS workaholic_payments (
+    id TEXT PRIMARY KEY, "companyId" TEXT NOT NULL, "membershipId" TEXT NOT NULL,
+    concept TEXT NOT NULL, amount DECIMAL(12,2) NOT NULL,
+    "paymentMethod" TEXT NOT NULL DEFAULT 'TRANSFERENCIA', reference TEXT,
+    period TEXT, "paidAt" TIMESTAMP NOT NULL DEFAULT NOW(), status TEXT NOT NULL DEFAULT 'PAGADO'
+  )`,
+  // Lonche tables
+  `CREATE TABLE IF NOT EXISTS lonche_products (
+    id TEXT PRIMARY KEY, "companyId" TEXT NOT NULL, sku TEXT NOT NULL,
+    name TEXT NOT NULL, category TEXT NOT NULL DEFAULT 'OTRO',
+    price DECIMAL(10,2) NOT NULL, cost DECIMAL(10,2) NOT NULL DEFAULT 0,
+    "cashbackPct" DECIMAL(5,2) NOT NULL DEFAULT 0, stock DECIMAL(10,2) NOT NULL DEFAULT 0,
+    "imageUrl" TEXT, "isActive" BOOLEAN NOT NULL DEFAULT TRUE,
+    "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(), "updatedAt" TIMESTAMP NOT NULL DEFAULT NOW()
+  )`,
+  `CREATE TABLE IF NOT EXISTS lonche_turnos (
+    id TEXT PRIMARY KEY, "companyId" TEXT NOT NULL, "cajeroId" TEXT NOT NULL,
+    "cajeroName" TEXT NOT NULL, date DATE NOT NULL, status TEXT NOT NULL DEFAULT 'ABIERTO',
+    "efectivoDeclarado" DECIMAL(12,2), "efectivoSistema" DECIMAL(12,2), diferencia DECIMAL(12,2),
+    "notasCierre" TEXT, "validadoPor" TEXT, "validadoAt" TIMESTAMP,
+    "aperturaAt" TIMESTAMP NOT NULL DEFAULT NOW(), "cierreAt" TIMESTAMP,
+    "createdAt" TIMESTAMP NOT NULL DEFAULT NOW()
+  )`,
+  `CREATE TABLE IF NOT EXISTS lonche_surtidos (
+    id TEXT PRIMARY KEY, "turnoId" TEXT NOT NULL, "companyId" TEXT NOT NULL,
+    type TEXT NOT NULL DEFAULT 'INICIAL', notes TEXT, "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+    "createdById" TEXT
+  )`,
+  `CREATE TABLE IF NOT EXISTS lonche_surtido_items (
+    id TEXT PRIMARY KEY, "surtidoId" TEXT NOT NULL, "productId" TEXT NOT NULL,
+    qty DECIMAL(10,2) NOT NULL, "costUnit" DECIMAL(10,2) NOT NULL DEFAULT 0
+  )`,
+  `CREATE TABLE IF NOT EXISTS lonche_sales (
+    id TEXT PRIMARY KEY, "companyId" TEXT NOT NULL, "turnoId" TEXT NOT NULL,
+    "studentId" TEXT, "studentName" TEXT, "paymentMethod" TEXT NOT NULL DEFAULT 'EFECTIVO',
+    total DECIMAL(12,2) NOT NULL, "cashbackEarned" DECIMAL(12,2) NOT NULL DEFAULT 0,
+    "prepagoPaid" DECIMAL(12,2) NOT NULL DEFAULT 0, "efectivoPaid" DECIMAL(12,2) NOT NULL DEFAULT 0,
+    "createdAt" TIMESTAMP NOT NULL DEFAULT NOW()
+  )`,
+  `CREATE TABLE IF NOT EXISTS lonche_sale_items (
+    id TEXT PRIMARY KEY, "saleId" TEXT NOT NULL, "productId" TEXT NOT NULL,
+    name TEXT NOT NULL, qty DECIMAL(10,2) NOT NULL, price DECIMAL(10,2) NOT NULL,
+    cashback DECIMAL(10,2) NOT NULL DEFAULT 0
+  )`,
+  `CREATE TABLE IF NOT EXISTS lonche_students (
+    id TEXT PRIMARY KEY, "companyId" TEXT NOT NULL, code TEXT NOT NULL,
+    name TEXT NOT NULL, grade TEXT, "tutorName" TEXT, "tutorEmail" TEXT, "tutorPhone" TEXT,
+    balance DECIMAL(12,2) NOT NULL DEFAULT 0, cashback DECIMAL(12,2) NOT NULL DEFAULT 0,
+    "dailyLimit" DECIMAL(10,2), "isActive" BOOLEAN NOT NULL DEFAULT TRUE,
+    "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(), "updatedAt" TIMESTAMP NOT NULL DEFAULT NOW()
+  )`,
+  `CREATE TABLE IF NOT EXISTS lonche_recharges (
+    id TEXT PRIMARY KEY, "companyId" TEXT NOT NULL, "studentId" TEXT NOT NULL,
+    amount DECIMAL(12,2) NOT NULL, "paymentMethod" TEXT NOT NULL DEFAULT 'EFECTIVO',
+    reference TEXT, "rechargedById" TEXT, "createdAt" TIMESTAMP NOT NULL DEFAULT NOW()
+  )`,
+  `CREATE TABLE IF NOT EXISTS lonche_transactions (
+    id TEXT PRIMARY KEY, "companyId" TEXT NOT NULL, "studentId" TEXT NOT NULL,
+    type TEXT NOT NULL, amount DECIMAL(12,2) NOT NULL, balance DECIMAL(12,2) NOT NULL,
+    "saleId" TEXT, notes TEXT, "createdAt" TIMESTAMP NOT NULL DEFAULT NOW()
+  )`,
+];
+
+async function addTables() {
+  const { PrismaClient: PC } = require('@prisma/client');
+  const p = new PC();
+  for (const sql of workahoticTables) {
+    const name = sql.match(/CREATE TABLE IF NOT EXISTS (\w+)/)?.[1];
+    try {
+      await p.$executeRawUnsafe(sql);
+      console.log(`✅ ${name}`);
+    } catch(e) { console.error(`❌ ${name}: ${e.message}`); }
+  }
+  await p.$disconnect();
+}
+addTables().catch(console.error);
