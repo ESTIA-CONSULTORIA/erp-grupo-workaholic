@@ -5,13 +5,13 @@ export declare class ExpensesService {
     findAll(companyId: string, period?: string, isExternal?: string): import(".prisma/client").Prisma.PrismaPromise<({
         supplier: {
             id: string;
-            name: string;
-            isActive: boolean;
-            createdAt: Date;
             companyId: string;
+            createdAt: Date;
+            name: string;
             email: string | null;
             phone: string | null;
             notes: string | null;
+            isActive: boolean;
         };
         rubric: {
             group: {
@@ -30,9 +30,9 @@ export declare class ExpensesService {
             id: string;
             code: string;
             name: string;
-            isActive: boolean;
             order: number;
             affectsResult: boolean;
+            isActive: boolean;
             groupId: string;
             rubricType: string;
             allowsContado: boolean;
@@ -57,38 +57,38 @@ export declare class ExpensesService {
         };
     } & {
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         companyId: string;
-        currency: string;
-        description: string | null;
+        supplierId: string | null;
+        rubricId: string | null;
+        cashAccountId: string | null;
         userId: string;
         date: Date;
-        rubricId: string | null;
-        total: import("@prisma/client/runtime/library").Decimal;
-        paymentMethod: string | null;
-        exchangeRate: import("@prisma/client/runtime/library").Decimal;
-        cashAccountId: string | null;
-        supplierId: string | null;
         concept: string;
+        description: string | null;
         subtotal: import("@prisma/client/runtime/library").Decimal;
         tax: import("@prisma/client/runtime/library").Decimal;
+        total: import("@prisma/client/runtime/library").Decimal;
+        currency: string;
+        exchangeRate: import("@prisma/client/runtime/library").Decimal;
         totalMxn: import("@prisma/client/runtime/library").Decimal;
         paymentStatus: string;
+        paymentMethod: string | null;
         invoiceRef: string | null;
         isExternal: boolean;
         externalNotes: string | null;
+        createdAt: Date;
+        updatedAt: Date;
     })[]>;
     create(companyId: string, userId: string, data: any): Promise<{
         supplier: {
             id: string;
-            name: string;
-            isActive: boolean;
-            createdAt: Date;
             companyId: string;
+            createdAt: Date;
+            name: string;
             email: string | null;
             phone: string | null;
             notes: string | null;
+            isActive: boolean;
         };
         rubric: {
             group: {
@@ -107,9 +107,9 @@ export declare class ExpensesService {
             id: string;
             code: string;
             name: string;
-            isActive: boolean;
             order: number;
             affectsResult: boolean;
+            isActive: boolean;
             groupId: string;
             rubricType: string;
             allowsContado: boolean;
@@ -134,50 +134,50 @@ export declare class ExpensesService {
         };
     } & {
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         companyId: string;
-        currency: string;
-        description: string | null;
+        supplierId: string | null;
+        rubricId: string | null;
+        cashAccountId: string | null;
         userId: string;
         date: Date;
-        rubricId: string | null;
-        total: import("@prisma/client/runtime/library").Decimal;
-        paymentMethod: string | null;
-        exchangeRate: import("@prisma/client/runtime/library").Decimal;
-        cashAccountId: string | null;
-        supplierId: string | null;
         concept: string;
+        description: string | null;
         subtotal: import("@prisma/client/runtime/library").Decimal;
         tax: import("@prisma/client/runtime/library").Decimal;
+        total: import("@prisma/client/runtime/library").Decimal;
+        currency: string;
+        exchangeRate: import("@prisma/client/runtime/library").Decimal;
         totalMxn: import("@prisma/client/runtime/library").Decimal;
         paymentStatus: string;
+        paymentMethod: string | null;
         invoiceRef: string | null;
         isExternal: boolean;
         externalNotes: string | null;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     delete(id: string): import(".prisma/client").Prisma.Prisma__ExpenseClient<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         companyId: string;
-        currency: string;
-        description: string | null;
+        supplierId: string | null;
+        rubricId: string | null;
+        cashAccountId: string | null;
         userId: string;
         date: Date;
-        rubricId: string | null;
-        total: import("@prisma/client/runtime/library").Decimal;
-        paymentMethod: string | null;
-        exchangeRate: import("@prisma/client/runtime/library").Decimal;
-        cashAccountId: string | null;
-        supplierId: string | null;
         concept: string;
+        description: string | null;
         subtotal: import("@prisma/client/runtime/library").Decimal;
         tax: import("@prisma/client/runtime/library").Decimal;
+        total: import("@prisma/client/runtime/library").Decimal;
+        currency: string;
+        exchangeRate: import("@prisma/client/runtime/library").Decimal;
         totalMxn: import("@prisma/client/runtime/library").Decimal;
         paymentStatus: string;
+        paymentMethod: string | null;
         invoiceRef: string | null;
         isExternal: boolean;
         externalNotes: string | null;
+        createdAt: Date;
+        updatedAt: Date;
     }, never, import("@prisma/client/runtime/library").DefaultArgs>;
 }

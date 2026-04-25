@@ -20,31 +20,31 @@ let BulkImportController = class BulkImportController {
         this.svc = svc;
     }
     importGastos(cid, body) {
-        return this.svc.importGastos(cid, body.rows);
+        return this.svc.importGastos(cid, body.rows || []);
     }
     importProveedores(cid, body) {
-        return this.svc.importProveedores(cid, body.rows);
+        return this.svc.importProveedores(cid, body.rows || []);
     }
     importClientes(cid, body) {
-        return this.svc.importClientes(cid, body.rows);
+        return this.svc.importClientes(cid, body.rows || []);
     }
     importProductos(cid, body) {
-        return this.svc.importProductos(cid, body.rows);
+        return this.svc.importProductos(cid, body.rows || []);
     }
     importInsumos(cid, body) {
-        return this.svc.importInsumos(cid, body.rows);
+        return this.svc.importInsumos(cid, body.rows || []);
     }
     importEmpleados(cid, body) {
-        return this.svc.importEmpleados(cid, body.rows);
+        return this.svc.importEmpleados(cid, body.rows || []);
     }
     importCxC(cid, body) {
-        return this.svc.importCxC(cid, body.rows);
+        return this.svc.importCxC(cid, body.rows || []);
     }
     importCxP(cid, body) {
-        return this.svc.importCxP(cid, body.rows);
+        return this.svc.importCxP(cid, body.rows || []);
     }
     importCompras(cid, body) {
-        return this.svc.importCompras(cid, body.rows);
+        return this.svc.importCompras(cid, body.rows || []);
     }
 };
 exports.BulkImportController = BulkImportController;
@@ -121,7 +121,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], BulkImportController.prototype, "importCompras", null);
 exports.BulkImportController = BulkImportController = __decorate([
-    (0, common_1.Controller)('api/v1/companies/:companyId/import'),
+    (0, common_1.Controller)('companies/:companyId/import'),
     __metadata("design:paramtypes", [bulk_import_service_1.BulkImportService])
 ], BulkImportController);
 //# sourceMappingURL=bulk-import.controller.js.map

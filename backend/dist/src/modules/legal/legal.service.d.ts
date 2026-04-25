@@ -1,9 +1,14 @@
 import { PrismaService } from '../../common/prisma/prisma.service';
+export declare function renderTemplate(template: string, data?: Record<string, any>): string;
+export declare function generateLegalDocument(type: string, data?: Record<string, any>): string;
 export declare class LegalService {
-    private prisma;
+    private readonly prisma;
     constructor(prisma: PrismaService);
-    getByEmployee(companyId: string, employeeId: string): any;
-    generate(companyId: string, userId: string, data: any): Promise<any>;
-    update(id: string, data: any): any;
-    sign(id: string, userId: string, byEmployee: boolean): any;
+    private todayMx;
+    private money;
+    private buildTemplateData;
+    getByEmployee(companyId: string, employeeId: string): Promise<any>;
+    generate(companyId: string, userId: string, body: any): Promise<any>;
+    update(id: string, body: any): Promise<any>;
+    sign(id: string, userId: string, byEmployee?: boolean): Promise<any>;
 }

@@ -1512,14 +1512,30 @@ model PalestraProduct {
 }
 
 model RolPermiso {
-  id          String  @id @default(cuid())
-  roleCode    String
-  module      String
-  action      String
-  allowed     Boolean @default(true)
-  companyId   String?
+  id          String   @id @default(cuid())
+  companyId   String   // REQUIRED: permisos son por empresa
+  roleCode    String   // código del rol: 'gerente', 'cajero', custom, etc.
+  module      String   // módulo: 'pos', 'gastos', 'rh', etc.
+  action      String   // acción: 'ver', 'crear', 'editar', etc.
+  allowed     Boolean  @default(true)
   createdAt   DateTime @default(now())
+  @@unique([companyId, roleCode, module, action])
   @@map("rol_permisos")
+}
+
+// Roles personalizados por empresa (los roles base son hardcoded)
+model CompanyRole {
+  id          String   @id @default(cuid())
+  companyId   String
+  code        String   // identificador único dentro de la empresa
+  label       String   // nombre visible
+  color       String   @default("#64748b")
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  @@unique([companyId, code])
+  @@map("company_roles")
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -2035,3 +2051,9 @@ model LoncheTransaction {
   student     LoncheStudent @relation(fields: [studentId], references: [id])
   @@map("lonche_transactions")
 }
+
+// ══════════════════════════════════════════════════════════════
+//  ROLES PERSONALIZADOS
+// ══════════════════════════════════════════════════════════════
+
+

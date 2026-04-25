@@ -45,58 +45,86 @@ let ExpensesService = class ExpensesService {
         const subtotal = Number(data.subtotal || 0);
         const tax = Number(data.tax || 0);
         const total = subtotal + tax;
-        const expense = await this.prisma.expense.create({
-            data: {
-                companyId,
-                rubricId: data.rubricId || null,
-                supplierId: data.supplierId || null,
-                cashAccountId: data.cashAccountId || null,
-                userId,
-                date: new Date(data.date),
-                concept: data.concept,
-                subtotal,
-                tax,
-                total,
-                currency: data.currency || 'MXN',
-                exchangeRate: 1,
-                totalMxn: total,
-                paymentMethod: data.paymentMethod || 'EFECTIVO',
-                paymentStatus: data.paymentStatus || 'PAGADO',
-                invoiceRef: data.invoiceRef || null,
-                isExternal: data.isExternal || false,
-                externalNotes: data.externalNotes || null,
-            },
-            include: {
-                supplier: true,
-                rubric: {
-                    include: {
-                        group: {
-                            include: {
-                                section: { select: { name: true } }
+        const currency = data.currency || 'MXN';
+        const exchangeRate = Number(data.exchangeRate || 1);
+        const totalMxn = currency === 'MXN' ? total : total * exchangeRate;
+        const paymentStatus = data.paymentStatus || 'PAGADO';
+        const paymentMethod = data.paymentMethod || (paymentStatus === 'PENDIENTE' ? 'CREDITO' : 'EFECTIVO');
+        return this.prisma.$transaction(async (tx) => {
+            const expense = await tx.expense.create({
+                data: {
+                    companyId,
+                    rubricId: data.rubricId || null,
+                    supplierId: data.supplierId || null,
+                    cashAccountId: data.cashAccountId || null,
+                    userId,
+                    date: new Date(data.date),
+                    concept: data.concept,
+                    description: data.description || null,
+                    subtotal,
+                    tax,
+                    total,
+                    currency,
+                    exchangeRate,
+                    totalMxn,
+                    paymentMethod,
+                    paymentStatus,
+                    invoiceRef: data.invoiceRef || null,
+                    isExternal: data.isExternal || false,
+                    externalNotes: data.externalNotes || null,
+                },
+                include: {
+                    supplier: true,
+                    rubric: {
+                        include: {
+                            group: {
+                                include: {
+                                    section: { select: { name: true } }
+                                }
                             }
                         }
                     }
-                }
-            },
-        });
-        if ((data.paymentStatus || 'PAGADO') === 'PAGADO' && data.paymentMethod !== 'CREDITO_CLIENTE' && data.paymentMethod !== 'credito') {
-            try {
-                const branch = await this.prisma.branch.findFirst({ where: { companyId } });
+                },
+            });
+            if (paymentStatus === 'PENDIENTE' || paymentMethod === 'CREDITO') {
+                const dueDate = data.dueDate
+                    ? new Date(data.dueDate)
+                    : new Date(new Date(data.date || new Date()).setDate(new Date(data.date || new Date()).getDate() + 30));
+                await tx.payable.create({
+                    data: {
+                        companyId,
+                        supplierId: data.supplierId || null,
+                        rubricId: data.rubricId || null,
+                        concept: `Gasto: ${data.concept}`,
+                        date: new Date(data.date),
+                        dueDate,
+                        currency,
+                        originalAmount: total,
+                        paidAmount: 0,
+                        balance: total,
+                        status: 'PENDIENTE',
+                        notes: `Generado automáticamente del gasto ${expense.id}${data.invoiceRef ? ` · Factura ${data.invoiceRef}` : ''}`,
+                    },
+                });
+            }
+            if (paymentStatus === 'PAGADO' && paymentMethod !== 'CREDITO' && paymentMethod !== 'CREDITO_CLIENTE') {
+                const branch = await tx.branch.findFirst({ where: { companyId } });
                 let cashAccountId = data.cashAccountId;
                 if (!cashAccountId) {
-                    const metodo = data.paymentMethod || 'EFECTIVO';
+                    const metodo = String(paymentMethod || '').toUpperCase();
                     const esEfectivo = metodo.includes('EFECTIVO');
-                    const cuenta = await this.prisma.cashAccount.findFirst({
+                    const cuenta = await tx.cashAccount.findFirst({
                         where: {
                             companyId,
                             isActive: true,
                             type: esEfectivo ? 'EFECTIVO' : { in: ['BANCO', 'PLATAFORMA'] },
+                            currency,
                         },
                     });
                     cashAccountId = cuenta?.id;
                 }
                 if (branch && cashAccountId) {
-                    await this.prisma.flowMovement.create({
+                    await tx.flowMovement.create({
                         data: {
                             companyId,
                             branchId: branch.id,
@@ -105,20 +133,19 @@ let ExpensesService = class ExpensesService {
                             type: 'SALIDA',
                             originType: 'GASTO',
                             originId: expense.id,
+                            rubricId: data.rubricId || null,
                             amount: total,
-                            currency: data.currency || 'MXN',
-                            exchangeRate: 1,
-                            amountMxn: total,
+                            currency,
+                            exchangeRate,
+                            amountMxn: totalMxn,
+                            reference: data.invoiceRef || null,
                             notes: data.concept,
                         },
                     });
                 }
             }
-            catch (e) {
-                console.error('ERROR FLOW GASTO:', e.message);
-            }
-        }
-        return expense;
+            return expense;
+        });
     }
     delete(id) {
         return this.prisma.expense.delete({ where: { id } });

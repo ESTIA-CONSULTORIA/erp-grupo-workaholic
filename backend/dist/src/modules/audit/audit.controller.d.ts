@@ -10,9 +10,9 @@ export declare class AuditController {
         };
     } & {
         id: string;
-        createdAt: Date;
         companyId: string | null;
         userId: string;
+        createdAt: Date;
         action: string;
         entity: string;
         entityId: string | null;

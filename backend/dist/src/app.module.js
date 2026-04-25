@@ -51,21 +51,7 @@ let AppModule = class AppModule {
         const httpAdapter = this.httpAdapterHost.httpAdapter;
         if (!httpAdapter)
             return;
-        httpAdapter.get('/api/v1/permissions/defaults', (req, res) => {
-            res.status(200).json(this.permissionsService.getDefaultPermissions());
-        });
-        httpAdapter.get('/api/v1/permissions/all', async (req, res) => {
-            const companyId = req.query.companyId;
-            const all = await this.permissionsService.getAllPermissions(companyId);
-            res.status(200).json(all);
-        });
-        httpAdapter.put('/api/v1/permissions/roles/:roleCode/modules/:module/actions/:action', async (req, res) => {
-            const { roleCode, module, action } = req.params;
-            const { allowed, companyId } = req.body;
-            const updated = await this.permissionsService.updatePermission(roleCode, module, action, allowed, companyId);
-            res.status(200).json(updated);
-        });
-        console.log('✅ Rutas de permisos registradas desde AppModule');
+        console.log('✅ AppModule listo');
     }
 };
 exports.AppModule = AppModule;

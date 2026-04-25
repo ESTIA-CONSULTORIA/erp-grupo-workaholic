@@ -63,9 +63,9 @@ export declare class MacheteService {
     } & {
         id: string;
         companyId: string;
-        status: string;
         createdAt: Date;
         updatedAt: Date;
+        status: string;
         fecha: Date;
         tipo: string;
         kgEntrada: import("@prisma/client/runtime/library").Decimal;
@@ -92,9 +92,9 @@ export declare class MacheteService {
     } & {
         id: string;
         companyId: string;
-        status: string;
         createdAt: Date;
         updatedAt: Date;
+        status: string;
         fecha: Date;
         tipo: string;
         kgEntrada: import("@prisma/client/runtime/library").Decimal;
@@ -109,9 +109,9 @@ export declare class MacheteService {
     registrarSalidaHorno(loteId: string, data: any): Promise<{
         id: string;
         companyId: string;
-        status: string;
         createdAt: Date;
         updatedAt: Date;
+        status: string;
         fecha: Date;
         tipo: string;
         kgEntrada: import("@prisma/client/runtime/library").Decimal;
@@ -162,9 +162,9 @@ export declare class MacheteService {
     } & {
         id: string;
         companyId: string;
-        status: string;
         createdAt: Date;
         updatedAt: Date;
+        status: string;
         fecha: Date;
         tipo: string;
         kgEntrada: import("@prisma/client/runtime/library").Decimal;
@@ -179,9 +179,9 @@ export declare class MacheteService {
     cerrarLote(loteId: string): Promise<{
         id: string;
         companyId: string;
-        status: string;
         createdAt: Date;
         updatedAt: Date;
+        status: string;
         fecha: Date;
         tipo: string;
         kgEntrada: import("@prisma/client/runtime/library").Decimal;
@@ -264,11 +264,9 @@ export declare class MacheteService {
     cancelarCompra(companyId: string, compraId: string): Promise<{
         id: string;
         companyId: string;
-        userId: string;
-        createdAt: Date;
-        updatedAt: Date;
         supplierId: string | null;
         rubricId: string | null;
+        userId: string;
         date: Date;
         concept: string;
         total: import("@prisma/client/runtime/library").Decimal;
@@ -276,8 +274,10 @@ export declare class MacheteService {
         exchangeRate: import("@prisma/client/runtime/library").Decimal;
         totalMxn: import("@prisma/client/runtime/library").Decimal;
         paymentStatus: string;
-        affectsInventory: boolean;
         invoiceRef: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        affectsInventory: boolean;
     }>;
     getCompras(companyId: string, filters?: any): Promise<({
         supplier: {
@@ -286,10 +286,10 @@ export declare class MacheteService {
         };
         items: {
             id: string;
-            productId: string | null;
-            total: import("@prisma/client/runtime/library").Decimal;
-            purchaseId: string;
             description: string;
+            total: import("@prisma/client/runtime/library").Decimal;
+            productId: string | null;
+            purchaseId: string;
             quantity: import("@prisma/client/runtime/library").Decimal;
             unit: string | null;
             unitCost: import("@prisma/client/runtime/library").Decimal;
@@ -297,11 +297,9 @@ export declare class MacheteService {
     } & {
         id: string;
         companyId: string;
-        userId: string;
-        createdAt: Date;
-        updatedAt: Date;
         supplierId: string | null;
         rubricId: string | null;
+        userId: string;
         date: Date;
         concept: string;
         total: import("@prisma/client/runtime/library").Decimal;
@@ -309,8 +307,10 @@ export declare class MacheteService {
         exchangeRate: import("@prisma/client/runtime/library").Decimal;
         totalMxn: import("@prisma/client/runtime/library").Decimal;
         paymentStatus: string;
-        affectsInventory: boolean;
         invoiceRef: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        affectsInventory: boolean;
     })[]>;
     crearCompra(companyId: string, userId: string, data: any): Promise<{
         supplier: {
@@ -319,10 +319,10 @@ export declare class MacheteService {
         };
         items: {
             id: string;
-            productId: string | null;
-            total: import("@prisma/client/runtime/library").Decimal;
-            purchaseId: string;
             description: string;
+            total: import("@prisma/client/runtime/library").Decimal;
+            productId: string | null;
+            purchaseId: string;
             quantity: import("@prisma/client/runtime/library").Decimal;
             unit: string | null;
             unitCost: import("@prisma/client/runtime/library").Decimal;
@@ -330,11 +330,9 @@ export declare class MacheteService {
     } & {
         id: string;
         companyId: string;
-        userId: string;
-        createdAt: Date;
-        updatedAt: Date;
         supplierId: string | null;
         rubricId: string | null;
+        userId: string;
         date: Date;
         concept: string;
         total: import("@prisma/client/runtime/library").Decimal;
@@ -342,8 +340,10 @@ export declare class MacheteService {
         exchangeRate: import("@prisma/client/runtime/library").Decimal;
         totalMxn: import("@prisma/client/runtime/library").Decimal;
         paymentStatus: string;
-        affectsInventory: boolean;
         invoiceRef: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        affectsInventory: boolean;
     }>;
     getRecipes(companyId: string): import(".prisma/client").Prisma.PrismaPromise<({
         ingredients: {
@@ -365,6 +365,10 @@ export declare class MacheteService {
         changeNote: string | null;
     })[]>;
     getSales(companyId: string, period?: string, channel?: string, startDate?: string, endDate?: string): import(".prisma/client").Prisma.PrismaPromise<({
+        client: {
+            id: string;
+            name: string;
+        };
         lines: ({
             product: {
                 id: string;
@@ -383,25 +387,21 @@ export declare class MacheteService {
             };
         } & {
             id: string;
-            productId: string;
             total: import("@prisma/client/runtime/library").Decimal;
+            productId: string;
             quantity: number;
             saleId: string;
             unitPrice: import("@prisma/client/runtime/library").Decimal;
         })[];
-        client: {
-            id: string;
-            name: string;
-        };
     } & {
         id: string;
         companyId: string;
-        createdAt: Date;
         date: Date;
         total: import("@prisma/client/runtime/library").Decimal;
+        paymentMethod: string;
+        createdAt: Date;
         channel: string;
         clientName: string | null;
-        paymentMethod: string;
         cutId: string | null;
         clientId: string | null;
         isCredit: boolean;
@@ -426,8 +426,8 @@ export declare class MacheteService {
             };
         } & {
             id: string;
-            productId: string;
             total: import("@prisma/client/runtime/library").Decimal;
+            productId: string;
             quantity: number;
             saleId: string;
             unitPrice: import("@prisma/client/runtime/library").Decimal;
@@ -435,12 +435,12 @@ export declare class MacheteService {
     } & {
         id: string;
         companyId: string;
-        createdAt: Date;
         date: Date;
         total: import("@prisma/client/runtime/library").Decimal;
+        paymentMethod: string;
+        createdAt: Date;
         channel: string;
         clientName: string | null;
-        paymentMethod: string;
         cutId: string | null;
         clientId: string | null;
         isCredit: boolean;

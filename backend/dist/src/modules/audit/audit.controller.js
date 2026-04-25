@@ -34,7 +34,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], AuditController.prototype, "getLogs", null);
 exports.AuditController = AuditController = __decorate([
-    (0, common_1.Controller)('api/v1/companies/:companyId/audit'),
+    (0, common_1.Controller)('companies/:companyId/audit'),
     __metadata("design:paramtypes", [audit_service_1.AuditService])
 ], AuditController);
 //# sourceMappingURL=audit.controller.js.map
