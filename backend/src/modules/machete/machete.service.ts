@@ -517,6 +517,18 @@ export class MacheteService {
     }
 
     // ── VENTA NORMAL (sin OC) ─────────────────────────────────
+    // Validar stock suficiente antes de proceder
+    for (const line of data.lines) {
+      const stock = await this.prisma.productStock.findFirst({
+        where: { productId: line.productId },
+      });
+      const available = Number(stock?.stock || 0);
+      if (available < Number(line.quantity)) {
+        const product = await this.prisma.product.findUnique({ where: { id: line.productId } });
+        throw new Error(`Stock insuficiente para "${product?.name || line.productId}". Disponible: ${available}, Solicitado: ${line.quantity}`);
+      }
+    }
+
     const sale = await this.prisma.$transaction(async (tx) => {
       const s = await tx.sale.create({
         data: {
