@@ -1042,6 +1042,10 @@ model Employee {
   bankName       String?
   repseNumber    String?
   repseExpiry    DateTime?
+  // ── CONFIGURACIÓN DE NÓMINA ─────────────────────────────
+  splitMode         String?  @default("TOTAL_TIMBRADO") // TOTAL_TIMBRADO | MIXTO | TOTAL_EFECTIVO
+  montoFijoTimbrado Decimal? @db.Decimal(12,2) // monto fijo timbrado (si MIXTO)
+  pctTimbrado       Decimal? @db.Decimal(5,2)  // % timbrado (si MIXTO y no hay monto fijo)
   status         String   @default("ACTIVO")
   userId         String?  @unique // vinculo con usuario del sistema
   createdAt      DateTime @default(now())
@@ -1095,10 +1099,19 @@ model VacationRequest {
   businessDays    Int?      // días hábiles LFT
   primaVacacional Decimal?  @db.Decimal(10,2) // 25% sobre salario diario × días
   conGoce         Boolean   @default(true)     // afecta nómina si false
-  status          String    @default("PENDIENTE") // PENDIENTE | APROBADO_JEFE | APROBADO | RECHAZADO | CANCELADO
-  requestedById   String?   // userId que solicitó
-  approvedByJefe  String?   // userId jefe directo
-  approvedByRH    String?   // userId RH
+  // PENDIENTE | APROBADO_JEFE | APROBADO | RECHAZADO | CANCELADA |
+  // PAGADA_SIN_GOZAR | GOZADA | PAGADA_Y_GOZADA
+  status          String    @default("PENDIENTE")
+  paymentType     String    @default("GOZAR") // GOZAR | PAGAR_SIN_GOZAR | AMBOS
+  pagoRegistrado  Boolean   @default(false)   // ¿ya se incluyó en nómina?
+  gozadaAt        DateTime?                   // cuando realmente tomó los días
+  plazoGozar      DateTime?                   // límite para gozarlos (si PAGAR_SIN_GOZAR)
+  montoTimbrado   Decimal?  @db.Decimal(12,2)
+  montoEfectivo   Decimal?  @db.Decimal(12,2)
+  montoPrima      Decimal?  @db.Decimal(12,2) // 25% prima vacacional
+  requestedById   String?
+  approvedByJefe  String?
+  approvedByRH    String?
   approvedAt      DateTime?
   rejectedReason  String?
   notes           String?
@@ -1179,6 +1192,12 @@ model PayrollLine {
   netPay           Decimal @db.Decimal(12,2) @default(0)
   imssEmployer     Decimal @db.Decimal(12,2) @default(0)
   notes            String?
+  // ── SPLIT TIMBRADO / EFECTIVO ────────────────────────────
+  // El empleado solo ve la parte timbrada. Solo contador/admin ve el total.
+  netTimbrado      Decimal @db.Decimal(12,2) @default(0) // neto SAT (visible al empleado)
+  netEfectivo      Decimal @db.Decimal(12,2) @default(0) // complemento en efectivo (solo contador/admin)
+  baseTimbrado     Decimal @db.Decimal(12,2) @default(0) // base para IMSS/ISR
+  baseEfectivo     Decimal @db.Decimal(12,2) @default(0) // complemento sin deducciones
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
   period   PayrollPeriod @relation(fields: [payrollPeriodId], references: [id], onDelete: Cascade)

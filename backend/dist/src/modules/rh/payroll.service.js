@@ -149,31 +149,54 @@ let PayrollService = class PayrollService {
         return { flowMovementId: flow.id, totalNet, periodLabel: period.periodLabel };
     }
     async calculatePeriod(periodId) {
+        const period = await this.prisma.payrollPeriod.findUnique({ where: { id: periodId } });
+        const divisor = period?.type === 'MENSUAL' ? 1 : 2;
         const lines = await this.prisma.payrollLine.findMany({
             where: { payrollPeriodId: periodId },
             include: { employee: true },
         });
         for (const line of lines) {
             const emp = line.employee;
-            const periodType = (await this.prisma.payrollPeriod.findUnique({ where: { id: periodId } }))?.type || 'QUINCENAL';
-            const divisor = periodType === 'MENSUAL' ? 1 : 2;
-            const baseSalary = Number(emp.grossSalary || 0) / divisor;
-            const imssEmployee = baseSalary * 0.0204;
-            const isrRetention = baseSalary * 0.08;
-            const totalDed = Number(line.imssEmployee || imssEmployee) + Number(line.isrRetention || isrRetention) +
+            const grossTotal = Number(emp.grossSalary || 0) / divisor;
+            let baseTimbrado = grossTotal;
+            let baseEfectivo = 0;
+            const splitMode = emp.splitMode || 'TOTAL_TIMBRADO';
+            if (splitMode === 'MIXTO') {
+                if (emp.montoFijoTimbrado) {
+                    baseTimbrado = Math.min(Number(emp.montoFijoTimbrado), grossTotal);
+                }
+                else if (emp.pctTimbrado) {
+                    baseTimbrado = grossTotal * (Number(emp.pctTimbrado) / 100);
+                }
+                baseEfectivo = Math.max(0, grossTotal - baseTimbrado);
+            }
+            else if (splitMode === 'TOTAL_EFECTIVO') {
+                baseTimbrado = 0;
+                baseEfectivo = grossTotal;
+            }
+            const imssEmployee = baseTimbrado * 0.0204;
+            const isrRetention = baseTimbrado * 0.08;
+            const totalDed = imssEmployee + isrRetention +
                 Number(line.infonavit || 0) + Number(line.loans || 0);
-            const totalPerc = baseSalary + Number(line.overtime || 0) + Number(line.bonus || 0);
+            const totalPerc = grossTotal + Number(line.overtime || 0) + Number(line.bonus || 0);
             const netPay = totalPerc - totalDed;
+            const netTimbrado = Math.max(0, baseTimbrado - imssEmployee - isrRetention -
+                Number(line.infonavit || 0) - Number(line.loans || 0));
+            const netEfectivo = baseEfectivo;
             await this.prisma.payrollLine.update({
                 where: { id: line.id },
                 data: {
-                    baseSalary,
+                    baseSalary: grossTotal,
+                    baseTimbrado,
+                    baseEfectivo,
                     totalPerceptions: totalPerc,
                     imssEmployee,
-                    imssEmployer: baseSalary * 0.0704,
+                    imssEmployer: baseTimbrado * 0.0704,
                     isrRetention,
                     totalDeductions: totalDed,
                     netPay: Math.max(0, netPay),
+                    netTimbrado,
+                    netEfectivo,
                 },
             });
         }
@@ -211,9 +234,9 @@ let PayrollService = class PayrollService {
                         companyId: line.employee.companyId,
                         payrollPeriodId: periodId,
                         employeeId: line.employeeId,
-                        grossAmount: Number(line.baseSalary || 0),
+                        grossAmount: Number(line.baseTimbrado || line.baseSalary || 0),
                         deductions: Number(line.totalDeductions || 0),
-                        netAmount: Number(line.netPay || 0),
+                        netAmount: Number(line.netTimbrado || line.netPay || 0),
                         breakdown: JSON.stringify({
                             imssEmployee: Number(line.imssEmployee),
                             isrRetention: Number(line.isrRetention),
@@ -221,6 +244,11 @@ let PayrollService = class PayrollService {
                             loans: Number(line.loans),
                             overtime: Number(line.overtime),
                             bonus: Number(line.bonus),
+                            _split: {
+                                baseTimbrado: Number(line.baseTimbrado || 0),
+                                baseEfectivo: Number(line.baseEfectivo || 0),
+                                netEfectivo: Number(line.netEfectivo || 0),
+                            },
                         }),
                         publishedAt: new Date(),
                         generatedById: publishedById,

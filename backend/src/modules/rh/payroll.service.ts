@@ -152,37 +152,64 @@ export class PayrollService {
   }
   // ── CALCULAR (recalcular todas las líneas del período) ────────
   async calculatePeriod(periodId: string) {
+    const period = await this.prisma.payrollPeriod.findUnique({ where:{id:periodId} });
+    const divisor = period?.type === 'MENSUAL' ? 1 : 2;
+
     const lines = await this.prisma.payrollLine.findMany({
       where: { payrollPeriodId: periodId },
       include: { employee: true },
     });
 
     for (const line of lines) {
-      const emp = line.employee;
-      const periodType = (await this.prisma.payrollPeriod.findUnique({ where:{id:periodId} }))?.type || 'QUINCENAL';
-      const divisor    = periodType === 'MENSUAL' ? 1 : 2;
-      const baseSalary = Number(emp.grossSalary || 0) / divisor;
+      const emp        = line.employee as any;
+      const grossTotal = Number(emp.grossSalary || 0) / divisor;
 
-      // Calcular deducciones sobre la base timbrada
-      const imssEmployee = baseSalary * 0.0204;
-      const isrRetention = baseSalary * 0.08;
-      const totalDed = Number(line.imssEmployee || imssEmployee) + Number(line.isrRetention || isrRetention) +
-                       Number(line.infonavit || 0) + Number(line.loans || 0);
+      // ── Calcular split timbrado/efectivo ──────────────────
+      let baseTimbrado = grossTotal;
+      let baseEfectivo = 0;
 
-      const totalPerc = baseSalary + Number(line.overtime || 0) + Number(line.bonus || 0);
+      const splitMode = emp.splitMode || 'TOTAL_TIMBRADO';
+      if (splitMode === 'MIXTO') {
+        if (emp.montoFijoTimbrado) {
+          baseTimbrado = Math.min(Number(emp.montoFijoTimbrado), grossTotal);
+        } else if (emp.pctTimbrado) {
+          baseTimbrado = grossTotal * (Number(emp.pctTimbrado) / 100);
+        }
+        baseEfectivo = Math.max(0, grossTotal - baseTimbrado);
+      } else if (splitMode === 'TOTAL_EFECTIVO') {
+        baseTimbrado = 0;
+        baseEfectivo = grossTotal;
+      }
+
+      // ── IMSS e ISR solo sobre parte timbrada ─────────────
+      const imssEmployee = baseTimbrado * 0.0204;
+      const isrRetention = baseTimbrado * 0.08;
+      const totalDed     = imssEmployee + isrRetention +
+                           Number(line.infonavit || 0) + Number(line.loans || 0);
+
+      const totalPerc = grossTotal + Number(line.overtime || 0) + Number(line.bonus || 0);
       const netPay    = totalPerc - totalDed;
+
+      // Net split: efectivo no tiene deducciones (son sobre la parte timbrada)
+      const netTimbrado = Math.max(0, baseTimbrado - imssEmployee - isrRetention -
+                          Number(line.infonavit || 0) - Number(line.loans || 0));
+      const netEfectivo = baseEfectivo; // sin deducciones
 
       await this.prisma.payrollLine.update({
         where: { id: line.id },
         data: {
-          baseSalary,
+          baseSalary:      grossTotal,
+          baseTimbrado,
+          baseEfectivo,
           totalPerceptions: totalPerc,
           imssEmployee,
-          imssEmployer:   baseSalary * 0.0704,
+          imssEmployer:    baseTimbrado * 0.0704,
           isrRetention,
           totalDeductions: totalDed,
-          netPay: Math.max(0, netPay),
-        },
+          netPay:          Math.max(0, netPay),
+          netTimbrado,
+          netEfectivo,
+        } as any,
       });
     }
 
@@ -223,16 +250,24 @@ export class PayrollService {
           companyId:       line.employee.companyId,
           payrollPeriodId: periodId,
           employeeId:      line.employeeId,
-          grossAmount:     Number(line.baseSalary    || 0),
+          // EMPLEADO SOLO VE LA PARTE TIMBRADA
+          grossAmount:     Number((line as any).baseTimbrado || line.baseSalary || 0),
           deductions:      Number(line.totalDeductions || 0),
-          netAmount:       Number(line.netPay          || 0),
+          netAmount:       Number((line as any).netTimbrado || line.netPay || 0),
           breakdown:       JSON.stringify({
+            // Visible al empleado
             imssEmployee: Number(line.imssEmployee),
             isrRetention: Number(line.isrRetention),
             infonavit:    Number(line.infonavit),
             loans:        Number(line.loans),
             overtime:     Number(line.overtime),
             bonus:        Number(line.bonus),
+            // Solo contador/admin (se oculta en el recibo del empleado)
+            _split: {
+              baseTimbrado: Number((line as any).baseTimbrado || 0),
+              baseEfectivo: Number((line as any).baseEfectivo || 0),
+              netEfectivo:  Number((line as any).netEfectivo  || 0),
+            },
           }),
           publishedAt:    new Date(),
           generatedById:  publishedById,

@@ -218,3 +218,34 @@ async function addTables() {
   await p.$disconnect();
 }
 addTables().catch(console.error);
+
+// Sprint C migration
+const sprintCSQL = `
+-- Sprint C: Nómina split timbrado/efectivo + Vacaciones avanzadas
+ALTER TABLE payroll_lines ADD COLUMN IF NOT EXISTS "netTimbrado" DECIMAL(12,2) DEFAULT 0;
+ALTER TABLE payroll_lines ADD COLUMN IF NOT EXISTS "netEfectivo" DECIMAL(12,2) DEFAULT 0;
+ALTER TABLE payroll_lines ADD COLUMN IF NOT EXISTS "baseTimbrado" DECIMAL(12,2) DEFAULT 0;
+ALTER TABLE payroll_lines ADD COLUMN IF NOT EXISTS "baseEfectivo" DECIMAL(12,2) DEFAULT 0;
+
+ALTER TABLE employees ADD COLUMN IF NOT EXISTS "splitMode" VARCHAR DEFAULT 'TOTAL_TIMBRADO';
+ALTER TABLE employees ADD COLUMN IF NOT EXISTS "montoFijoTimbrado" DECIMAL(12,2);
+ALTER TABLE employees ADD COLUMN IF NOT EXISTS "pctTimbrado" DECIMAL(5,2);
+
+ALTER TABLE vacation_requests ADD COLUMN IF NOT EXISTS "paymentType" VARCHAR DEFAULT 'GOZAR';
+ALTER TABLE vacation_requests ADD COLUMN IF NOT EXISTS "pagoRegistrado" BOOLEAN DEFAULT FALSE;
+ALTER TABLE vacation_requests ADD COLUMN IF NOT EXISTS "gozadaAt" TIMESTAMP;
+ALTER TABLE vacation_requests ADD COLUMN IF NOT EXISTS "plazoGozar" TIMESTAMP;
+ALTER TABLE vacation_requests ADD COLUMN IF NOT EXISTS "montoTimbrado" DECIMAL(12,2);
+ALTER TABLE vacation_requests ADD COLUMN IF NOT EXISTS "montoEfectivo" DECIMAL(12,2);
+ALTER TABLE vacation_requests ADD COLUMN IF NOT EXISTS "montoPrima" DECIMAL(12,2);
+`;
+async function runSprintC() {
+  const { PrismaClient: PC } = require('@prisma/client');
+  const p = new PC();
+  try {
+    await p.$executeRawUnsafe(sprintCSQL);
+    console.log('✅ Sprint C: nomina split + vacaciones avanzadas');
+  } catch(e) { console.error('Sprint C:', e.message); }
+  await p.$disconnect();
+}
+runSprintC().catch(console.error);
