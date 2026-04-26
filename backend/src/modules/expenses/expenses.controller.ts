@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Delete, Param, Body, Query, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Body, Query, UseGuards, Request } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/auth.guards';
 import { ExpensesService } from './expenses.service';
@@ -23,6 +23,9 @@ export class ExpensesController {
   create(@Param('companyId') cid: string, @Request() req: any, @Body() body: any) {
     return this.svc.create(cid, req.user.sub, body);
   }
+
+  @Put(':id')
+  update(@Param('id') id: string, @Body() body: any) { return this.svc.update(id, body); }
 
   @Delete(':id')
   delete(@Param('id') id: string) { return this.svc.delete(id); }

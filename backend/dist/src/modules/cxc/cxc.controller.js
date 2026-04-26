@@ -26,6 +26,9 @@ let CxcController = class CxcController {
     addPayment(cid, receivableId, body) {
         return this.svc.addPayment(receivableId, body.cashAccountId, body);
     }
+    cancel(id, body) {
+        return this.svc.cancelReceivable(id, body.motivo || '');
+    }
 };
 exports.CxcController = CxcController;
 __decorate([
@@ -56,6 +59,14 @@ __decorate([
     __metadata("design:paramtypes", [String, String, Object]),
     __metadata("design:returntype", void 0)
 ], CxcController.prototype, "addPayment", null);
+__decorate([
+    (0, common_1.Put)(':id/cancel'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], CxcController.prototype, "cancel", null);
 exports.CxcController = CxcController = __decorate([
     (0, swagger_1.ApiTags)('CxC'),
     (0, swagger_1.ApiBearerAuth)(),

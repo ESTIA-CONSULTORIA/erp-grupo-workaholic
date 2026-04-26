@@ -1,5 +1,5 @@
 // cxc.controller.ts
-import { Controller, Get, Post, Param, Body, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Param, Body, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/auth.guards';
 import { CxcService } from './cxc.service';
@@ -32,5 +32,9 @@ export class CxcController {
     @Body() body: any,
   ) {
     return this.svc.addPayment(receivableId, body.cashAccountId, body);
+  }
+  @Put(':id/cancel')
+  cancel(@Param('id') id: string, @Body() body: { motivo: string }) {
+    return this.svc.cancelReceivable(id, body.motivo || '');
   }
 }

@@ -27,6 +27,7 @@ let ExpensesController = class ExpensesController {
     create(cid, req, body) {
         return this.svc.create(cid, req.user.sub, body);
     }
+    update(id, body) { return this.svc.update(id, body); }
     delete(id) { return this.svc.delete(id); }
 };
 exports.ExpensesController = ExpensesController;
@@ -48,6 +49,14 @@ __decorate([
     __metadata("design:paramtypes", [String, Object, Object]),
     __metadata("design:returntype", void 0)
 ], ExpensesController.prototype, "create", null);
+__decorate([
+    (0, common_1.Put)(':id'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], ExpensesController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)(':id'),
     __param(0, (0, common_1.Param)('id')),

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Param, Body, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Patch, Param, Body, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/auth.guards';
 import { CxpService } from './cxp.service';
@@ -40,4 +40,8 @@ export class CxpController {
     @Param('id') id: string,
     @Body() body: any,
   ) { return this.svc.update(id, body); }
+  @Put(':id/cancel')
+  cancel(@Param('id') id: string, @Body() body: { motivo: string }) {
+    return this.svc.cancelPayable(id, body.motivo || '');
+  }
 }

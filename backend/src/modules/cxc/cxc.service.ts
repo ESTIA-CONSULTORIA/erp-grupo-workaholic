@@ -67,4 +67,14 @@ export class CxcService {
       }),
     ]);
   }
+  async cancelReceivable(id: string, motivo: string) {
+    const cxc = await this.prisma.receivable.findUnique({ where: { id } });
+    if (!cxc) throw new Error('CxC no encontrada');
+    if (cxc.status === 'PAGADA' || cxc.status === 'COBRADA') throw new Error('No se puede cancelar una CxC ya pagada');
+    return this.prisma.receivable.update({
+      where: { id },
+      data: { status: 'CANCELADA', notes: motivo ? `CANCELADA: ${motivo}` : 'CANCELADA' },
+    });
+  }
+
 }

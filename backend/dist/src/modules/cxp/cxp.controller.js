@@ -28,6 +28,9 @@ let CxpController = class CxpController {
     create(cid, body) { return this.svc.create(cid, body); }
     addPayment(id, body) { return this.svc.addPayment(id, body); }
     update(id, body) { return this.svc.update(id, body); }
+    cancel(id, body) {
+        return this.svc.cancelPayable(id, body.motivo || '');
+    }
 };
 exports.CxpController = CxpController;
 __decorate([
@@ -71,6 +74,14 @@ __decorate([
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], CxpController.prototype, "update", null);
+__decorate([
+    (0, common_1.Put)(':id/cancel'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], CxpController.prototype, "cancel", null);
 exports.CxpController = CxpController = __decorate([
     (0, swagger_1.ApiTags)('CxP'),
     (0, swagger_1.ApiBearerAuth)(),

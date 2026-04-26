@@ -94,4 +94,14 @@ export class CxpService {
       },
     });
   }
+  async cancelPayable(id: string, motivo: string) {
+    const cxp = await this.prisma.payable.findUnique({ where: { id } });
+    if (!cxp) throw new Error('CxP no encontrada');
+    if (cxp.status === 'PAGADO') throw new Error('No se puede cancelar una CxP ya pagada');
+    return this.prisma.payable.update({
+      where: { id },
+      data: { status: 'CANCELADA', notes: motivo ? `CANCELADA: ${motivo}` : 'CANCELADA' },
+    });
+  }
+
 }

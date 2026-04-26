@@ -147,6 +147,23 @@ export class ExpensesService {
     });
   }
 
+  update(id: string, data: any) {
+    return this.prisma.expense.update({
+      where: { id },
+      data: {
+        concept:       data.concept,
+        subtotal:      data.subtotal      ? Number(data.subtotal)      : undefined,
+        tax:           data.tax           !== undefined ? Number(data.tax) : undefined,
+        total:         data.subtotal && data.tax ? Number(data.subtotal) + Number(data.tax) : undefined,
+        date:          data.date          ? new Date(data.date)         : undefined,
+        paymentMethod: data.paymentMethod || undefined,
+        rubricId:      data.rubricId      || undefined,
+        supplierId:    data.supplierId    || undefined,
+
+      },
+    });
+  }
+
   delete(id: string) {
     return this.prisma.expense.delete({ where: { id } });
   }

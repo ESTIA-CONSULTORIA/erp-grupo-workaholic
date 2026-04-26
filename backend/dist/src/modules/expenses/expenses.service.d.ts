@@ -156,6 +156,30 @@ export declare class ExpensesService {
         createdAt: Date;
         updatedAt: Date;
     }>;
+    update(id: string, data: any): import(".prisma/client").Prisma.Prisma__ExpenseClient<{
+        id: string;
+        companyId: string;
+        supplierId: string | null;
+        rubricId: string | null;
+        cashAccountId: string | null;
+        userId: string;
+        date: Date;
+        concept: string;
+        description: string | null;
+        subtotal: import("@prisma/client/runtime/library").Decimal;
+        tax: import("@prisma/client/runtime/library").Decimal;
+        total: import("@prisma/client/runtime/library").Decimal;
+        currency: string;
+        exchangeRate: import("@prisma/client/runtime/library").Decimal;
+        totalMxn: import("@prisma/client/runtime/library").Decimal;
+        paymentStatus: string;
+        paymentMethod: string | null;
+        invoiceRef: string | null;
+        isExternal: boolean;
+        externalNotes: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+    }, never, import("@prisma/client/runtime/library").DefaultArgs>;
     delete(id: string): import(".prisma/client").Prisma.Prisma__ExpenseClient<{
         id: string;
         companyId: string;
