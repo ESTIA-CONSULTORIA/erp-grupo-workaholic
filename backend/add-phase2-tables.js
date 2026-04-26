@@ -249,3 +249,70 @@ async function runSprintC() {
   await p.$disconnect();
 }
 runSprintC().catch(console.error);
+
+// company_roles table for custom roles per company
+async function addCompanyRoles() {
+  const { PrismaClient: PC } = require('@prisma/client');
+  const p = new PC();
+  try {
+    await p.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS company_roles (
+        id TEXT PRIMARY KEY,
+        "companyId" TEXT NOT NULL,
+        code TEXT NOT NULL,
+        label TEXT NOT NULL,
+        color TEXT NOT NULL DEFAULT '#64748b',
+        description TEXT,
+        "isActive" BOOLEAN NOT NULL DEFAULT TRUE,
+        "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+        "updatedAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+        UNIQUE("companyId", code)
+      )
+    `);
+    console.log('✅ company_roles');
+  } catch(e) { console.error('company_roles:', e.message); }
+  await p.$disconnect();
+}
+addCompanyRoles().catch(console.error);
+
+// Fix rol_permisos - ensure companyId column exists (was nullable before)
+async function fixRolPermisos() {
+  const { PrismaClient: PC } = require('@prisma/client');
+  const p = new PC();
+  try {
+    await p.$executeRawUnsafe(`
+      ALTER TABLE rol_permisos ADD COLUMN IF NOT EXISTS "companyId" TEXT;
+    `);
+    console.log('✅ rol_permisos companyId ensured');
+  } catch(e) { console.error('rol_permisos fix:', e.message); }
+  await p.$disconnect();
+}
+fixRolPermisos().catch(console.error);
+
+// Add IVA fields to sales, period_closures table
+async function addIvaAndPeriodClosures() {
+  const { PrismaClient: PC } = require('@prisma/client');
+  const p = new PC();
+  try {
+    await p.$executeRawUnsafe(`
+      ALTER TABLE sales ADD COLUMN IF NOT EXISTS subtotal DECIMAL(12,2) DEFAULT 0;
+      ALTER TABLE sales ADD COLUMN IF NOT EXISTS tax DECIMAL(12,2) DEFAULT 0;
+      ALTER TABLE sales ADD COLUMN IF NOT EXISTS notes TEXT;
+      CREATE TABLE IF NOT EXISTS period_closures (
+        id TEXT PRIMARY KEY,
+        "companyId" TEXT NOT NULL,
+        period TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'ABIERTO',
+        "closedBy" TEXT,
+        "closedAt" TIMESTAMP,
+        notes TEXT,
+        "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+        UNIQUE("companyId", period)
+      );
+      ALTER TABLE payroll_lines ADD COLUMN IF NOT EXISTS bonus DECIMAL(12,2) DEFAULT 0;
+    `);
+    console.log('✅ sales IVA fields + period_closures + payroll bonus');
+  } catch(e) { console.error('sales_iva:', e.message); }
+  await p.$disconnect();
+}
+addIvaAndPeriodClosures(); // sales_iva

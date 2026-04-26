@@ -317,9 +317,17 @@ export class MacheteService {
     const costoUnitario = Number(data.costoUnitario);
     const total         = cantidad * costoUnitario;
 
+    // Costo promedio ponderado: (stock_actual * costo_actual + cantidad_nueva * costo_nuevo) / stock_total
+    const insumoActual = await (this.prisma as any).insumo.findUnique({ where: { id: data.insumoId } });
+    const stockActual  = Number(insumoActual?.stock || 0);
+    const costoActual  = Number(insumoActual?.costUnit || costoUnitario);
+    const costoPromedio = stockActual > 0
+      ? (stockActual * costoActual + cantidad * costoUnitario) / (stockActual + cantidad)
+      : costoUnitario;
+
     await (this.prisma as any).insumo.update({
       where: { id: data.insumoId },
-      data:  { stock: { increment: cantidad }, costUnit: costoUnitario },
+      data:  { stock: { increment: cantidad }, costUnit: costoPromedio },
     });
 
     const branch = await this.prisma.branch.findFirst({ where: { companyId } });
@@ -472,7 +480,23 @@ export class MacheteService {
   }
 
   async registerSale(companyId: string, data: any) {
-    const total = data.lines.reduce((t: number, l: any) => t + l.quantity * l.unitPrice, 0);
+    // Calcular subtotal e IVA desde las líneas
+    // Cada línea puede tener ivaRate (16, 8, 0). Si no viene, se asume precio con IVA incluido.
+    let subtotal = 0;
+    let tax      = 0;
+    for (const l of data.lines) {
+      const lineTotal = l.quantity * l.unitPrice;
+      const ivaRate   = l.ivaRate !== undefined ? Number(l.ivaRate) : 0;
+      if (ivaRate > 0) {
+        // Precio ya incluye IVA → extraer
+        const sub = lineTotal / (1 + ivaRate / 100);
+        subtotal += sub;
+        tax      += lineTotal - sub;
+      } else {
+        subtotal += lineTotal;
+      }
+    }
+    const total = subtotal + tax;
 
     // ── ENTREGA DE OC (preventa ya registrada) ────────────────
     // Si viene ocId, NO crear venta nueva — solo mover stock y actualizar OC

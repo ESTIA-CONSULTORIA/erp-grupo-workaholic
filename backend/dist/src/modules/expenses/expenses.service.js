@@ -41,7 +41,22 @@ let ExpensesService = class ExpensesService {
             orderBy: { date: 'desc' },
         });
     }
+    async isPeriodLocked(companyId, date) {
+        try {
+            const period = date.slice(0, 7);
+            const closure = await this.prisma.periodClosure.findFirst({
+                where: { companyId, period, status: 'CERRADO' },
+            });
+            return !!closure;
+        }
+        catch {
+            return false;
+        }
+    }
     async create(companyId, userId, data) {
+        const locked = await this.isPeriodLocked(companyId, data.date);
+        if (locked)
+            throw new Error(`El período ${data.date?.slice(0, 7)} está cerrado. No se pueden registrar gastos en períodos cerrados.`);
         const subtotal = Number(data.subtotal || 0);
         const tax = Number(data.tax || 0);
         const total = subtotal + tax;

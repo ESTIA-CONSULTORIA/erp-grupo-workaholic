@@ -295,9 +295,15 @@ let MacheteService = class MacheteService {
         const cantidad = Number(data.cantidad);
         const costoUnitario = Number(data.costoUnitario);
         const total = cantidad * costoUnitario;
+        const insumoActual = await this.prisma.insumo.findUnique({ where: { id: data.insumoId } });
+        const stockActual = Number(insumoActual?.stock || 0);
+        const costoActual = Number(insumoActual?.costUnit || costoUnitario);
+        const costoPromedio = stockActual > 0
+            ? (stockActual * costoActual + cantidad * costoUnitario) / (stockActual + cantidad)
+            : costoUnitario;
         await this.prisma.insumo.update({
             where: { id: data.insumoId },
-            data: { stock: { increment: cantidad }, costUnit: costoUnitario },
+            data: { stock: { increment: cantidad }, costUnit: costoPromedio },
         });
         const branch = await this.prisma.branch.findFirst({ where: { companyId } });
         if (data.metodoPago !== 'credito' && branch) {
@@ -439,7 +445,21 @@ let MacheteService = class MacheteService {
         return map[method] || (method ? method.toUpperCase() : 'EFECTIVO');
     }
     async registerSale(companyId, data) {
-        const total = data.lines.reduce((t, l) => t + l.quantity * l.unitPrice, 0);
+        let subtotal = 0;
+        let tax = 0;
+        for (const l of data.lines) {
+            const lineTotal = l.quantity * l.unitPrice;
+            const ivaRate = l.ivaRate !== undefined ? Number(l.ivaRate) : 0;
+            if (ivaRate > 0) {
+                const sub = lineTotal / (1 + ivaRate / 100);
+                subtotal += sub;
+                tax += lineTotal - sub;
+            }
+            else {
+                subtotal += lineTotal;
+            }
+        }
+        const total = subtotal + tax;
         if (data.ocId) {
             for (const line of data.lines) {
                 await this.prisma.productStock.updateMany({

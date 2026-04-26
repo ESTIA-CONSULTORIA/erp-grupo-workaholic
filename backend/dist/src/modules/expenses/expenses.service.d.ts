@@ -79,6 +79,7 @@ export declare class ExpensesService {
         createdAt: Date;
         updatedAt: Date;
     })[]>;
+    private isPeriodLocked;
     create(companyId: string, userId: string, data: any): Promise<{
         supplier: {
             id: string;
