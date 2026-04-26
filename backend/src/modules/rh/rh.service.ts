@@ -309,4 +309,95 @@ export class RhService {
     });
   }
 
+  // ── SOLICITAR VACACIONES CON TIPO DE PAGO ───────────────────
+  async requestVacation(employeeId: string, data: any) {
+    const emp = await this.prisma.employee.findUnique({ where: { id: employeeId } });
+    if (!emp) throw new Error('Empleado no encontrado');
+
+    const paymentType = data.paymentType || 'GOZAR';
+    const startDate   = new Date(data.startDate);
+    const endDate     = new Date(data.endDate);
+    const days        = Math.ceil((endDate.getTime() - startDate.getTime()) / 86400000) + 1;
+    const salarioDiario = Number(emp.grossSalary || 0) / 30;
+    const montoPrima    = salarioDiario * days * 0.25;
+    const montoBase     = salarioDiario * days;
+
+    // Si PAGAR_SIN_GOZAR: calcular plazo para gozar (6 meses)
+    let plazoGozar: Date | null = null;
+    if (paymentType === 'PAGAR_SIN_GOZAR') {
+      plazoGozar = new Date();
+      plazoGozar.setMonth(plazoGozar.getMonth() + 6);
+    }
+
+    // Calcular split timbrado/efectivo según configuración del empleado
+    const splitMode = (emp as any).splitMode || 'TOTAL_TIMBRADO';
+    let montoTimbrado = montoBase + montoPrima;
+    let montoEfectivo = 0;
+
+    if (splitMode === 'MIXTO' && (emp as any).pctTimbrado) {
+      const pct = Number((emp as any).pctTimbrado) / 100;
+      montoTimbrado = (montoBase + montoPrima) * pct;
+      montoEfectivo = (montoBase + montoPrima) * (1 - pct);
+    } else if (splitMode === 'TOTAL_EFECTIVO') {
+      montoTimbrado = 0;
+      montoEfectivo = montoBase + montoPrima;
+    }
+
+    return this.prisma.vacationRequest.create({
+      data: {
+        employeeId,
+        type:        data.type || 'VACACIONES',
+        startDate,
+        endDate,
+        days,
+        businessDays: days,
+        paymentType,
+        plazoGozar,
+        montoPrima,
+        montoTimbrado,
+        montoEfectivo,
+        status:      'PENDIENTE',
+        notes:       data.notes || null,
+        conGoce:     paymentType !== 'PAGAR_SIN_GOZAR',
+      },
+    });
+  }
+
+  // ── GOZAR VACACIONES YA PAGADAS ─────────────────────────────
+  async gozarVacacionesPagadas(vacationId: string, fechaInicio: string, fechaFin: string) {
+    const vac = await this.prisma.vacationRequest.findUnique({ where: { id: vacationId } });
+    if (!vac) throw new Error('Solicitud no encontrada');
+    if ((vac as any).status !== 'PAGADA_SIN_GOZAR') {
+      throw new Error('Solo se pueden gozar vacaciones con status PAGADA_SIN_GOZAR');
+    }
+    return this.prisma.vacationRequest.update({
+      where: { id: vacationId },
+      data: {
+        status:   'PAGADA_Y_GOZADA',
+        gozadaAt: new Date(),
+        // Actualizar fechas de gozo si se especifican
+        ...(fechaInicio ? { startDate: new Date(fechaInicio) } : {}),
+        ...(fechaFin    ? { endDate:   new Date(fechaFin)    } : {}),
+      },
+    });
+  }
+
+  // ── REPORTE: VACACIONES PAGADAS SIN GOZAR ───────────────────
+  async getVacacionesPagadasSinGozar(companyId: string) {
+    const hoy = new Date();
+    const vacaciones = await this.prisma.vacationRequest.findMany({
+      where: { status: 'PAGADA_SIN_GOZAR', employee: { companyId } },
+      include: { employee: { select: { id:true, firstName:true, lastName:true, position:true, employeeNumber:true } } },
+      orderBy: { plazoGozar: 'asc' },
+    });
+
+    return vacaciones.map((v: any) => {
+      const plazo = v.plazoGozar ? new Date(v.plazoGozar) : null;
+      const diasRestantes = plazo ? Math.ceil((plazo.getTime() - hoy.getTime()) / 86400000) : null;
+      const alerta = diasRestantes !== null && diasRestantes <= 30;
+      const vencida = diasRestantes !== null && diasRestantes < 0;
+      return { ...v, diasRestantes, alerta, vencida };
+    });
+  }
+
 }

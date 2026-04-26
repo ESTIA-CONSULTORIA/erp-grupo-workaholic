@@ -106,4 +106,22 @@ export class RhController {
   cancelVacation(@Param('id') cid: string, @Param('vacationId') vid: string, @Request() req: any) {
     return this.svc.cancelVacation(req.user.sub, vid);
   }
+  @Post('me/vacations')
+  requestVacation(@Param('id') cid: string, @Request() req: any, @Body() body: any) {
+    return this.svc.requestVacation(req.user.sub, body);
+  }
+
+  @Put('vacations/:vacationId/gozar-pagadas')
+  gozarVacacionesPagadas(
+    @Param('vacationId') vid: string,
+    @Body() body: { fechaInicio?: string; fechaFin?: string },
+  ) {
+    return this.svc.gozarVacacionesPagadas(vid, body.fechaInicio || '', body.fechaFin || '');
+  }
+
+  @Get('vacaciones-pagadas-sin-gozar')
+  getVacsPagadasSinGozar(@Param('id') cid: string) {
+    return this.svc.getVacacionesPagadasSinGozar(cid);
+  }
+
 }

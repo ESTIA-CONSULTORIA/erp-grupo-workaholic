@@ -505,4 +505,36 @@ export declare class RhController {
         approvedById: string | null;
         approvedAt: Date | null;
     }>;
+    requestVacation(cid: string, req: any, body: any): Promise<{
+        id: string;
+        companyId: string;
+        startDate: Date;
+        endDate: Date;
+        status: string;
+        createdAt: Date;
+        employeeId: string;
+        type: string;
+        notes: string | null;
+        days: number;
+        approvedById: string | null;
+        approvedAt: Date | null;
+    }>;
+    gozarVacacionesPagadas(vid: string, body: {
+        fechaInicio?: string;
+        fechaFin?: string;
+    }): Promise<{
+        id: string;
+        companyId: string;
+        startDate: Date;
+        endDate: Date;
+        status: string;
+        createdAt: Date;
+        employeeId: string;
+        type: string;
+        notes: string | null;
+        days: number;
+        approvedById: string | null;
+        approvedAt: Date | null;
+    }>;
+    getVacsPagadasSinGozar(cid: string): Promise<any[]>;
 }

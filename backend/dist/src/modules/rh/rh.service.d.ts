@@ -365,20 +365,6 @@ export declare class RhService {
         workDays: 6 | 5;
         department: string;
     }>;
-    requestVacation(companyId: string, employeeId: string, userId: string, data: any): Promise<{
-        id: string;
-        companyId: string;
-        startDate: Date;
-        endDate: Date;
-        status: string;
-        createdAt: Date;
-        employeeId: string;
-        type: string;
-        notes: string | null;
-        days: number;
-        approvedById: string | null;
-        approvedAt: Date | null;
-    }>;
     approveVacation(id: string, userId: string, role: string, approved: boolean, reason?: string): Promise<{
         id: string;
         companyId: string;
@@ -491,4 +477,19 @@ export declare class RhService {
         approvedById: string | null;
         approvedAt: Date | null;
     }>;
+    gozarVacacionesPagadas(vacationId: string, fechaInicio: string, fechaFin: string): Promise<{
+        id: string;
+        companyId: string;
+        startDate: Date;
+        endDate: Date;
+        status: string;
+        createdAt: Date;
+        employeeId: string;
+        type: string;
+        notes: string | null;
+        days: number;
+        approvedById: string | null;
+        approvedAt: Date | null;
+    }>;
+    getVacacionesPagadasSinGozar(companyId: string): Promise<any[]>;
 }

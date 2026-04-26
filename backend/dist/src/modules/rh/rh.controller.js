@@ -78,6 +78,15 @@ let RhController = class RhController {
     cancelVacation(cid, vid, req) {
         return this.svc.cancelVacation(req.user.sub, vid);
     }
+    requestVacation(cid, req, body) {
+        return this.svc.requestVacation(req.user.sub, body);
+    }
+    gozarVacacionesPagadas(vid, body) {
+        return this.svc.gozarVacacionesPagadas(vid, body.fechaInicio || '', body.fechaFin || '');
+    }
+    getVacsPagadasSinGozar(cid) {
+        return this.svc.getVacacionesPagadasSinGozar(cid);
+    }
 };
 exports.RhController = RhController;
 __decorate([
@@ -251,6 +260,30 @@ __decorate([
     __metadata("design:paramtypes", [String, String, Object]),
     __metadata("design:returntype", void 0)
 ], RhController.prototype, "cancelVacation", null);
+__decorate([
+    (0, common_1.Post)('me/vacations'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Request)()),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object, Object]),
+    __metadata("design:returntype", void 0)
+], RhController.prototype, "requestVacation", null);
+__decorate([
+    (0, common_1.Put)('vacations/:vacationId/gozar-pagadas'),
+    __param(0, (0, common_1.Param)('vacationId')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], RhController.prototype, "gozarVacacionesPagadas", null);
+__decorate([
+    (0, common_1.Get)('vacaciones-pagadas-sin-gozar'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], RhController.prototype, "getVacsPagadasSinGozar", null);
 exports.RhController = RhController = __decorate([
     (0, common_1.Controller)('companies/:companyId/rh'),
     (0, common_1.UseGuards)(auth_guards_1.JwtAuthGuard),
