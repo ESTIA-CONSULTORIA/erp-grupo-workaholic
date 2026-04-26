@@ -30,6 +30,9 @@ let LoncheController = class LoncheController {
         return this.svc.abrirTurno(cid, req.user.sub, body.cajeroName || req.user.email);
     }
     cerrarTurno(id, body) { return this.svc.cerrarTurno(id, body); }
+    reabrirTurno(cid, id, req, body) {
+        return this.svc.reabrirTurno(id, req.user.sub, body.motivo || '');
+    }
     validarTurno(id, req) { return this.svc.validarTurno(id, req.user.sub); }
     crearSurtido(cid, turnoId, req, body) {
         return this.svc.crearSurtido(turnoId, cid, req.user.sub, body.items, body.type);
@@ -120,6 +123,16 @@ __decorate([
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], LoncheController.prototype, "cerrarTurno", null);
+__decorate([
+    (0, common_1.Put)('turnos/:id/reabrir'),
+    __param(0, (0, common_1.Param)('companyId')),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Request)()),
+    __param(3, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, Object, Object]),
+    __metadata("design:returntype", void 0)
+], LoncheController.prototype, "reabrirTurno", null);
 __decorate([
     (0, common_1.Put)('turnos/:id/validar'),
     __param(0, (0, common_1.Param)('id')),

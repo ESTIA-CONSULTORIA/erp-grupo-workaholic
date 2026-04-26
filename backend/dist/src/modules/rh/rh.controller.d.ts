@@ -491,4 +491,18 @@ export declare class RhController {
         hasRepse: boolean;
         payrollType: string;
     }, never, import("@prisma/client/runtime/library").DefaultArgs>;
+    cancelVacation(cid: string, vid: string, req: any): Promise<{
+        id: string;
+        companyId: string;
+        startDate: Date;
+        endDate: Date;
+        status: string;
+        createdAt: Date;
+        employeeId: string;
+        type: string;
+        notes: string | null;
+        days: number;
+        approvedById: string | null;
+        approvedAt: Date | null;
+    }>;
 }

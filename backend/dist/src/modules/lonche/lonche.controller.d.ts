@@ -18,6 +18,7 @@ export declare class LoncheController {
     getTurnoActivo(cid: string): Promise<any>;
     abrirTurno(cid: string, req: any, body: any): Promise<any>;
     cerrarTurno(id: string, body: any): Promise<any>;
+    reabrirTurno(cid: string, id: string, req: any, body: any): Promise<any>;
     validarTurno(id: string, req: any): Promise<any>;
     crearSurtido(cid: string, turnoId: string, req: any, body: any): Promise<any>;
     registrarVenta(cid: string, turnoId: string, body: any): Promise<any>;

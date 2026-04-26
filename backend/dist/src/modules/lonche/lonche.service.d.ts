@@ -51,4 +51,5 @@ export declare class LoncheService {
         saldoTotal: number;
         cashbackTotal: number;
     }>;
+    reabrirTurno(turnoId: string, userId: string, motivo: string): Promise<any>;
 }

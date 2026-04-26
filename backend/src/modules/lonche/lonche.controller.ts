@@ -30,6 +30,12 @@ export class LoncheController {
   }
   @Put('turnos/:id/cerrar')
   cerrarTurno(@Param('id') id: string, @Body() body: any) { return this.svc.cerrarTurno(id, body); }
+  @Put('turnos/:id/reabrir')
+  reabrirTurno(@Param('companyId') cid: string, @Param('id') id: string,
+    @Request() req: any, @Body() body: any) {
+    return this.svc.reabrirTurno(id, req.user.sub, body.motivo || '');
+  }
+
   @Put('turnos/:id/validar')
   validarTurno(@Param('id') id: string, @Request() req: any) { return this.svc.validarTurno(id, req.user.sub); }
 

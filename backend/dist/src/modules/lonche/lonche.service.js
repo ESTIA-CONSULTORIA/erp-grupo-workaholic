@@ -379,6 +379,26 @@ let LoncheService = class LoncheService {
             cashbackTotal: Number(totalCashback._sum.cashback || 0),
         };
     }
+    async reabrirTurno(turnoId, userId, motivo) {
+        const turno = await this.prisma.loncheTurno.findUnique({ where: { id: turnoId } });
+        if (!turno)
+            throw new Error('Turno no encontrado');
+        if (turno.status === 'ABIERTO')
+            throw new Error('El turno ya está abierto');
+        return this.prisma.loncheTurno.update({
+            where: { id: turnoId },
+            data: {
+                status: 'ABIERTO',
+                cierreAt: null,
+                efectivoDeclarado: null,
+                efectivoSistema: null,
+                diferencia: null,
+                notasCierre: `REABIERTO por ${userId}: ${motivo}`,
+                validadoPor: null,
+                validadoAt: null,
+            },
+        });
+    }
 };
 exports.LoncheService = LoncheService;
 exports.LoncheService = LoncheService = __decorate([

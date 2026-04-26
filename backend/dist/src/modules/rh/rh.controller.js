@@ -75,6 +75,9 @@ let RhController = class RhController {
     }
     getConfig(cid) { return this.svc.getHRConfig(cid); }
     upsertConfig(cid, body) { return this.svc.upsertHRConfig(cid, body); }
+    cancelVacation(cid, vid, req) {
+        return this.svc.cancelVacation(req.user.sub, vid);
+    }
 };
 exports.RhController = RhController;
 __decorate([
@@ -239,6 +242,15 @@ __decorate([
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], RhController.prototype, "upsertConfig", null);
+__decorate([
+    (0, common_1.Put)('me/vacations/:vacationId/cancel'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Param)('vacationId')),
+    __param(2, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, Object]),
+    __metadata("design:returntype", void 0)
+], RhController.prototype, "cancelVacation", null);
 exports.RhController = RhController = __decorate([
     (0, common_1.Controller)('companies/:companyId/rh'),
     (0, common_1.UseGuards)(auth_guards_1.JwtAuthGuard),

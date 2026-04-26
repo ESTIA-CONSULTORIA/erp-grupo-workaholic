@@ -102,4 +102,8 @@ export class RhController {
 
   @Post('config')
   upsertConfig(@Param('companyId') cid: string, @Body() body: any) { return this.svc.upsertHRConfig(cid, body); }
+  @Put('me/vacations/:vacationId/cancel')
+  cancelVacation(@Param('id') cid: string, @Param('vacationId') vid: string, @Request() req: any) {
+    return this.svc.cancelVacation(req.user.sub, vid);
+  }
 }

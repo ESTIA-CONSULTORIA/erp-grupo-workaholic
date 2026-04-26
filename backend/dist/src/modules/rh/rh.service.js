@@ -270,6 +270,17 @@ let RhService = class RhService {
             where: { companyId }, update: data, create: { companyId, ...data },
         });
     }
+    async cancelVacation(employeeId, vacationId) {
+        const vac = await this.prisma.vacationRequest.findUnique({ where: { id: vacationId } });
+        if (!vac)
+            throw new Error('Solicitud no encontrada');
+        if (vac.status !== 'PENDIENTE')
+            throw new Error('Solo se pueden cancelar solicitudes pendientes');
+        return this.prisma.vacationRequest.update({
+            where: { id: vacationId },
+            data: { status: 'CANCELADA' },
+        });
+    }
 };
 exports.RhService = RhService;
 exports.RhService = RhService = __decorate([
