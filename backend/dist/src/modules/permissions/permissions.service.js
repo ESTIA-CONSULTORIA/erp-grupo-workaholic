@@ -63,12 +63,13 @@ let PermissionsService = class PermissionsService {
         this.prisma = prisma;
     }
     getModulesForCompany(companyCode) {
-        return (COMPANY_MODULES[companyCode] || Object.keys(MODULE_ACTIONS)).map(mod => ({
+        const code = (companyCode || '').toUpperCase();
+        return (COMPANY_MODULES[code] || Object.keys(MODULE_ACTIONS)).map(mod => ({
             key: mod, actions: MODULE_ACTIONS[mod] || [],
         }));
     }
     async getRoles(companyId, companyCode) {
-        const code = companyCode || await this._getCompanyCode(companyId);
+        const code = (companyCode || await this._getCompanyCode(companyId)).toUpperCase();
         const base = (BASE_ROLES[code] || BASE_ROLES['MACHETE']).map(r => ({ ...r, isBase: true, isActive: true, companyId }));
         let custom = [];
         try {
@@ -171,8 +172,8 @@ let PermissionsService = class PermissionsService {
     getDefaults() { return DEFAULTS; }
     async _getCompanyCode(companyId) {
         try {
-            const c = await this.prisma.company.findUnique({ where: { id: companyId }, select: { companyCode: true } });
-            return c?.companyCode || 'MACHETE';
+            const c = await this.prisma.company.findUnique({ where: { id: companyId }, select: { code: true } });
+            return (c?.code || 'MACHETE').toUpperCase();
         }
         catch {
             return 'MACHETE';
