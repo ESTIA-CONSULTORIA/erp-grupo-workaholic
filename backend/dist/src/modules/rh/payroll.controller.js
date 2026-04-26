@@ -35,6 +35,11 @@ let PayrollController = class PayrollController {
     registerPayment(id, req, body) {
         return this.svc.registerPayment(id, body.cashAccountId, req.user.sub);
     }
+    calculate(id) { return this.svc.calculatePeriod(id); }
+    close(id) { return this.svc.closePeriod(id); }
+    publishReceipts(id, req) {
+        return this.svc.publishReceipts(id, req.user.sub);
+    }
 };
 exports.PayrollController = PayrollController;
 __decorate([
@@ -91,6 +96,28 @@ __decorate([
     __metadata("design:paramtypes", [String, Object, Object]),
     __metadata("design:returntype", void 0)
 ], PayrollController.prototype, "registerPayment", null);
+__decorate([
+    (0, common_1.Post)('periods/:periodId/calculate'),
+    __param(0, (0, common_1.Param)('periodId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], PayrollController.prototype, "calculate", null);
+__decorate([
+    (0, common_1.Post)('periods/:periodId/close'),
+    __param(0, (0, common_1.Param)('periodId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], PayrollController.prototype, "close", null);
+__decorate([
+    (0, common_1.Post)('periods/:periodId/publish-receipts'),
+    __param(0, (0, common_1.Param)('periodId')),
+    __param(1, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], PayrollController.prototype, "publishReceipts", null);
 exports.PayrollController = PayrollController = __decorate([
     (0, swagger_1.ApiTags)('Payroll'),
     (0, swagger_1.ApiBearerAuth)(),

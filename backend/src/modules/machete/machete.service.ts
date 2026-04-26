@@ -154,11 +154,25 @@ export class MacheteService {
         },
       });
 
-      // Actualizar inventario
-      await this.prisma.productStock.updateMany({
+      // Actualizar inventario — upsert para crear el registro si no existe
+      const existingStock = await this.prisma.productStock.findFirst({
         where: { productId: linea.productId },
-        data:  { stock: { increment: linea.cantidad } },
       });
+      if (existingStock) {
+        await this.prisma.productStock.update({
+          where: { id: existingStock.id },
+          data:  { stock: { increment: Number(linea.cantidad) } },
+        });
+      } else {
+        await this.prisma.productStock.create({
+          data: {
+            productId: linea.productId,
+            stock:     Number(linea.cantidad),
+            minStock:  0,
+            maxStock:  9999,
+          },
+        });
+      }
     }
 
     // Verificar si ya se empacaron todos los kg disponibles → cerrar automáticamente

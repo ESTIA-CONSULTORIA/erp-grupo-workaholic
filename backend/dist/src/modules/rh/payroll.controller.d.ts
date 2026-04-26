@@ -5,14 +5,12 @@ export declare class PayrollController {
     constructor(svc: PayrollService);
     getPeriods(cid: string): import(".prisma/client").Prisma.PrismaPromise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         companyId: string;
         type: string;
-        status: string;
         period: string;
         periodEnd: string;
         periodLabel: string;
+        status: string;
         totalGross: import("@prisma/client/runtime/library").Decimal | null;
         totalNet: import("@prisma/client/runtime/library").Decimal | null;
         totalIMSS: import("@prisma/client/runtime/library").Decimal | null;
@@ -21,17 +19,17 @@ export declare class PayrollController {
         paidAt: Date | null;
         paidById: string | null;
         flowMovementId: string | null;
+        createdAt: Date;
+        updatedAt: Date;
     }[]>;
     createPeriod(cid: string, body: any): import(".prisma/client").Prisma.Prisma__PayrollPeriodClient<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         companyId: string;
         type: string;
-        status: string;
         period: string;
         periodEnd: string;
         periodLabel: string;
+        status: string;
         totalGross: import("@prisma/client/runtime/library").Decimal | null;
         totalNet: import("@prisma/client/runtime/library").Decimal | null;
         totalIMSS: import("@prisma/client/runtime/library").Decimal | null;
@@ -40,6 +38,8 @@ export declare class PayrollController {
         paidAt: Date | null;
         paidById: string | null;
         flowMovementId: string | null;
+        createdAt: Date;
+        updatedAt: Date;
     }, never, import("@prisma/client/runtime/library").DefaultArgs>;
     loadEmployees(id: string): Promise<{
         loaded: number;
@@ -56,12 +56,11 @@ export declare class PayrollController {
         };
     } & {
         id: string;
+        companyId: string;
         createdAt: Date;
         updatedAt: Date;
-        companyId: string;
-        notes: string | null;
-        employeeId: string;
         payrollPeriodId: string;
+        employeeId: string;
         baseSalary: import("@prisma/client/runtime/library").Decimal;
         overtime: import("@prisma/client/runtime/library").Decimal;
         bonus: import("@prisma/client/runtime/library").Decimal;
@@ -77,15 +76,15 @@ export declare class PayrollController {
         totalDeductions: import("@prisma/client/runtime/library").Decimal;
         netPay: import("@prisma/client/runtime/library").Decimal;
         imssEmployer: import("@prisma/client/runtime/library").Decimal;
+        notes: string | null;
     })[]>;
     updateLine(id: string, body: any): Promise<{
         id: string;
+        companyId: string;
         createdAt: Date;
         updatedAt: Date;
-        companyId: string;
-        notes: string | null;
-        employeeId: string;
         payrollPeriodId: string;
+        employeeId: string;
         baseSalary: import("@prisma/client/runtime/library").Decimal;
         overtime: import("@prisma/client/runtime/library").Decimal;
         bonus: import("@prisma/client/runtime/library").Decimal;
@@ -101,6 +100,7 @@ export declare class PayrollController {
         totalDeductions: import("@prisma/client/runtime/library").Decimal;
         netPay: import("@prisma/client/runtime/library").Decimal;
         imssEmployer: import("@prisma/client/runtime/library").Decimal;
+        notes: string | null;
     }>;
     exportContpaq(id: string, res: Response): Promise<void>;
     registerPayment(id: string, req: any, body: {
@@ -109,5 +109,30 @@ export declare class PayrollController {
         flowMovementId: string;
         totalNet: number;
         periodLabel: string;
+    }>;
+    calculate(id: string): Promise<{
+        calculated: number;
+    }>;
+    close(id: string): Promise<{
+        id: string;
+        companyId: string;
+        type: string;
+        period: string;
+        periodEnd: string;
+        periodLabel: string;
+        status: string;
+        totalGross: import("@prisma/client/runtime/library").Decimal | null;
+        totalNet: import("@prisma/client/runtime/library").Decimal | null;
+        totalIMSS: import("@prisma/client/runtime/library").Decimal | null;
+        totalISR: import("@prisma/client/runtime/library").Decimal | null;
+        exportedAt: Date | null;
+        paidAt: Date | null;
+        paidById: string | null;
+        flowMovementId: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+    }>;
+    publishReceipts(id: string, req: any): Promise<{
+        published: number;
     }>;
 }

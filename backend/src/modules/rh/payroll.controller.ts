@@ -38,4 +38,15 @@ export class PayrollController {
   registerPayment(@Param('periodId') id: string, @Request() req: any, @Body() body: { cashAccountId: string }) {
     return this.svc.registerPayment(id, body.cashAccountId, req.user.sub);
   }
+
+  @Post('periods/:periodId/calculate')
+  calculate(@Param('periodId') id: string) { return this.svc.calculatePeriod(id); }
+
+  @Post('periods/:periodId/close')
+  close(@Param('periodId') id: string) { return this.svc.closePeriod(id); }
+
+  @Post('periods/:periodId/publish-receipts')
+  publishReceipts(@Param('periodId') id: string, @Request() req: any) {
+    return this.svc.publishReceipts(id, req.user.sub);
+  }
 }

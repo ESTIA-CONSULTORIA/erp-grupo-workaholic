@@ -57,7 +57,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], IntercompanyController.prototype, "approve", null);
 exports.IntercompanyController = IntercompanyController = __decorate([
-    (0, common_1.Controller)('api/v1/companies/:companyId/intercompany'),
+    (0, common_1.Controller)('companies/:companyId/intercompany'),
     __metadata("design:paramtypes", [intercompany_service_1.IntercompanyService])
 ], IntercompanyController);
 //# sourceMappingURL=intercompany.controller.js.map

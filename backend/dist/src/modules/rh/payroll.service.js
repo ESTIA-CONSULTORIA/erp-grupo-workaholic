@@ -148,6 +148,91 @@ let PayrollService = class PayrollService {
         });
         return { flowMovementId: flow.id, totalNet, periodLabel: period.periodLabel };
     }
+    async calculatePeriod(periodId) {
+        const lines = await this.prisma.payrollLine.findMany({
+            where: { payrollPeriodId: periodId },
+            include: { employee: true },
+        });
+        for (const line of lines) {
+            const emp = line.employee;
+            const periodType = (await this.prisma.payrollPeriod.findUnique({ where: { id: periodId } }))?.type || 'QUINCENAL';
+            const divisor = periodType === 'MENSUAL' ? 1 : 2;
+            const baseSalary = Number(emp.grossSalary || 0) / divisor;
+            const imssEmployee = baseSalary * 0.0204;
+            const isrRetention = baseSalary * 0.08;
+            const totalDed = Number(line.imssEmployee || imssEmployee) + Number(line.isrRetention || isrRetention) +
+                Number(line.infonavit || 0) + Number(line.loans || 0);
+            const totalPerc = baseSalary + Number(line.overtime || 0) + Number(line.bonus || 0);
+            const netPay = totalPerc - totalDed;
+            await this.prisma.payrollLine.update({
+                where: { id: line.id },
+                data: {
+                    baseSalary,
+                    totalPerceptions: totalPerc,
+                    imssEmployee,
+                    imssEmployer: baseSalary * 0.0704,
+                    isrRetention,
+                    totalDeductions: totalDed,
+                    netPay: Math.max(0, netPay),
+                },
+            });
+        }
+        return { calculated: lines.length };
+    }
+    async closePeriod(periodId) {
+        const period = await this.prisma.payrollPeriod.findUnique({ where: { id: periodId } });
+        if (!period)
+            throw new Error('Período no encontrado');
+        if (period.status === 'CERRADO')
+            throw new Error('El período ya está cerrado');
+        return this.prisma.payrollPeriod.update({
+            where: { id: periodId },
+            data: { status: 'CERRADO' },
+        });
+    }
+    async publishReceipts(periodId, publishedById) {
+        const lines = await this.prisma.payrollLine.findMany({
+            where: { payrollPeriodId: periodId },
+            include: { employee: true },
+        });
+        let published = 0;
+        for (const line of lines) {
+            try {
+                const existing = await this.prisma.payrollReceipt.findFirst({
+                    where: { payrollPeriodId: periodId, employeeId: line.employeeId },
+                });
+                if (existing)
+                    continue;
+            }
+            catch { }
+            try {
+                await this.prisma.payrollReceipt.create({
+                    data: {
+                        companyId: line.employee.companyId,
+                        payrollPeriodId: periodId,
+                        employeeId: line.employeeId,
+                        grossAmount: Number(line.baseSalary || 0),
+                        deductions: Number(line.totalDeductions || 0),
+                        netAmount: Number(line.netPay || 0),
+                        breakdown: JSON.stringify({
+                            imssEmployee: Number(line.imssEmployee),
+                            isrRetention: Number(line.isrRetention),
+                            infonavit: Number(line.infonavit),
+                            loans: Number(line.loans),
+                            overtime: Number(line.overtime),
+                            bonus: Number(line.bonus),
+                        }),
+                        publishedAt: new Date(),
+                        generatedById: publishedById,
+                        status: 'PUBLICADO',
+                    },
+                });
+                published++;
+            }
+            catch { }
+        }
+        return { published };
+    }
 };
 exports.PayrollService = PayrollService;
 exports.PayrollService = PayrollService = __decorate([

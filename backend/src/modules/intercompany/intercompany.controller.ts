@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Put, Param, Body, Query, Request } from '@nestjs/common';
 import { IntercompanyService } from './intercompany.service';
 
-@Controller('api/v1/companies/:companyId/intercompany')
+@Controller('companies/:companyId/intercompany')
 export class IntercompanyController {
   constructor(private readonly svc: IntercompanyService) {}
 

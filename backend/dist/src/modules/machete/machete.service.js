@@ -147,10 +147,25 @@ let MacheteService = class MacheteService {
                     costoUnit,
                 },
             });
-            await this.prisma.productStock.updateMany({
+            const existingStock = await this.prisma.productStock.findFirst({
                 where: { productId: linea.productId },
-                data: { stock: { increment: linea.cantidad } },
             });
+            if (existingStock) {
+                await this.prisma.productStock.update({
+                    where: { id: existingStock.id },
+                    data: { stock: { increment: Number(linea.cantidad) } },
+                });
+            }
+            else {
+                await this.prisma.productStock.create({
+                    data: {
+                        productId: linea.productId,
+                        stock: Number(linea.cantidad),
+                        minStock: 0,
+                        maxStock: 9999,
+                    },
+                });
+            }
         }
         const loteActualizado = await this.prisma.loteProduccion.findUnique({
             where: { id: loteId },
