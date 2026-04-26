@@ -16,7 +16,16 @@ export class IntercompanyController {
   }
 
   @Put(':transferId/approve')
-  approve(@Param('transferId') id: string, @Request() req: any, @Body() body: { approved: boolean }) {
-    return this.svc.approveTransfer(id, req.user.sub, body.approved);
+  approve(
+    @Param('transferId') id: string,
+    @Request() req: any,
+    @Body() body: { approved: boolean; motivo?: string },
+  ) {
+    return this.svc.approveTransfer(id, req.user.sub, body.approved, body.motivo);
+  }
+
+  @Get('pending/:toCompanyId')
+  getPending(@Param('toCompanyId') cid: string) {
+    return this.svc.getTransfers(cid);
   }
 }

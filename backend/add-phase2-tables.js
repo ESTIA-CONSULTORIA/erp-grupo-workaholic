@@ -316,3 +316,18 @@ async function addIvaAndPeriodClosures() {
   await p.$disconnect();
 }
 addIvaAndPeriodClosures(); // sales_iva
+
+async function addIntercompanyFields() {
+  const { PrismaClient: PC } = require('@prisma/client');
+  const p = new PC();
+  try {
+    await p.$executeRawUnsafe(`
+      ALTER TABLE intercompany_transfers ADD COLUMN IF NOT EXISTS "fromCashAccountId" TEXT;
+      ALTER TABLE intercompany_transfers ADD COLUMN IF NOT EXISTS "toCashAccountId" TEXT;
+      ALTER TABLE intercompany_transfers ADD COLUMN IF NOT EXISTS "rejectedReason" TEXT;
+    `);
+    console.log('✅ intercompany_transfers: cash account fields added');
+  } catch(e) { console.error('intercompany fields:', e.message); }
+  await p.$disconnect();
+}
+addIntercompanyFields().catch(console.error);

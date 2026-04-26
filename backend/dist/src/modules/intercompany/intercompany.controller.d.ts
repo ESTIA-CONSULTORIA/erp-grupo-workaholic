@@ -6,5 +6,7 @@ export declare class IntercompanyController {
     create(cid: string, req: any, body: any): Promise<any>;
     approve(id: string, req: any, body: {
         approved: boolean;
+        motivo?: string;
     }): Promise<any>;
+    getPending(cid: string): any;
 }

@@ -1373,9 +1373,12 @@ model IntercompanyTransfer {
   requestedById String
   approvedById  String?
   approvedAt    DateTime?
-  notes         String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  notes              String?
+  fromCashAccountId  String?  // cuenta de donde sale el dinero
+  toCashAccountId    String?  // cuenta donde entra el dinero
+  rejectedReason     String?  // motivo de rechazo
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
   fromCompany   Company  @relation("TransferFrom", fields: [fromCompanyId], references: [id])
   toCompany     Company  @relation("TransferTo",   fields: [toCompanyId],   references: [id])
   @@map("intercompany_transfers")

@@ -26,7 +26,10 @@ let IntercompanyController = class IntercompanyController {
         return this.svc.createTransfer(cid, req.user.sub, body);
     }
     approve(id, req, body) {
-        return this.svc.approveTransfer(id, req.user.sub, body.approved);
+        return this.svc.approveTransfer(id, req.user.sub, body.approved, body.motivo);
+    }
+    getPending(cid) {
+        return this.svc.getTransfers(cid);
     }
 };
 exports.IntercompanyController = IntercompanyController;
@@ -56,6 +59,13 @@ __decorate([
     __metadata("design:paramtypes", [String, Object, Object]),
     __metadata("design:returntype", void 0)
 ], IntercompanyController.prototype, "approve", null);
+__decorate([
+    (0, common_1.Get)('pending/:toCompanyId'),
+    __param(0, (0, common_1.Param)('toCompanyId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], IntercompanyController.prototype, "getPending", null);
 exports.IntercompanyController = IntercompanyController = __decorate([
     (0, common_1.Controller)('companies/:companyId/intercompany'),
     __metadata("design:paramtypes", [intercompany_service_1.IntercompanyService])
