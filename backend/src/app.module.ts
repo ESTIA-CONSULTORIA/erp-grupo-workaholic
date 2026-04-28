@@ -30,6 +30,7 @@ import { PalestraModule } from './modules/palestra/palestra.module';
 import { MaintenanceModule } from './modules/maintenance/maintenance.module';
 import { IntercompanyModule } from './modules/intercompany/intercompany.module';
 import { CorteCajaModule } from './modules/corte-caja/corte-caja.module';
+import { ArqueoContadorModule } from './modules/arqueo-contador/arqueo-contador.module';
 
 @Module({
   imports: [
@@ -62,6 +63,7 @@ import { CorteCajaModule } from './modules/corte-caja/corte-caja.module';
     MaintenanceModule,
     IntercompanyModule,
     CorteCajaModule,
+    ArqueoContadorModule,
   ],
 })
 export class AppModule implements OnModuleInit {
