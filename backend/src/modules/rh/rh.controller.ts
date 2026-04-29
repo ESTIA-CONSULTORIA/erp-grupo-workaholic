@@ -124,4 +124,30 @@ export class RhController {
     return this.svc.getVacacionesPagadasSinGozar(cid);
   }
 
+  // ── CONTRATOS ─────────────────────────────────────────────────
+  @Get('employees/:empId/contracts')
+  getContracts(@Param('empId') eid: string) {
+    return this.svc.getContracts(eid);
+  }
+
+  @Post('employees/:empId/contracts')
+  createContract(
+    @Param('id') cid: string,
+    @Param('empId') eid: string,
+    @Body() body: any,
+  ) {
+    return this.svc.createContract(cid, eid, body);
+  }
+
+  @Put('contracts/:contractId/cancel')
+  cancelContract(@Param('contractId') cid2: string) {
+    return this.svc.cancelContract(cid2);
+  }
+
+  // ── EXPEDIENTE COMPLETO ────────────────────────────────────────
+  @Get('employees/:empId/expediente')
+  getExpediente(@Param('id') cid: string, @Param('empId') eid: string) {
+    return this.svc.getExpedienteCompleto(cid, eid);
+  }
+
 }

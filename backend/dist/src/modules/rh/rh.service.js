@@ -360,6 +360,65 @@ let RhService = class RhService {
             return { ...v, diasRestantes, alerta, vencida };
         });
     }
+    async getContracts(employeeId) {
+        return this.prisma.employeeContract.findMany({
+            where: { employeeId },
+            orderBy: { startDate: 'desc' },
+        }).catch(() => []);
+    }
+    async createContract(companyId, employeeId, data) {
+        const emp = await this.prisma.employee.findUnique({ where: { id: employeeId } });
+        if (!emp)
+            throw new Error('Empleado no encontrado');
+        await this.prisma.employeeContract.updateMany({
+            where: { employeeId, status: 'VIGENTE' },
+            data: { status: 'FINALIZADO' },
+        }).catch(() => { });
+        return this.prisma.employeeContract.create({
+            data: {
+                id: require('crypto').randomUUID(),
+                companyId,
+                employeeId,
+                type: data.type || 'INDEFINIDO',
+                startDate: new Date(data.startDate),
+                endDate: data.endDate ? new Date(data.endDate) : null,
+                salaryAtSigning: Number(emp.grossSalary || 0),
+                position: emp.position,
+                workSchedule: data.workSchedule || null,
+                status: 'VIGENTE',
+                notes: data.notes || null,
+                updatedAt: new Date(),
+            },
+        });
+    }
+    async cancelContract(contractId) {
+        return this.prisma.employeeContract.update({
+            where: { id: contractId },
+            data: { status: 'CANCELADO' },
+        }).catch(() => { throw new Error('Contrato no encontrado'); });
+    }
+    async getExpedienteCompleto(companyId, employeeId) {
+        const emp = await this.prisma.employee.findUnique({
+            where: { id: employeeId, companyId },
+            include: {
+                documents: { orderBy: { createdAt: 'desc' } },
+                vacations: { orderBy: { createdAt: 'desc' }, take: 20 },
+                hrEvents: { orderBy: { date: 'desc' }, take: 30 },
+                hrIncidents: { orderBy: { date: 'desc' }, take: 30 },
+                disabilities: { orderBy: { startDate: 'desc' }, take: 20 },
+                payrollLines: { orderBy: { createdAt: 'desc' }, take: 6,
+                    include: { period: true } },
+                legalDocuments: { orderBy: { createdAt: 'desc' } },
+            },
+        });
+        if (!emp)
+            throw new Error('Empleado no encontrado');
+        const contracts = await this.prisma.employeeContract.findMany({
+            where: { employeeId },
+            orderBy: { startDate: 'desc' },
+        }).catch(() => []);
+        return { ...emp, contracts };
+    }
 };
 exports.RhService = RhService;
 exports.RhService = RhService = __decorate([

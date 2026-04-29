@@ -87,6 +87,18 @@ let RhController = class RhController {
     getVacsPagadasSinGozar(cid) {
         return this.svc.getVacacionesPagadasSinGozar(cid);
     }
+    getContracts(eid) {
+        return this.svc.getContracts(eid);
+    }
+    createContract(cid, eid, body) {
+        return this.svc.createContract(cid, eid, body);
+    }
+    cancelContract(cid2) {
+        return this.svc.cancelContract(cid2);
+    }
+    getExpediente(cid, eid) {
+        return this.svc.getExpedienteCompleto(cid, eid);
+    }
 };
 exports.RhController = RhController;
 __decorate([
@@ -284,6 +296,37 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], RhController.prototype, "getVacsPagadasSinGozar", null);
+__decorate([
+    (0, common_1.Get)('employees/:empId/contracts'),
+    __param(0, (0, common_1.Param)('empId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], RhController.prototype, "getContracts", null);
+__decorate([
+    (0, common_1.Post)('employees/:empId/contracts'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Param)('empId')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, Object]),
+    __metadata("design:returntype", void 0)
+], RhController.prototype, "createContract", null);
+__decorate([
+    (0, common_1.Put)('contracts/:contractId/cancel'),
+    __param(0, (0, common_1.Param)('contractId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], RhController.prototype, "cancelContract", null);
+__decorate([
+    (0, common_1.Get)('employees/:empId/expediente'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Param)('empId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", void 0)
+], RhController.prototype, "getExpediente", null);
 exports.RhController = RhController = __decorate([
     (0, common_1.Controller)('companies/:companyId/rh'),
     (0, common_1.UseGuards)(auth_guards_1.JwtAuthGuard),

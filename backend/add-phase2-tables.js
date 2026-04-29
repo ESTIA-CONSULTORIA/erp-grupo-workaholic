@@ -345,3 +345,32 @@ async function addSaleDiscount() {
   await p.$disconnect();
 }
 addSaleDiscount().catch(console.error);
+
+async function addContracts() {
+  const { PrismaClient: PC } = require('@prisma/client');
+  const p = new PC();
+  try {
+    await p.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS employee_contracts (
+        id TEXT PRIMARY KEY,
+        "companyId" TEXT NOT NULL,
+        "employeeId" TEXT NOT NULL,
+        type TEXT NOT NULL,
+        "startDate" DATE NOT NULL,
+        "endDate" DATE,
+        "salaryAtSigning" DECIMAL(12,2) NOT NULL DEFAULT 0,
+        position TEXT NOT NULL,
+        "workSchedule" TEXT,
+        status TEXT NOT NULL DEFAULT 'VIGENTE',
+        "legalDocumentId" TEXT,
+        notes TEXT,
+        "signedAt" TIMESTAMP,
+        "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+        "updatedAt" TIMESTAMP NOT NULL DEFAULT NOW()
+      )
+    `);
+    console.log('✅ employee_contracts table created');
+  } catch(e) { console.error('contracts:', e.message); }
+  await p.$disconnect();
+}
+addContracts().catch(console.error);
