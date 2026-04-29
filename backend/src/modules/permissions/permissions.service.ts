@@ -12,28 +12,50 @@ const COMPANY_MODULES: Record<string, string[]> = {
 
 // ── Acciones disponibles por módulo ───────────────────────────
 const MODULE_ACTIONS: Record<string, string[]> = {
-  pos:         ['ver','crear'],
-  catalogo:    ['ver','crear','editar','eliminar'],
-  inventario:  ['ver','editar','exportar'],
-  compras:     ['ver','crear','editar','eliminar','exportar'],
-  produccion:  ['ver','crear','editar','eliminar'],
-  oc:          ['ver','crear','editar','eliminar'],
-  corte:       ['ver','crear','aprobar'],
-  gastos:      ['ver','crear','editar','eliminar','aprobar','exportar'],
-  cxc:         ['ver','crear','editar','exportar'],
-  cxp:         ['ver','crear','editar','exportar'],
-  reportes:    ['ver','exportar'],
-  rh:          ['ver','crear','editar','eliminar','aprobar','exportar'],
-  nomina:      ['ver','editar','aprobar','exportar'],
-  documentos:  ['ver','crear'],
-  admin:       ['ver','crear','editar','eliminar'],
-  membresias:  ['ver','crear','editar','eliminar'],
-  servicios:   ['ver','crear','editar','eliminar'],
-  comisiones:  ['ver','aprobar'],
-  espacios:    ['ver','crear','editar'],
-  reservaciones:['ver','crear','editar','eliminar'],
-  surtido:     ['ver','crear'],
-  alumnos:     ['ver','crear','editar'],
+  // ── Operación ──────────────────────────────────────────────
+  pos:                   ['ver','crear','descuento','cancelar'],
+  corte:                 ['ver','crear','aprobar','reabrir'],
+  oc:                    ['ver','crear','editar','cancelar'],
+  // ── Inventario ─────────────────────────────────────────────
+  catalogo:              ['ver','crear','editar','eliminar','importar','exportar'],
+  inventario:            ['ver','ajustar','exportar'],
+  compras:               ['ver','crear','editar','cancelar','exportar'],
+  produccion:            ['ver','crear','editar','cancelar'],
+  surtido:               ['ver','crear'],
+  alumnos:               ['ver','crear','editar','recargar'],
+  // ── Finanzas ───────────────────────────────────────────────
+  gastos:                ['ver','crear','editar','eliminar','aprobar','exportar'],
+  cxc:                   ['ver','crear','abonar','cancelar','exportar'],
+  cxp:                   ['ver','crear','abonar','cancelar','exportar'],
+  intercompany:          ['ver','crear','aprobar'],
+  // ── Reportes (granular) ────────────────────────────────────
+  reporte_ventas:        ['ver','exportar'],
+  reporte_cxc:           ['ver','exportar'],
+  reporte_cxp:           ['ver','exportar'],
+  reporte_gastos:        ['ver','exportar'],
+  reporte_er:            ['ver','exportar'],
+  reporte_flujo:         ['ver','exportar'],
+  reporte_balance:       ['ver','exportar'],
+  reporte_consolidado:   ['ver','exportar'],
+  reporte_nomina:        ['ver','exportar'],
+  // ── RH (granular) ──────────────────────────────────────────
+  rh_empleados:          ['ver','crear','editar','exportar'],
+  rh_bajas:              ['ver','crear','aprobar'],
+  rh_incidencias:        ['ver','crear','cancelar'],
+  rh_incapacidades:      ['ver','crear','cancelar'],
+  rh_vacaciones:         ['ver','aprobar','cancelar'],
+  rh_contratos:          ['ver','crear','editar'],
+  nomina:                ['ver','calcular','aprobar','exportar'],
+  documentos:            ['ver','crear','eliminar'],
+  // ── Membresías ─────────────────────────────────────────────
+  membresias:            ['ver','crear','editar','cancelar'],
+  servicios:             ['ver','crear','editar','eliminar'],
+  comisiones:            ['ver','aprobar','exportar'],
+  espacios:              ['ver','crear','editar'],
+  reservaciones:         ['ver','crear','editar','cancelar'],
+  // ── Administración ─────────────────────────────────────────
+  admin_usuarios:        ['ver','crear','editar','suspender'],
+  admin_permisos:        ['ver','editar'],
 };
 
 // ── Permisos por defecto por rol (base — se sobreescribe con lo de BD) ──
