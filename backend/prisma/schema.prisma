@@ -165,6 +165,7 @@ model Company {
   cxcs             CxC[]
   documents        Document[]
   employees        Employee[]
+  employeeContracts EmployeeContract[]
   hrConfig         CompanyHRConfig?
   payrollPeriods   PayrollPeriod[]
   insumos          Insumo[]
