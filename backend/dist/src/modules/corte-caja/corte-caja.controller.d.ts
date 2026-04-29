@@ -13,13 +13,11 @@ export declare class CorteCajaController {
         };
     } & {
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         companyId: string;
-        fecha: Date;
-        status: string;
         branchId: string | null;
         cajeroId: string;
+        fecha: Date;
+        status: string;
         totalVentas: import("@prisma/client/runtime/library").Decimal;
         totalEfectivo: import("@prisma/client/runtime/library").Decimal;
         totalTarjeta: import("@prisma/client/runtime/library").Decimal;
@@ -40,6 +38,8 @@ export declare class CorteCajaController {
         totalTerminal: import("@prisma/client/runtime/library").Decimal;
         diferenciEfectivo: import("@prisma/client/runtime/library").Decimal;
         diferenciaTerminal: import("@prisma/client/runtime/library").Decimal;
+        createdAt: Date;
+        updatedAt: Date;
     })[]>;
     getVentasDelDia(cid: string, fecha: string): Promise<{
         fecha: string;
@@ -57,23 +57,23 @@ export declare class CorteCajaController {
                 };
             } & {
                 id: string;
-                productId: string;
                 total: import("@prisma/client/runtime/library").Decimal;
+                saleId: string;
+                productId: string;
                 quantity: number;
                 unitPrice: import("@prisma/client/runtime/library").Decimal;
-                saleId: string;
             })[];
         } & {
             id: string;
-            createdAt: Date;
             companyId: string;
-            clientId: string | null;
+            createdAt: Date;
             date: Date;
-            total: import("@prisma/client/runtime/library").Decimal;
             channel: string;
             clientName: string | null;
+            total: import("@prisma/client/runtime/library").Decimal;
             paymentMethod: string;
             cutId: string | null;
+            clientId: string | null;
             isCredit: boolean;
         })[];
     }>;
@@ -84,13 +84,11 @@ export declare class CorteCajaController {
         };
     } & {
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         companyId: string;
-        fecha: Date;
-        status: string;
         branchId: string | null;
         cajeroId: string;
+        fecha: Date;
+        status: string;
         totalVentas: import("@prisma/client/runtime/library").Decimal;
         totalEfectivo: import("@prisma/client/runtime/library").Decimal;
         totalTarjeta: import("@prisma/client/runtime/library").Decimal;
@@ -111,16 +109,16 @@ export declare class CorteCajaController {
         totalTerminal: import("@prisma/client/runtime/library").Decimal;
         diferenciEfectivo: import("@prisma/client/runtime/library").Decimal;
         diferenciaTerminal: import("@prisma/client/runtime/library").Decimal;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     validar(id: string, body: any, req: any): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         companyId: string;
-        fecha: Date;
-        status: string;
         branchId: string | null;
         cajeroId: string;
+        fecha: Date;
+        status: string;
         totalVentas: import("@prisma/client/runtime/library").Decimal;
         totalEfectivo: import("@prisma/client/runtime/library").Decimal;
         totalTarjeta: import("@prisma/client/runtime/library").Decimal;
@@ -141,16 +139,16 @@ export declare class CorteCajaController {
         totalTerminal: import("@prisma/client/runtime/library").Decimal;
         diferenciEfectivo: import("@prisma/client/runtime/library").Decimal;
         diferenciaTerminal: import("@prisma/client/runtime/library").Decimal;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     rechazar(id: string, body: any, req: any): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         companyId: string;
-        fecha: Date;
-        status: string;
         branchId: string | null;
         cajeroId: string;
+        fecha: Date;
+        status: string;
         totalVentas: import("@prisma/client/runtime/library").Decimal;
         totalEfectivo: import("@prisma/client/runtime/library").Decimal;
         totalTarjeta: import("@prisma/client/runtime/library").Decimal;
@@ -171,16 +169,16 @@ export declare class CorteCajaController {
         totalTerminal: import("@prisma/client/runtime/library").Decimal;
         diferenciEfectivo: import("@prisma/client/runtime/library").Decimal;
         diferenciaTerminal: import("@prisma/client/runtime/library").Decimal;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     responder(id: string, body: any, req: any): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         companyId: string;
-        fecha: Date;
-        status: string;
         branchId: string | null;
         cajeroId: string;
+        fecha: Date;
+        status: string;
         totalVentas: import("@prisma/client/runtime/library").Decimal;
         totalEfectivo: import("@prisma/client/runtime/library").Decimal;
         totalTarjeta: import("@prisma/client/runtime/library").Decimal;
@@ -201,5 +199,7 @@ export declare class CorteCajaController {
         totalTerminal: import("@prisma/client/runtime/library").Decimal;
         diferenciEfectivo: import("@prisma/client/runtime/library").Decimal;
         diferenciaTerminal: import("@prisma/client/runtime/library").Decimal;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
 }

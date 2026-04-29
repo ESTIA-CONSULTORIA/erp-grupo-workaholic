@@ -13,13 +13,11 @@ export declare class CorteCajaService {
         };
     } & {
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         companyId: string;
-        fecha: Date;
-        status: string;
         branchId: string | null;
         cajeroId: string;
+        fecha: Date;
+        status: string;
         totalVentas: import("@prisma/client/runtime/library").Decimal;
         totalEfectivo: import("@prisma/client/runtime/library").Decimal;
         totalTarjeta: import("@prisma/client/runtime/library").Decimal;
@@ -40,6 +38,8 @@ export declare class CorteCajaService {
         totalTerminal: import("@prisma/client/runtime/library").Decimal;
         diferenciEfectivo: import("@prisma/client/runtime/library").Decimal;
         diferenciaTerminal: import("@prisma/client/runtime/library").Decimal;
+        createdAt: Date;
+        updatedAt: Date;
     })[]>;
     getCorteById(corteId: string): Promise<{
         cajero: {
@@ -52,13 +52,11 @@ export declare class CorteCajaService {
         };
     } & {
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         companyId: string;
-        fecha: Date;
-        status: string;
         branchId: string | null;
         cajeroId: string;
+        fecha: Date;
+        status: string;
         totalVentas: import("@prisma/client/runtime/library").Decimal;
         totalEfectivo: import("@prisma/client/runtime/library").Decimal;
         totalTarjeta: import("@prisma/client/runtime/library").Decimal;
@@ -79,6 +77,8 @@ export declare class CorteCajaService {
         totalTerminal: import("@prisma/client/runtime/library").Decimal;
         diferenciEfectivo: import("@prisma/client/runtime/library").Decimal;
         diferenciaTerminal: import("@prisma/client/runtime/library").Decimal;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     crearCorte(companyId: string, cajeroId: string, data: any): Promise<{
         cajero: {
@@ -87,13 +87,11 @@ export declare class CorteCajaService {
         };
     } & {
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         companyId: string;
-        fecha: Date;
-        status: string;
         branchId: string | null;
         cajeroId: string;
+        fecha: Date;
+        status: string;
         totalVentas: import("@prisma/client/runtime/library").Decimal;
         totalEfectivo: import("@prisma/client/runtime/library").Decimal;
         totalTarjeta: import("@prisma/client/runtime/library").Decimal;
@@ -114,16 +112,16 @@ export declare class CorteCajaService {
         totalTerminal: import("@prisma/client/runtime/library").Decimal;
         diferenciEfectivo: import("@prisma/client/runtime/library").Decimal;
         diferenciaTerminal: import("@prisma/client/runtime/library").Decimal;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     validarCorte(corteId: string, validadorId: string, data: any): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         companyId: string;
-        fecha: Date;
-        status: string;
         branchId: string | null;
         cajeroId: string;
+        fecha: Date;
+        status: string;
         totalVentas: import("@prisma/client/runtime/library").Decimal;
         totalEfectivo: import("@prisma/client/runtime/library").Decimal;
         totalTarjeta: import("@prisma/client/runtime/library").Decimal;
@@ -144,16 +142,16 @@ export declare class CorteCajaService {
         totalTerminal: import("@prisma/client/runtime/library").Decimal;
         diferenciEfectivo: import("@prisma/client/runtime/library").Decimal;
         diferenciaTerminal: import("@prisma/client/runtime/library").Decimal;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     rechazarCorte(corteId: string, validadorId: string, notas: string): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         companyId: string;
-        fecha: Date;
-        status: string;
         branchId: string | null;
         cajeroId: string;
+        fecha: Date;
+        status: string;
         totalVentas: import("@prisma/client/runtime/library").Decimal;
         totalEfectivo: import("@prisma/client/runtime/library").Decimal;
         totalTarjeta: import("@prisma/client/runtime/library").Decimal;
@@ -174,16 +172,16 @@ export declare class CorteCajaService {
         totalTerminal: import("@prisma/client/runtime/library").Decimal;
         diferenciEfectivo: import("@prisma/client/runtime/library").Decimal;
         diferenciaTerminal: import("@prisma/client/runtime/library").Decimal;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     responderCorte(corteId: string, cajeroId: string, respuesta: string, ticketUrl?: string, ticketNombre?: string): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         companyId: string;
-        fecha: Date;
-        status: string;
         branchId: string | null;
         cajeroId: string;
+        fecha: Date;
+        status: string;
         totalVentas: import("@prisma/client/runtime/library").Decimal;
         totalEfectivo: import("@prisma/client/runtime/library").Decimal;
         totalTarjeta: import("@prisma/client/runtime/library").Decimal;
@@ -204,6 +202,8 @@ export declare class CorteCajaService {
         totalTerminal: import("@prisma/client/runtime/library").Decimal;
         diferenciEfectivo: import("@prisma/client/runtime/library").Decimal;
         diferenciaTerminal: import("@prisma/client/runtime/library").Decimal;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     getVentasDelDia(companyId: string, fecha: string): Promise<{
         fecha: string;
@@ -221,23 +221,23 @@ export declare class CorteCajaService {
                 };
             } & {
                 id: string;
-                productId: string;
                 total: import("@prisma/client/runtime/library").Decimal;
+                saleId: string;
+                productId: string;
                 quantity: number;
                 unitPrice: import("@prisma/client/runtime/library").Decimal;
-                saleId: string;
             })[];
         } & {
             id: string;
-            createdAt: Date;
             companyId: string;
-            clientId: string | null;
+            createdAt: Date;
             date: Date;
-            total: import("@prisma/client/runtime/library").Decimal;
             channel: string;
             clientName: string | null;
+            total: import("@prisma/client/runtime/library").Decimal;
             paymentMethod: string;
             cutId: string | null;
+            clientId: string | null;
             isCredit: boolean;
         })[];
     }>;

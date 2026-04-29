@@ -794,6 +794,7 @@ model PeriodClosure {
 model AuditLog {
   id         String   @id @default(cuid())
   userId     String
+  folio      String?  // CRT-0001
   companyId  String?
   action     String
   // CREATE | UPDATE | DELETE | APPROVE | REJECT | LOGIN | CLOSE_PERIOD
@@ -1279,6 +1280,7 @@ model LineaOC {
 
 model CorteCaja {
   id              String   @id @default(cuid())
+  folio     String?  // CRT-0001
   companyId       String
   branchId        String?
   cajeroId        String

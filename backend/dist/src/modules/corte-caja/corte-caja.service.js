@@ -48,10 +48,13 @@ let CorteCajaService = class CorteCajaService {
         const diferenciaEfectivo = efectivoContado - efectivoEsperado;
         const diferenciaTerminal = terminalReportada - terminalEsperada;
         const diferencia = diferenciaEfectivo + diferenciaTerminal;
+        const count = await this.prisma.corteCaja.count({ where: { companyId } }).catch(() => 0);
+        const folio = `CRT-${String(count + 1).padStart(4, '0')}`;
         return this.prisma.corteCaja.create({
             data: {
                 companyId,
                 cajeroId,
+                ...(folio ? { folio } : {}),
                 fecha,
                 status: 'PENDIENTE',
                 totalVentas: data.totalVentas || 0,

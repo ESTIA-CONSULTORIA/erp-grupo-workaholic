@@ -374,3 +374,14 @@ async function addContracts() {
   await p.$disconnect();
 }
 addContracts().catch(console.error);
+
+async function addCorteCajaFolio() {
+  const { PrismaClient: PC } = require('@prisma/client');
+  const p = new PC();
+  try {
+    await p.$executeRawUnsafe(`ALTER TABLE cortes_caja ADD COLUMN IF NOT EXISTS folio TEXT`);
+    console.log('✅ cortes_caja.folio added');
+  } catch(e) { console.error('folio:', e.message); }
+  await p.$disconnect();
+}
+addCorteCajaFolio().catch(console.error);
