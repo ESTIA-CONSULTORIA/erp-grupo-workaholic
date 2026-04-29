@@ -331,3 +331,17 @@ async function addIntercompanyFields() {
   await p.$disconnect();
 }
 addIntercompanyFields().catch(console.error);
+
+async function addSaleDiscount() {
+  const { PrismaClient: PC } = require('@prisma/client');
+  const p = new PC();
+  try {
+    await p.$executeRawUnsafe(`ALTER TABLE sales ADD COLUMN IF NOT EXISTS discount DECIMAL(12,2) DEFAULT 0`);
+    await p.$executeRawUnsafe(`ALTER TABLE intercompany_transfers ADD COLUMN IF NOT EXISTS "fromCashAccountId" TEXT`);
+    await p.$executeRawUnsafe(`ALTER TABLE intercompany_transfers ADD COLUMN IF NOT EXISTS "toCashAccountId" TEXT`);
+    await p.$executeRawUnsafe(`ALTER TABLE intercompany_transfers ADD COLUMN IF NOT EXISTS "rejectedReason" TEXT`);
+    console.log('✅ sales.discount + intercompany fields');
+  } catch(e) { console.error(e.message); }
+  await p.$disconnect();
+}
+addSaleDiscount().catch(console.error);

@@ -459,7 +459,8 @@ let MacheteService = class MacheteService {
                 subtotal += lineTotal;
             }
         }
-        const total = subtotal + tax;
+        const discountAmt = Number(data.discount || 0);
+        const total = Math.max(0, subtotal + tax - discountAmt);
         if (data.ocId) {
             for (const line of data.lines) {
                 await this.prisma.productStock.updateMany({

@@ -923,9 +923,10 @@ model Sale {
   date          DateTime @db.Date
   channel       String   // MOSTRADOR | MAYOREO | ONLINE | ML
   clientName    String?
-  subtotal      Decimal  @db.Decimal(12,2) @default(0) // antes de IVA
-  tax           Decimal  @db.Decimal(12,2) @default(0) // IVA trasladado
-  total         Decimal  @db.Decimal(12,2)              // subtotal + tax
+  subtotal      Decimal  @db.Decimal(12,2) @default(0)
+  tax           Decimal  @db.Decimal(12,2) @default(0)
+  discount      Decimal  @db.Decimal(12,2) @default(0) // descuento aplicado
+  total         Decimal  @db.Decimal(12,2)
   paymentMethod String
   cutId         String?
   notes         String?

@@ -42,6 +42,7 @@ const palestra_module_1 = require("./modules/palestra/palestra.module");
 const maintenance_module_1 = require("./modules/maintenance/maintenance.module");
 const intercompany_module_1 = require("./modules/intercompany/intercompany.module");
 const corte_caja_module_1 = require("./modules/corte-caja/corte-caja.module");
+const arqueo_contador_module_1 = require("./modules/arqueo-contador/arqueo-contador.module");
 let AppModule = class AppModule {
     constructor(httpAdapterHost, permissionsService) {
         this.httpAdapterHost = httpAdapterHost;
@@ -87,6 +88,7 @@ exports.AppModule = AppModule = __decorate([
             maintenance_module_1.MaintenanceModule,
             intercompany_module_1.IntercompanyModule,
             corte_caja_module_1.CorteCajaModule,
+            arqueo_contador_module_1.ArqueoContadorModule,
         ],
     }),
     __metadata("design:paramtypes", [core_1.HttpAdapterHost,

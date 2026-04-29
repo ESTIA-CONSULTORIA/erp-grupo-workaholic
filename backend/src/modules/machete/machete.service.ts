@@ -496,7 +496,8 @@ export class MacheteService {
         subtotal += lineTotal;
       }
     }
-    const total = subtotal + tax;
+    const discountAmt = Number(data.discount || 0);
+    const total = Math.max(0, subtotal + tax - discountAmt);
 
     // ── ENTREGA DE OC (preventa ya registrada) ────────────────
     // Si viene ocId, NO crear venta nueva — solo mover stock y actualizar OC
