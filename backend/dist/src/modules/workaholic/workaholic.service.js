@@ -179,6 +179,7 @@ let WorkaholicService = class WorkaholicService {
             where.status = filters.status;
         return this.prisma.workaholicReservation.findMany({
             where,
+            orderBy: { date: 'asc' },
             include: { space: true, membership: true },
             orderBy: [{ date: 'asc' }, { startTime: 'asc' }],
         });
@@ -235,7 +236,8 @@ let WorkaholicService = class WorkaholicService {
                 status: 'CONFIRMADA',
                 notes: data.notes || null,
             },
-            include: { space: true },
+            orderBy: { date: 'asc' },
+            include: { space: true, membership: { select: { id: true, clientName: true, remainingHours: true } } },
         });
         if (!fromMembership && total > 0) {
             await this.prisma.sale.create({

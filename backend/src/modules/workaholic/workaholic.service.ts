@@ -189,6 +189,7 @@ export class WorkaholicService {
     if (filters.status)  where.status  = filters.status;
     return this.prisma.workaholicReservation.findMany({
       where,
+      orderBy: { date: 'asc' },
       include: { space: true, membership: true },
       orderBy: [{ date: 'asc' }, { startTime: 'asc' }],
     });
@@ -250,7 +251,8 @@ export class WorkaholicService {
         status: 'CONFIRMADA',
         notes: data.notes || null,
       },
-      include: { space: true },
+      orderBy: { date: 'asc' },
+      include: { space: true, membership: { select: { id:true, clientName:true, remainingHours:true } } },
     });
 
     // Registrar en ventas si no es de membresía
