@@ -342,4 +342,11 @@ export class WorkaholicService {
   private _periodLabel(date: Date): string {
     return date.toLocaleDateString('es-MX', { month: 'long', year: 'numeric' });
   }
+  async getServices(companyId: string) {
+    return (this.prisma as any).workaholicService.findMany({
+      where: { companyId, isActive: true },
+      orderBy: { category: 'asc' },
+    }).catch(() => []);
+  }
+
 }

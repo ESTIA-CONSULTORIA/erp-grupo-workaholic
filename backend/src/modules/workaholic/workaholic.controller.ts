@@ -38,6 +38,11 @@ export class WorkaholicController {
   registerPayment(@Param('id') id: string, @Body() body: any) { return this.svc.registerPayment(id, body); }
 
   // Reservaciones
+  @Get('services')
+  getServices(@Param('companyId') cid: string) {
+    return this.svc.getServices(cid);
+  }
+
   @Get('reservations')
   getReservations(@Param('companyId') cid: string, @Query() q: any) { return this.svc.getReservations(cid, q); }
   @Post('reservations')

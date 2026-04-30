@@ -2107,3 +2107,17 @@ model EmployeeContract {
   company   Company  @relation(fields: [companyId],  references: [id])
   @@map("employee_contracts")
 }
+
+model WorkaholicService {
+  id          String   @id @default(cuid())
+  companyId   String
+  name        String
+  description String?
+  category    String   @default("SERVICIO") // ACCESO | SALA | SERVICIO | CAFETERIA | ALIMENTO
+  price       Decimal  @db.Decimal(12,2)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  company     Company  @relation(fields: [companyId], references: [id])
+  @@map("workaholic_services")
+}

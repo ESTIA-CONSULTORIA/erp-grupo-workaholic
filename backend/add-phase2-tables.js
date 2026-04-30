@@ -385,3 +385,26 @@ async function addCorteCajaFolio() {
   await p.$disconnect();
 }
 addCorteCajaFolio().catch(console.error);
+
+async function addWorkaholicServices() {
+  const { PrismaClient: PC } = require('@prisma/client');
+  const p2 = new PC();
+  try {
+    await p2.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS workaholic_services (
+        id TEXT PRIMARY KEY,
+        "companyId" TEXT NOT NULL,
+        name TEXT NOT NULL,
+        description TEXT,
+        category TEXT NOT NULL DEFAULT 'SERVICIO',
+        price DECIMAL(12,2) NOT NULL DEFAULT 0,
+        "isActive" BOOLEAN NOT NULL DEFAULT true,
+        "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+        "updatedAt" TIMESTAMP NOT NULL DEFAULT NOW()
+      )
+    `);
+    console.log('✅ workaholic_services table created');
+  } catch(e) { console.error('workaholic_services:', e.message); }
+  await p2.$disconnect();
+}
+addWorkaholicServices().catch(console.error);
