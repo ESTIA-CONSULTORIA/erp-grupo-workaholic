@@ -10,6 +10,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CxpService = void 0;
+const flow_helper_1 = require("../shared/flow.helper");
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../../common/prisma/prisma.service");
 let CxpService = class CxpService {
@@ -67,7 +68,7 @@ let CxpService = class CxpService {
             throw new Error('CxP no encontrada');
         const newBalance = Number(payable.balance) - Number(data.amount);
         const newStatus = newBalance <= 0 ? 'PAGADO' : 'PARCIAL';
-        return this.prisma.$transaction([
+        const [payment] = await this.prisma.$transaction([
             this.prisma.payablePayment.create({
                 data: {
                     payableId,
@@ -90,6 +91,15 @@ let CxpService = class CxpService {
                 },
             }),
         ]);
+        await (0, flow_helper_1.registrarFlujo)(this.prisma, payable.companyId, {
+            type: 'SALIDA', originType: 'PAGO_CXP',
+            originId: payment?.id,
+            amount: Number(data.amount || 0),
+            paymentMethod: data.paymentMethod || 'EFECTIVO',
+            date: data.date ? new Date(data.date) : new Date(),
+            notes: 'Pago a proveedor CxP',
+        });
+        return payment;
     }
     update(id, data) {
         return this.prisma.payable.update({

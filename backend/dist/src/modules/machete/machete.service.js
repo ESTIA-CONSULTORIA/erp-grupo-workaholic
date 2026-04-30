@@ -10,6 +10,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MacheteService = void 0;
+const flow_helper_1 = require("../shared/flow.helper");
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../../common/prisma/prisma.service");
 let MacheteService = class MacheteService {
@@ -567,6 +568,22 @@ let MacheteService = class MacheteService {
             }
             catch (e) {
                 console.error('ERROR CXC:', e.message);
+            }
+        }
+        if (!data.isCredit && data.paymentMethod !== 'CREDITO_CLIENTE') {
+            const metodos = data.paymentSplits?.length > 0
+                ? data.paymentSplits
+                : [{ method: data.paymentMethod || 'EFECTIVO', amount: total }];
+            for (const pago of metodos) {
+                await (0, flow_helper_1.registrarFlujo)(this.prisma, companyId, {
+                    type: 'ENTRADA',
+                    originType: 'VENTA',
+                    originId: sale.id,
+                    amount: Number(pago.amount || pago.monto || 0),
+                    paymentMethod: pago.method || pago.metodo || 'EFECTIVO',
+                    date: new Date(data.date),
+                    notes: `Venta POS${data.clientName ? ' — ' + data.clientName : ''}`,
+                });
             }
         }
         return sale;

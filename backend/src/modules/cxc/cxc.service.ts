@@ -1,3 +1,4 @@
+import { registrarFlujo } from '../shared/flow.helper';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
 
@@ -41,11 +42,9 @@ export class CxcService {
     if (!rec) throw new Error('CxC no encontrada');
     const newBalance = Number(rec.balance) - Number(data.amount);
     const newStatus  = newBalance <= 0 ? 'PAGADO' : 'PARCIAL';
-
-    // Fix UTC: usar mediodía para evitar desfase de zona horaria
     const fecha = new Date(data.date + 'T12:00:00');
 
-    return this.prisma.$transaction([
+    const [payment] = await this.prisma.$transaction([
       this.prisma.receivablePayment.create({
         data: {
           receivableId,
@@ -66,6 +65,18 @@ export class CxcService {
         },
       }),
     ]);
+
+    // Flujo de caja — abono CxC es ENTRADA
+    await registrarFlujo(this.prisma, rec.companyId, {
+      type: 'ENTRADA', originType: 'ABONO_CXC',
+      originId: payment?.id,
+      amount: Number(data.amount || 0),
+      paymentMethod: data.paymentMethod || 'EFECTIVO',
+      date: fecha,
+      notes: 'Abono CxC',
+    });
+
+    return payment;
   }
   async cancelReceivable(id: string, motivo: string) {
     const cxc = await this.prisma.receivable.findUnique({ where: { id } });

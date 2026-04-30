@@ -25,9 +25,9 @@ export declare class WorkaholicService {
         spaces: any;
     }>;
     registerSale(companyId: string, data: any): Promise<{
-        date: Date;
         id: string;
         companyId: string;
+        date: Date;
         channel: string;
         clientName: string | null;
         total: import("@prisma/client/runtime/library").Decimal;
@@ -42,4 +42,5 @@ export declare class WorkaholicService {
     private _calcEndDate;
     private _calcHours;
     private _periodLabel;
+    getServices(companyId: string): Promise<any>;
 }

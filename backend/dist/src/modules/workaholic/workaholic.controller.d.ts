@@ -21,13 +21,14 @@ export declare class WorkaholicController {
         expired: any;
     }>;
     registerPayment(id: string, body: any): Promise<any>;
+    getServices(cid: string): Promise<any>;
     getReservations(cid: string, q: any): Promise<any>;
     createReservation(cid: string, body: any): Promise<any>;
     updateReservation(id: string, body: any): any;
     registerSale(cid: string, body: any): Promise<{
-        date: Date;
         id: string;
         companyId: string;
+        date: Date;
         channel: string;
         clientName: string | null;
         total: import("@prisma/client/runtime/library").Decimal;

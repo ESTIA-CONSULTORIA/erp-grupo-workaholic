@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { registrarFlujo } from '../shared/flow.helper';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
 
@@ -247,6 +248,23 @@ export class LoncheService {
       },
     });
 
+    // ── Flujo de caja ─────────────────────────────────────────
+    const _metodoPago = data.paymentMethod || 'EFECTIVO';
+    const _pagos = (data.paymentSplits && data.paymentSplits.length > 0)
+      ? data.paymentSplits
+      : [{ method: _metodoPago, amount: total }];
+    for (const _p of _pagos) {
+      if (Number(_p.amount || 0) > 0) {
+        await registrarFlujo(this.prisma, companyId, {
+          type: 'ENTRADA', originType: 'VENTA',
+          originId: sale.id,
+          amount: Number(_p.amount),
+          paymentMethod: _p.method || _metodoPago,
+          date: new Date(),
+          notes: 'Venta Lonche',
+        });
+      }
+    }
     return sale;
   }
 

@@ -10,6 +10,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.LoncheService = void 0;
+const flow_helper_1 = require("../shared/flow.helper");
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../../common/prisma/prisma.service");
 let LoncheService = class LoncheService {
@@ -232,6 +233,22 @@ let LoncheService = class LoncheService {
                 isCredit: false,
             },
         });
+        const _metodoPago = data.paymentMethod || 'EFECTIVO';
+        const _pagos = (data.paymentSplits && data.paymentSplits.length > 0)
+            ? data.paymentSplits
+            : [{ method: _metodoPago, amount: total }];
+        for (const _p of _pagos) {
+            if (Number(_p.amount || 0) > 0) {
+                await (0, flow_helper_1.registrarFlujo)(this.prisma, companyId, {
+                    type: 'ENTRADA', originType: 'VENTA',
+                    originId: sale.id,
+                    amount: Number(_p.amount),
+                    paymentMethod: _p.method || _metodoPago,
+                    date: new Date(),
+                    notes: 'Venta Lonche',
+                });
+            }
+        }
         return sale;
     }
     getStudents(companyId, search) {

@@ -41,13 +41,13 @@ export declare class PalestraController {
     registerSale(cid: string, req: any, body: any): Promise<{
         id: string;
         companyId: string;
-        createdAt: Date;
         date: Date;
-        total: import("@prisma/client/runtime/library").Decimal;
         channel: string;
         clientName: string | null;
+        total: import("@prisma/client/runtime/library").Decimal;
         paymentMethod: string;
         cutId: string | null;
+        createdAt: Date;
         isCredit: boolean;
         clientId: string | null;
     }>;

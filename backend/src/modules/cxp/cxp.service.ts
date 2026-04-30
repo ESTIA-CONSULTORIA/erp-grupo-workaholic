@@ -1,3 +1,4 @@
+import { registrarFlujo } from '../shared/flow.helper';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
 
@@ -58,7 +59,7 @@ export class CxpService {
     const newBalance = Number(payable.balance) - Number(data.amount);
     const newStatus  = newBalance <= 0 ? 'PAGADO' : 'PARCIAL';
 
-    return this.prisma.$transaction([
+    const [payment] = await this.prisma.$transaction([
       this.prisma.payablePayment.create({
         data: {
           payableId,
@@ -81,6 +82,18 @@ export class CxpService {
         },
       }),
     ]);
+
+    // Flujo de caja — pago CxP es SALIDA
+    await registrarFlujo(this.prisma, payable.companyId, {
+      type: 'SALIDA', originType: 'PAGO_CXP',
+      originId: payment?.id,
+      amount: Number(data.amount || 0),
+      paymentMethod: data.paymentMethod || 'EFECTIVO',
+      date: data.date ? new Date(data.date) : new Date(),
+      notes: 'Pago a proveedor CxP',
+    });
+
+    return payment;
   }
 
   update(id: string, data: any) {

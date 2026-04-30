@@ -10,6 +10,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CxcService = void 0;
+const flow_helper_1 = require("../shared/flow.helper");
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../../common/prisma/prisma.service");
 let CxcService = class CxcService {
@@ -56,7 +57,7 @@ let CxcService = class CxcService {
         const newBalance = Number(rec.balance) - Number(data.amount);
         const newStatus = newBalance <= 0 ? 'PAGADO' : 'PARCIAL';
         const fecha = new Date(data.date + 'T12:00:00');
-        return this.prisma.$transaction([
+        const [payment] = await this.prisma.$transaction([
             this.prisma.receivablePayment.create({
                 data: {
                     receivableId,
@@ -77,6 +78,15 @@ let CxcService = class CxcService {
                 },
             }),
         ]);
+        await (0, flow_helper_1.registrarFlujo)(this.prisma, rec.companyId, {
+            type: 'ENTRADA', originType: 'ABONO_CXC',
+            originId: payment?.id,
+            amount: Number(data.amount || 0),
+            paymentMethod: data.paymentMethod || 'EFECTIVO',
+            date: fecha,
+            notes: 'Abono CxC',
+        });
+        return payment;
     }
     async cancelReceivable(id, motivo) {
         const cxc = await this.prisma.receivable.findUnique({ where: { id } });

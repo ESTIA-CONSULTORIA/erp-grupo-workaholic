@@ -10,6 +10,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.WorkaholicService = void 0;
+const flow_helper_1 = require("../shared/flow.helper");
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../../common/prisma/prisma.service");
 let WorkaholicService = class WorkaholicService {
@@ -319,7 +320,30 @@ let WorkaholicService = class WorkaholicService {
         return Math.round(((eh * 60 + em) - (sh * 60 + sm)) / 60 * 100) / 100;
     }
     _periodLabel(date) {
-        return date.toLocaleDateString('es-MX', { month: 'long', year: 'numeric' });
+        const _metodo_workaholic = data.paymentMethod || 'EFECTIVO';
+        const _pagos_workaholic = (data.paymentSplits && data.paymentSplits.length > 0)
+            ? data.paymentSplits
+            : [{ method: _metodo_workaholic, amount: Number(data.total || sale?.total || sale?.amount || 0) }];
+        for (const _p of _pagos_workaholic) {
+            if (Number(_p.amount || 0) > 0) {
+                await (0, flow_helper_1.registrarFlujo)(this.prisma, companyId, {
+                    type: 'ENTRADA', originType: 'VENTA',
+                    originId: sale?.id || String(sale),
+                    amount: Number(_p.amount),
+                    paymentMethod: _p.method || _metodo_workaholic,
+                    date: new Date(),
+                    notes: 'Venta Workaholic',
+                });
+            }
+        }
+        return sale;
+        toLocaleDateString('es-MX', { month: 'long', year: 'numeric' });
+    }
+    async getServices(companyId) {
+        return this.prisma.workaholicService.findMany({
+            where: { companyId, isActive: true },
+            orderBy: { category: 'asc' },
+        }).catch(() => []);
     }
 };
 exports.WorkaholicService = WorkaholicService;

@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { registrarFlujo } from '../shared/flow.helper';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
 
@@ -406,7 +407,33 @@ export class PalestraService {
     const now = new Date();
     const jan1 = new Date(now.getFullYear(), 0, 1);
     const week = Math.ceil(((now.getTime() - jan1.getTime()) / 86400000 + jan1.getDay() + 1) / 7);
-    return `${now.getFullYear()}-W${String(week).padStart(2, '0')}`;
+    // Flujo de caja
+    const _metodo_palestra = data.paymentMethod || 'EFECTIVO';
+    const _pagos_palestra = (data.paymentSplits && data.paymentSplits.length > 0)
+      ? data.paymentSplits
+      : [{ method: _metodo_palestra, amount: Number(data.total || sale?.total || sale?.amount || 0) }];
+    for (const _p of _pagos_palestra) {
+      if (Number(_p.amount || 0) > 0) {
+        await registrarFlujo(this.prisma, companyId, {
+          type: 'ENTRADA', originType: 'VENTA',
+          originId: sale?.id || String(sale),
+          amount: Number(_p.amount),
+          paymentMethod: _p.method || _metodo_palestra,
+          date: new Date(),
+          notes: 'Venta Palestra',
+        });
+      }
+    }
+    return sale;
+  }
+
+  _getWeekPeriod() {
+    const now = new Date();
+    const d = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+    d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    const week = Math.ceil((((d as any) - (yearStart as any)) / 86400000 + 1) / 7);
+    return `${d.getUTCFullYear()}-W${String(week).padStart(2, '0')}`;
   }
 
   // Dashboard resumen Palestra

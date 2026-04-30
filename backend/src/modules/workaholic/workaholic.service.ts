@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { registrarFlujo } from '../shared/flow.helper';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
 
@@ -340,7 +341,24 @@ export class WorkaholicService {
   }
 
   private _periodLabel(date: Date): string {
-    return date.toLocaleDateString('es-MX', { month: 'long', year: 'numeric' });
+    // Flujo de caja
+    const _metodo_workaholic = data.paymentMethod || 'EFECTIVO';
+    const _pagos_workaholic = (data.paymentSplits && data.paymentSplits.length > 0)
+      ? data.paymentSplits
+      : [{ method: _metodo_workaholic, amount: Number(data.total || sale?.total || sale?.amount || 0) }];
+    for (const _p of _pagos_workaholic) {
+      if (Number(_p.amount || 0) > 0) {
+        await registrarFlujo(this.prisma, companyId, {
+          type: 'ENTRADA', originType: 'VENTA',
+          originId: sale?.id || String(sale),
+          amount: Number(_p.amount),
+          paymentMethod: _p.method || _metodo_workaholic,
+          date: new Date(),
+          notes: 'Venta Workaholic',
+        });
+      }
+    }
+    return sale;toLocaleDateString('es-MX', { month: 'long', year: 'numeric' });
   }
   async getServices(companyId: string) {
     return (this.prisma as any).workaholicService.findMany({

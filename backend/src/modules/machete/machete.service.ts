@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { registrarFlujo } from '../shared/flow.helper';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
 
@@ -624,6 +625,26 @@ export class MacheteService {
         });
       } catch (e: any) {
         console.error('ERROR CXC:', e.message);
+      }
+    }
+
+    // ── Registrar en flujo de caja ────────────────────────────
+    // Ventas a crédito NO afectan caja (afectan cuando se abona CxC)
+    if (!data.isCredit && data.paymentMethod !== 'CREDITO_CLIENTE') {
+      const metodos = data.paymentSplits?.length > 0
+        ? data.paymentSplits
+        : [{ method: data.paymentMethod || 'EFECTIVO', amount: total }];
+
+      for (const pago of metodos) {
+        await registrarFlujo(this.prisma, companyId, {
+          type:          'ENTRADA',
+          originType:    'VENTA',
+          originId:      sale.id,
+          amount:        Number(pago.amount || pago.monto || 0),
+          paymentMethod: pago.method || pago.metodo || 'EFECTIVO',
+          date:          new Date(data.date),
+          notes:         `Venta POS${data.clientName ? ' — ' + data.clientName : ''}`,
+        });
       }
     }
 
