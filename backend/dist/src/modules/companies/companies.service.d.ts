@@ -2,19 +2,13 @@ import { PrismaService } from '../../common/prisma/prisma.service';
 export declare class CompaniesService {
     private prisma;
     constructor(prisma: PrismaService);
-    findAll(): import(".prisma/client").Prisma.PrismaPromise<{
+    findAll(): Promise<{
         id: string;
         code: string;
         name: string;
         color: string;
-        logoUrl: string | null;
-        hasAB: boolean;
-        hasProduction: boolean;
-        isActive: boolean;
-        createdAt: Date;
-        updatedAt: Date;
     }[]>;
-    findOne(id: string): import(".prisma/client").Prisma.Prisma__CompanyClient<{
+    findOne(id: string): Promise<{
         branches: {
             id: string;
             code: string;
@@ -34,7 +28,7 @@ export declare class CompaniesService {
         isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
-    }, null, import("@prisma/client/runtime/library").DefaultArgs>;
+    }>;
     getFinancialRubrics(companyId: string): Promise<any[]>;
     getCashAccounts(companyId: string): import(".prisma/client").Prisma.PrismaPromise<{
         id: string;
@@ -48,17 +42,17 @@ export declare class CompaniesService {
         accountNumber: string | null;
     }[]>;
     getUsers(companyId: string): import(".prisma/client").Prisma.PrismaPromise<({
-        role: {
-            id: string;
-            code: string;
-            name: string;
-            description: string;
-        };
         user: {
             id: string;
             name: string;
             isActive: boolean;
             email: string;
+        };
+        role: {
+            id: string;
+            code: string;
+            name: string;
+            description: string;
         };
     } & {
         id: string;
@@ -191,8 +185,8 @@ export declare class CompaniesService {
             } & {
                 id: string;
                 createdAt: Date;
-                productId: string;
                 ordenCompraId: string;
+                productId: string;
                 cantidad: number;
                 cantidadSurtida: number;
                 precioUnitario: import("@prisma/client/runtime/library").Decimal;
@@ -258,8 +252,8 @@ export declare class CompaniesService {
         } & {
             id: string;
             createdAt: Date;
-            productId: string;
             ordenCompraId: string;
+            productId: string;
             cantidad: number;
             cantidadSurtida: number;
             precioUnitario: import("@prisma/client/runtime/library").Decimal;
@@ -299,8 +293,8 @@ export declare class CompaniesService {
         } & {
             id: string;
             createdAt: Date;
-            productId: string;
             ordenCompraId: string;
+            productId: string;
             cantidad: number;
             cantidadSurtida: number;
             precioUnitario: import("@prisma/client/runtime/library").Decimal;

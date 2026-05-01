@@ -2,19 +2,13 @@ import { CompaniesService } from './companies.service';
 export declare class CompaniesController {
     private svc;
     constructor(svc: CompaniesService);
-    findAll(): import(".prisma/client").Prisma.PrismaPromise<{
+    findAll(): Promise<{
         id: string;
         code: string;
         name: string;
         color: string;
-        logoUrl: string | null;
-        hasAB: boolean;
-        hasProduction: boolean;
-        isActive: boolean;
-        createdAt: Date;
-        updatedAt: Date;
     }[]>;
-    findOne(id: string): import(".prisma/client").Prisma.Prisma__CompanyClient<{
+    findOne(id: string): Promise<{
         branches: {
             id: string;
             code: string;
@@ -34,7 +28,7 @@ export declare class CompaniesController {
         isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
-    }, null, import("@prisma/client/runtime/library").DefaultArgs>;
+    }>;
     getCashAccounts(id: string): import(".prisma/client").Prisma.PrismaPromise<{
         id: string;
         code: string;
@@ -47,17 +41,17 @@ export declare class CompaniesController {
         accountNumber: string | null;
     }[]>;
     getUsers(id: string): import(".prisma/client").Prisma.PrismaPromise<({
-        role: {
-            id: string;
-            code: string;
-            name: string;
-            description: string;
-        };
         user: {
             id: string;
             name: string;
             isActive: boolean;
             email: string;
+        };
+        role: {
+            id: string;
+            code: string;
+            name: string;
+            description: string;
         };
     } & {
         id: string;
@@ -191,8 +185,8 @@ export declare class CompaniesController {
             } & {
                 id: string;
                 createdAt: Date;
-                productId: string;
                 ordenCompraId: string;
+                productId: string;
                 cantidad: number;
                 cantidadSurtida: number;
                 precioUnitario: import("@prisma/client/runtime/library").Decimal;
@@ -258,8 +252,8 @@ export declare class CompaniesController {
         } & {
             id: string;
             createdAt: Date;
-            productId: string;
             ordenCompraId: string;
+            productId: string;
             cantidad: number;
             cantidadSurtida: number;
             precioUnitario: import("@prisma/client/runtime/library").Decimal;
@@ -299,8 +293,8 @@ export declare class CompaniesController {
         } & {
             id: string;
             createdAt: Date;
-            productId: string;
             ordenCompraId: string;
+            productId: string;
             cantidad: number;
             cantidadSurtida: number;
             precioUnitario: import("@prisma/client/runtime/library").Decimal;

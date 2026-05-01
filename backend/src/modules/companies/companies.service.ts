@@ -6,11 +6,15 @@ import * as bcrypt from 'bcryptjs';
 export class CompaniesService {
   constructor(private prisma: PrismaService) {}
 
-  findAll() {
-    return this.prisma.company.findMany({ orderBy: { name: 'asc' } });
+  async findAll() {
+    return this.prisma.company.findMany({
+      where: { isActive: true },
+      select: { id: true, name: true, code: true, color: true },
+      orderBy: { name: 'asc' },
+    });
   }
 
-  findOne(id: string) {
+  async findOne(id: string) {
     return this.prisma.company.findUnique({
       where: { id },
       include: { branches: true },

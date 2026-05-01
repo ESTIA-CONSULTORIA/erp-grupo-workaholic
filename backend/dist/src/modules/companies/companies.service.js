@@ -17,10 +17,14 @@ let CompaniesService = class CompaniesService {
     constructor(prisma) {
         this.prisma = prisma;
     }
-    findAll() {
-        return this.prisma.company.findMany({ orderBy: { name: 'asc' } });
+    async findAll() {
+        return this.prisma.company.findMany({
+            where: { isActive: true },
+            select: { id: true, name: true, code: true, color: true },
+            orderBy: { name: 'asc' },
+        });
     }
-    findOne(id) {
+    async findOne(id) {
         return this.prisma.company.findUnique({
             where: { id },
             include: { branches: true },
