@@ -38,7 +38,6 @@ let IntercompanyService = class IntercompanyService {
         const folio = `ICT-${String(count + 1).padStart(4, '0')}`;
         const transfer = await this.prisma.intercompanyTransfer.create({
             data: {
-                folio,
                 fromCompanyId,
                 toCompanyId: data.toCompanyId,
                 amount: Number(data.amount),
@@ -47,9 +46,10 @@ let IntercompanyService = class IntercompanyService {
                 date: new Date(data.date),
                 status: 'PENDIENTE',
                 requestedById: userId,
-                fromCashAccountId: data.fromCashAccountId || null,
-                toCashAccountId: data.toCashAccountId || null,
                 notes: data.notes || null,
+                ...(folio ? { folio } : {}),
+                ...(data.fromCashAccountId ? { fromCashAccountId: data.fromCashAccountId } : {}),
+                ...(data.toCashAccountId ? { toCashAccountId: data.toCashAccountId } : {}),
             },
             include: {
                 fromCompany: { select: { id: true, name: true, color: true } },
@@ -118,7 +118,7 @@ let IntercompanyService = class IntercompanyService {
                 branchId: fromBranch,
                 cashAccountId: fromAccId,
                 date: t.date,
-                type: 'EGRESO',
+                type: 'SALIDA',
                 originType: 'TRASPASO',
                 originId: t.id,
                 amount: t.amount,
@@ -137,7 +137,7 @@ let IntercompanyService = class IntercompanyService {
                 branchId: toBranch,
                 cashAccountId: toAccId,
                 date: t.date,
-                type: 'INGRESO',
+                type: 'ENTRADA',
                 originType: 'TRASPASO',
                 originId: t.id,
                 amount: t.amount,

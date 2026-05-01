@@ -33,7 +33,6 @@ export class IntercompanyService {
 
     const transfer = await this.prisma.intercompanyTransfer.create({
       data: {
-        folio,
         fromCompanyId,
         toCompanyId:      data.toCompanyId,
         amount:           Number(data.amount),
@@ -42,10 +41,12 @@ export class IntercompanyService {
         date:             new Date(data.date),
         status:           'PENDIENTE',
         requestedById:    userId,
-        fromCashAccountId: data.fromCashAccountId || null,
-        toCashAccountId:   data.toCashAccountId   || null,
         notes:            data.notes || null,
-      },
+        // These fields may not exist if add-phase2-tables.js hasn't been run
+        ...(folio ? { folio } : {}),
+        ...(data.fromCashAccountId ? { fromCashAccountId: data.fromCashAccountId } : {}),
+        ...(data.toCashAccountId   ? { toCashAccountId:   data.toCashAccountId   } : {}),
+      } as any,
       include: {
         fromCompany: { select: { id: true, name: true, color: true } },
         toCompany:   { select: { id: true, name: true, color: true } },
@@ -130,7 +131,7 @@ export class IntercompanyService {
         branchId:      fromBranch,
         cashAccountId: fromAccId,
         date:          t.date,
-        type:          'EGRESO',
+        type:          'SALIDA',
         originType:    'TRASPASO',
         originId:      t.id,
         amount:        t.amount,
@@ -149,7 +150,7 @@ export class IntercompanyService {
         branchId:      toBranch,
         cashAccountId: toAccId,
         date:          t.date,
-        type:          'INGRESO',
+        type:          'ENTRADA',
         originType:    'TRASPASO',
         originId:      t.id,
         amount:        t.amount,
