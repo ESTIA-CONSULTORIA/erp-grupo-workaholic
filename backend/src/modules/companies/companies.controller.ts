@@ -28,13 +28,27 @@ export class CompaniesController {
   }
 
   @Post(':id/users')
-  createUser(@Param('id') companyId: string, @Body() body: any) {
-    return this.svc.createUser(companyId, body);
+  async createUser(@Param('id') companyId: string, @Body() body: any) {
+    try {
+      return await this.svc.createUser(companyId, body);
+    } catch(e: any) {
+      const msg = e.code === 'P2002'
+        ? 'El correo electrónico ya está registrado'
+        : e.message || 'Error al crear usuario';
+      throw Object.assign(new Error(msg), { status: 400, response: { message: msg } });
+    }
   }
 
   @Put(':id/users/:userId')
-  updateUser(@Param('userId') userId: string, @Body() body: any) {
-    return this.svc.updateUser(userId, body);
+  async updateUser(@Param('userId') userId: string, @Body() body: any) {
+    try {
+      return await this.svc.updateUser(userId, body);
+    } catch(e: any) {
+      const msg = e.code === 'P2002'
+        ? 'El correo electrónico ya está registrado'
+        : e.message || 'Error al actualizar usuario';
+      throw Object.assign(new Error(msg), { status: 400, response: { message: msg } });
+    }
   }
 
   @Put(':id/users/:userId/toggle')
