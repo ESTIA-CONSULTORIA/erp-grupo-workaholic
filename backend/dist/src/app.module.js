@@ -40,6 +40,7 @@ const lonche_module_1 = require("./modules/lonche/lonche.module");
 const workaholic_module_1 = require("./modules/workaholic/workaholic.module");
 const palestra_module_1 = require("./modules/palestra/palestra.module");
 const maintenance_module_1 = require("./modules/maintenance/maintenance.module");
+const migrate_module_1 = require("./modules/migrate/migrate.module");
 const intercompany_module_1 = require("./modules/intercompany/intercompany.module");
 const corte_caja_module_1 = require("./modules/corte-caja/corte-caja.module");
 const arqueo_contador_module_1 = require("./modules/arqueo-contador/arqueo-contador.module");
@@ -87,6 +88,7 @@ exports.AppModule = AppModule = __decorate([
             permissions_module_1.PermissionsModule,
             maintenance_module_1.MaintenanceModule,
             intercompany_module_1.IntercompanyModule,
+            migrate_module_1.MigrateModule,
             corte_caja_module_1.CorteCajaModule,
             arqueo_contador_module_1.ArqueoContadorModule,
         ],

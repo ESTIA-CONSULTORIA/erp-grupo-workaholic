@@ -28,6 +28,7 @@ import { LoncheModule } from './modules/lonche/lonche.module';
 import { WorkaholicModule } from './modules/workaholic/workaholic.module';
 import { PalestraModule } from './modules/palestra/palestra.module';
 import { MaintenanceModule } from './modules/maintenance/maintenance.module';
+import { MigrateModule } from './modules/migrate/migrate.module';
 import { IntercompanyModule } from './modules/intercompany/intercompany.module';
 import { CorteCajaModule } from './modules/corte-caja/corte-caja.module';
 import { ArqueoContadorModule } from './modules/arqueo-contador/arqueo-contador.module';
@@ -62,6 +63,7 @@ import { ArqueoContadorModule } from './modules/arqueo-contador/arqueo-contador.
     PermissionsModule,
     MaintenanceModule,
     IntercompanyModule,
+    MigrateModule,
     CorteCajaModule,
     ArqueoContadorModule,
   ],
