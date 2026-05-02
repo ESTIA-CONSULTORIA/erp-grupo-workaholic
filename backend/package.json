@@ -2,7 +2,7 @@
   "name": "erp-backend",
   "version": "1.0.0",
   "scripts": {
-    "postinstall": "prisma generate",
+    "postinstall": "node node_modules/prisma/build/index.js generate || true",
     "build": "npm run prisma:generate && node node_modules/typescript/bin/tsc -p tsconfig.build.json --skipLibCheck --noEmitOnError false || true",
     "start": "node dist/src/main",
     "start:dev": "nest start --watch",

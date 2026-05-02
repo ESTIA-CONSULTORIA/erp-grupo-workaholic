@@ -201,6 +201,8 @@ model Company {
   loncheRecharges        LoncheRecharge[]
   loncheTransactions     LoncheTransaction[]
 
+  workaholicServices    WorkaholicService[]
+
   @@map("companies")
 }
 
