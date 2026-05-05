@@ -203,12 +203,6 @@ model Company {
 
   workaholicServices    WorkaholicService[]
 
-  adminCostAllocations AdminCostAllocation[]
-  adminCostSettlements AdminCostSettlement[]
-  casaLeonConfig       CasaLeonConfig?
-  casaLeonAdvances     CasaLeonAdvance[]
-  casaLeonSettlements  CasaLeonSettlement[]
-
   @@map("companies")
 }
 
@@ -403,8 +397,6 @@ model CashAccount {
   cashCounts    CashCount[]
   expenses      Expense[]
   cxcPayments   CxCPayment[]
-  adminCostEntries AdminCostEntry[]
-  casaLeonAdvances CasaLeonAdvance[]
 
   @@unique([companyId, code])
   @@map("cash_accounts")
@@ -1396,10 +1388,6 @@ model IntercompanyTransfer {
   updatedAt          DateTime @updatedAt
   fromCompany   Company  @relation("TransferFrom", fields: [fromCompanyId], references: [id])
   toCompany     Company  @relation("TransferTo",   fields: [toCompanyId],   references: [id])
-  transferType  String  @default("PRESTAMO")
-// PRESTAMO  → genera CxC + CxP
-// PRORRATEO → se liquida automáticamente sin deuda
-
   @@map("intercompany_transfers")
 }
 
@@ -2134,172 +2122,4 @@ model WorkaholicService {
   updatedAt   DateTime @updatedAt
   company     Company  @relation(fields: [companyId], references: [id])
   @@map("workaholic_services")
-}
-
-// ══════════════════════════════════════════════════════════════
-//  CENTRO DE COSTOS ADMINISTRATIVOS
-// ══════════════════════════════════════════════════════════════
-
-model AdminCostConcept {
-  id          String   @id @default(cuid())
-  code        String   @unique
-  // NOMINAS_ADMIN | RENTA_FORO | ALARMEX | SERVIDOR
-  name        String
-  description String?
-  ruleType    String
-  // PERCENTAGE_OF_SALES | FIXED_SPLIT | DIRECT
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  allocations AdminCostAllocation[]
-  entries     AdminCostEntry[]
-
-  @@map("admin_cost_concepts")
-}
-
-model AdminCostAllocation {
-  id          String   @id @default(cuid())
-  conceptId   String
-  companyId   String
-  pct         Decimal? @db.Decimal(5,2)
-  fixedAmount Decimal? @db.Decimal(12,2)
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  concept AdminCostConcept @relation(fields: [conceptId], references: [id], onDelete: Cascade)
-  company Company          @relation(fields: [companyId], references: [id])
-
-  @@unique([conceptId, companyId])
-  @@map("admin_cost_allocations")
-}
-
-model AdminCostEntry {
-  id              String   @id @default(cuid())
-  conceptId       String
-  supplierName    String
-  supplierId      String?
-  period          String
-  date            DateTime @db.Date
-  amount          Decimal  @db.Decimal(12,2)
-  currency        String   @default("MXN")
-  exchangeRate    Decimal  @default(1) @db.Decimal(10,4)
-  amountMxn       Decimal  @db.Decimal(12,2)
-  paidByCompanyId String
-  cashAccountId   String
-  paymentMethod   String   @default("TRANSFERENCIA")
-  reference       String?
-  notes           String?
-  createdById     String
-  flowMovementId  String?
-  status          String   @default("ACTIVO")
-  // ACTIVO | ANULADO
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  concept     AdminCostConcept    @relation(fields: [conceptId],     references: [id])
-  cashAccount CashAccount         @relation(fields: [cashAccountId], references: [id])
-  settlements AdminCostSettlement[]
-
-  @@map("admin_cost_entries")
-}
-
-model AdminCostSettlement {
-  id                 String   @id @default(cuid())
-  entryId            String
-  companyId          String
-  cutId              String?
-  period             String
-  ruleType           String
-  periodSales        Decimal? @db.Decimal(12,2)
-  pctApplied         Decimal? @db.Decimal(5,2)
-  amountOwed         Decimal  @db.Decimal(12,2)
-  isAdvancingCompany Boolean  @default(false)
-  expenseId          String?
-  intercompanyId     String?
-  status             String   @default("PENDIENTE")
-  // PENDIENTE | CALCULADO | LIQUIDADO
-  paidAt             DateTime?
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
-
-  entry   AdminCostEntry @relation(fields: [entryId],   references: [id], onDelete: Cascade)
-  company Company        @relation(fields: [companyId], references: [id])
-
-  @@unique([entryId, companyId])
-  @@map("admin_cost_settlements")
-}
-
-// ══════════════════════════════════════════════════════════════
-//  CASA LEÓN — DISTRIBUCIÓN DE UTILIDADES
-// ══════════════════════════════════════════════════════════════
-
-model CasaLeonConfig {
-  id        String   @id @default(cuid())
-  companyId String   @unique
-  pct       Decimal  @db.Decimal(5,2)
-  // Worka, Palestra, Lonche → 5.0
-  // Machete                 → 3.0
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  company Company @relation(fields: [companyId], references: [id])
-
-  @@map("casa_leon_configs")
-}
-
-model CasaLeonAdvance {
-  id            String   @id @default(cuid())
-  companyId     String
-  period        String
-  date          DateTime @db.Date
-  amount        Decimal  @db.Decimal(12,2)
-  cashAccountId String
-  paymentMethod String   @default("TRANSFERENCIA")
-  reference     String?
-  notes         String?
-  createdById   String
-  approvedById  String?
-  approvedAt    DateTime?
-  flowMovementId String?
-  status        String   @default("PENDIENTE")
-  // PENDIENTE | APROBADO | ANULADO
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  company     Company     @relation(fields: [companyId],     references: [id])
-  cashAccount CashAccount @relation(fields: [cashAccountId], references: [id])
-
-  @@map("casa_leon_advances")
-}
-
-model CasaLeonSettlement {
-  id               String   @id @default(cuid())
-  companyId        String
-  period           String
-  netResult        Decimal  @db.Decimal(12,2)
-  pctApplied       Decimal  @db.Decimal(5,2)
-  targetAmount     Decimal  @db.Decimal(12,2)
-  totalAdvanced    Decimal  @db.Decimal(12,2)
-  difference       Decimal  @db.Decimal(12,2)
-  // positivo → falta retirar
-  // negativo → se adelantó de más, hay que devolver
-  adjustmentType   String?
-  // RETIRO_ADICIONAL | DEVOLUCION | SIN_AJUSTE
-  adjustmentAmount Decimal? @db.Decimal(12,2)
-  adjustmentDate   DateTime? @db.Date
-  adjustmentNotes  String?
-  status           String   @default("PENDIENTE")
-  // PENDIENTE | CALCULADO | CERRADO
-  closedAt         DateTime?
-  closedById       String?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-
-  company Company @relation(fields: [companyId], references: [id])
-
-  @@unique([companyId, period])
-  @@map("casa_leon_settlements")
 }
